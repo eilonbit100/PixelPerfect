@@ -794,6 +794,58 @@ export type Database = {
           },
         ]
       }
+      daily_plans: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          branch_id: string
+          created_at: string
+          id: string
+          organization_id: string
+          plan_date: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          branch_id: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          plan_date: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          branch_id?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          plan_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_plans_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_plans_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_plans_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insights: {
         Row: {
           acknowledged_at: string | null
@@ -1766,6 +1818,8 @@ export type Database = {
           entity_type: string | null
           id: string
           organization_id: string
+          plan_date: string | null
+          plan_rank: number | null
           priority: string
           rule_key: string | null
           source: string
@@ -1786,6 +1840,8 @@ export type Database = {
           entity_type?: string | null
           id?: string
           organization_id: string
+          plan_date?: string | null
+          plan_rank?: number | null
           priority?: string
           rule_key?: string | null
           source?: string
@@ -1806,6 +1862,8 @@ export type Database = {
           entity_type?: string | null
           id?: string
           organization_id?: string
+          plan_date?: string | null
+          plan_rank?: number | null
           priority?: string
           rule_key?: string | null
           source?: string
@@ -1870,6 +1928,10 @@ export type Database = {
         }
         Returns: Json
       }
+      approve_daily_plan: {
+        Args: { _branch: string; _date: string }
+        Returns: undefined
+      }
       book_class: {
         Args: { _customer: string; _date: string; _template: string }
         Returns: string
@@ -1913,6 +1975,10 @@ export type Database = {
         }[]
       }
       shares_org_with: { Args: { _user: string }; Returns: boolean }
+      suggest_daily_plan: {
+        Args: { _branch: string; _date: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

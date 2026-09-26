@@ -33,11 +33,11 @@ export function MyWorkStrip() {
     { label: "הלידים שלי", value: d?.leads, to: "/leads" as const, search: { filter: "mine" } },
   ];
   return (
-    <div className="panel mb-8 grid grid-cols-3 divide-x divide-x-reverse">
+    <div className="mb-6 flex flex-wrap gap-2">
       {cells.map((c) => (
-        <Link key={c.label} to={c.to} search={c.search as never} className="px-4 py-3 hover:bg-muted">
-          <div className="eyebrow">{c.label}</div>
-          {d ? <div className={"num mt-1 text-xl font-semibold " + (c.bad && d.overdue ? "text-critical" : "")}>{fmtNum(c.value ?? 0)}</div> : <Skeleton className="mt-2 h-6 w-10" />}
+        <Link key={c.label} to={c.to} search={c.search as never} className="panel inline-flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent">
+          <span className="text-muted-foreground">{c.label}</span>
+          {d ? <span className={"num font-semibold " + (c.bad && d.overdue ? "text-critical" : "")}>{fmtNum(c.value ?? 0)}</span> : <Skeleton className="h-4 w-5" />}
         </Link>
       ))}
     </div>

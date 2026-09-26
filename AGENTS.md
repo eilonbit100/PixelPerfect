@@ -22,3 +22,4 @@
 - Entry decisions come only from `check_in_customer` RPC (uses `entry_block_reasons`) and are logged in `check_ins`; clients never decide or insert check-ins.
 - Freezes are inserted into `customer_freezes`; a trigger extends membership end_date and toggles FROZEN via `apply_freezes`.
 - Class schedule = recurring `class_templates` (weekday+time); bookings keyed by (template, session_date) via `book_class`/`cancel_booking` RPCs for atomic capacity/waitlist.
+- Daily plan: tasks.plan_date/plan_rank + daily_plans approval row; `suggest_daily_plan` (priority/overdue order, assigns by job_title + load) and `approve_daily_plan` RPCs, manager edits via normal task updates — keeps prioritization logic server-side.

@@ -7,10 +7,10 @@ import { useOrg } from "@/lib/org";
 import { useInsights, useRefreshInsights } from "@/lib/queries";
 import { RULES, sevRank, worst, type Insight } from "@/lib/rules";
 import { fmtMoney, fmtNum, fmtRelative, greeting } from "@/lib/format";
-import { SeverityBadge, SeverityIcon } from "@/components/app/badges";
+import { SEVERITY_UI } from "@/components/app/badges";
+import { DailyPlanEmployee, DailyPlanManager } from "@/components/app/DailyPlan";
 import { EmptyState, ErrorState } from "@/components/app/states";
 import { RuleLink } from "@/components/app/InsightLink";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BranchComparison, MyWorkStrip, PendingApprovals, TeamFollowUp } from "@/components/app/RoleWidgets";
 
@@ -198,13 +198,15 @@ function Dashboard() {
       </div>
       )}
 
+      {role === "EMPLOYEE" ? <DailyPlanEmployee /> : <DailyPlanManager />}
+
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <section className="min-w-0 overflow-hidden">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold">דורש טיפול</h2>
             {!!groups.length && <span className="text-xs text-muted-foreground num">{insights.data?.length} פריטים פתוחים</span>}
           </div>
-          <div className="panel divide-y">
+          <div className="panel divide-y overflow-hidden">
             {insights.isLoading ? (
               Array.from({ length: 5 }).map((_, i) => <div key={i} className="flex gap-3 p-4"><Skeleton className="size-8" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-56" /><Skeleton className="h-3 w-80" /></div></div>)
             ) : insights.error ? (
@@ -214,20 +216,22 @@ function Dashboard() {
             ) : (
               groups.map(({ rule, list }) => {
                 const sev = worst(list)!;
+                const ui = SEVERITY_UI[sev];
+                const Icon = ui.icon;
                 return (
-                  <div key={rule} className="flex items-start gap-3 p-4">
-                    <SeverityIcon severity={sev} />
+                  <RuleLink key={rule} rule={rule} className="group flex items-center gap-3 px-4 py-3 hover:bg-accent">
+                    <Icon className={"size-4 shrink-0 " + ui.cls.split(" ")[1]} />
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <SeverityBadge severity={sev} />
-                        <span className="font-medium">{RULES[rule].group(list.length)}</span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="truncate text-sm font-medium">{RULES[rule].group(list.length)}</span>
+                        <span className={"shrink-0 text-xs " + ui.cls.split(" ")[1]}>{ui.label}</span>
                       </div>
-                      <p className="mt-1 truncate text-sm text-muted-foreground">{breakdown(rule, list)}</p>
+                      <p className="truncate text-xs text-muted-foreground">{breakdown(rule, list)}</p>
                     </div>
-                    <RuleLink rule={rule}>
-                      <Button size="sm" variant={sevRank(sev) <= 1 ? "default" : "outline"} className="shrink-0">{RULES[rule].cta}</Button>
-                    </RuleLink>
-                  </div>
+                    <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground group-hover:text-foreground">
+                      {RULES[rule].cta} <ArrowLeft className="size-3.5" />
+                    </span>
+                  </RuleLink>
                 );
               })
             )}
