@@ -251,6 +251,248 @@ export type Database = {
           },
         ]
       }
+      check_ins: {
+        Row: {
+          allowed: boolean
+          branch_id: string
+          created_at: string
+          customer_id: string
+          id: string
+          organization_id: string
+          performed_by: string | null
+          reasons: string[]
+        }
+        Insert: {
+          allowed: boolean
+          branch_id: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          organization_id: string
+          performed_by?: string | null
+          reasons?: string[]
+        }
+        Update: {
+          allowed?: boolean
+          branch_id?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          organization_id?: string
+          performed_by?: string | null
+          reasons?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "check_ins_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_ins_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_ins_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_bookings: {
+        Row: {
+          attended: boolean
+          branch_id: string
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          id: string
+          organization_id: string
+          session_date: string
+          status: string
+          template_id: string
+        }
+        Insert: {
+          attended?: boolean
+          branch_id: string
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          id?: string
+          organization_id: string
+          session_date: string
+          status?: string
+          template_id: string
+        }
+        Update: {
+          attended?: boolean
+          branch_id?: string
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          id?: string
+          organization_id?: string
+          session_date?: string
+          status?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_bookings_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_bookings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_bookings_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "class_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_rooms: {
+        Row: {
+          active: boolean
+          branch_id: string
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          active?: boolean
+          branch_id: string
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+        }
+        Update: {
+          active?: boolean
+          branch_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_rooms_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_rooms_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_templates: {
+        Row: {
+          active: boolean
+          branch_id: string
+          capacity: number
+          created_at: string
+          duration_min: number
+          id: string
+          instructor_member_id: string | null
+          name: string
+          organization_id: string
+          room_id: string
+          start_time: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          branch_id: string
+          capacity?: number
+          created_at?: string
+          duration_min?: number
+          id?: string
+          instructor_member_id?: string | null
+          name: string
+          organization_id: string
+          room_id: string
+          start_time: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          branch_id?: string
+          capacity?: number
+          created_at?: string
+          duration_min?: number
+          id?: string
+          instructor_member_id?: string | null
+          name?: string
+          organization_id?: string
+          room_id?: string
+          start_time?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_templates_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_templates_instructor_member_id_fkey"
+            columns: ["instructor_member_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_templates_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "class_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_requirements: {
         Row: {
           active: boolean
@@ -413,11 +655,73 @@ export type Database = {
           },
         ]
       }
+      customer_freezes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          end_date: string
+          id: string
+          membership_id: string
+          note: string | null
+          organization_id: string
+          reason: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          end_date: string
+          id?: string
+          membership_id: string
+          note?: string | null
+          organization_id: string
+          reason: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          end_date?: string
+          id?: string
+          membership_id?: string
+          note?: string | null
+          organization_id?: string
+          reason?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_freezes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_freezes_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_freezes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_at: string
           created_by: string | null
           deleted_at: string | null
+          desk_note: string | null
           email: string | null
           full_name: string
           home_branch_id: string | null
@@ -429,6 +733,7 @@ export type Database = {
           payment_method: string | null
           payment_method_details: string | null
           phone: string | null
+          photo_path: string | null
           status: string
           updated_at: string
         }
@@ -436,6 +741,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
+          desk_note?: string | null
           email?: string | null
           full_name: string
           home_branch_id?: string | null
@@ -447,6 +753,7 @@ export type Database = {
           payment_method?: string | null
           payment_method_details?: string | null
           phone?: string | null
+          photo_path?: string | null
           status?: string
           updated_at?: string
         }
@@ -454,6 +761,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
+          desk_note?: string | null
           email?: string | null
           full_name?: string
           home_branch_id?: string | null
@@ -465,6 +773,7 @@ export type Database = {
           payment_method?: string | null
           payment_method_details?: string | null
           phone?: string | null
+          photo_path?: string | null
           status?: string
           updated_at?: string
         }
@@ -1545,6 +1854,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      apply_freezes: { Args: { _customer?: string }; Returns: undefined }
       apply_inventory_transaction: {
         Args: {
           _branch: string
@@ -1560,9 +1870,19 @@ export type Database = {
         }
         Returns: Json
       }
+      book_class: {
+        Args: { _customer: string; _date: string; _template: string }
+        Returns: string
+      }
       bootstrap_current_user: { Args: { _full_name?: string }; Returns: Json }
+      cancel_booking: { Args: { _booking: string }; Returns: undefined }
+      check_in_customer: {
+        Args: { _branch: string; _customer: string }
+        Returns: Json
+      }
       convert_lead_to_customer: { Args: { _lead: string }; Returns: string }
       current_member_id: { Args: { _org: string }; Returns: string }
+      entry_block_reasons: { Args: { _customer: string }; Returns: string[] }
       evaluate_rules: { Args: { _org: string }; Returns: undefined }
       get_dashboard_kpis: {
         Args: { _branch?: string; _org: string }
