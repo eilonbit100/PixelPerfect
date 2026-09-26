@@ -68,6 +68,95 @@ export type Database = {
           },
         ]
       }
+      approval_requests: {
+        Row: {
+          amount: number | null
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
+          branch_id: string | null
+          created_at: string
+          details: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          organization_id: string
+          rejection_reason: string | null
+          request_type: string
+          requested_by: string | null
+          submitted_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          branch_id?: string | null
+          created_at?: string
+          details?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          organization_id: string
+          rejection_reason?: string | null
+          request_type?: string
+          requested_by?: string | null
+          submitted_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          branch_id?: string | null
+          created_at?: string
+          details?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          organization_id?: string
+          rejection_reason?: string | null
+          request_type?: string
+          requested_by?: string | null
+          submitted_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1040,36 +1129,42 @@ export type Database = {
           display_name: string | null
           id: string
           invited_email: string | null
+          job_title: string | null
           joined_at: string | null
           organization_id: string
           role: string
           status: string
           updated_at: string
           user_id: string | null
+          username: string | null
         }
         Insert: {
           created_at?: string
           display_name?: string | null
           id?: string
           invited_email?: string | null
+          job_title?: string | null
           joined_at?: string | null
           organization_id: string
-          role: string
+          role?: string
           status?: string
           updated_at?: string
           user_id?: string | null
+          username?: string | null
         }
         Update: {
           created_at?: string
           display_name?: string | null
           id?: string
           invited_email?: string | null
+          job_title?: string | null
           joined_at?: string | null
           organization_id?: string
           role?: string
           status?: string
           updated_at?: string
           user_id?: string | null
+          username?: string | null
         }
         Relationships: [
           {
@@ -1211,34 +1306,43 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active: boolean
           avatar_url: string | null
           created_at: string
           full_name: string | null
           id: string
+          job_title: string | null
           locale: string
           phone: string | null
           timezone: string
           updated_at: string
+          username: string | null
         }
         Insert: {
+          active?: boolean
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id: string
+          job_title?: string | null
           locale?: string
           phone?: string | null
           timezone?: string
           updated_at?: string
+          username?: string | null
         }
         Update: {
+          active?: boolean
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          job_title?: string | null
           locale?: string
           phone?: string | null
           timezone?: string
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
