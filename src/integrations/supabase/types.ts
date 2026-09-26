@@ -426,6 +426,8 @@ export type Database = {
           national_id: string | null
           normalized_phone: string | null
           organization_id: string
+          payment_method: string | null
+          payment_method_details: string | null
           phone: string | null
           status: string
           updated_at: string
@@ -442,6 +444,8 @@ export type Database = {
           national_id?: string | null
           normalized_phone?: string | null
           organization_id: string
+          payment_method?: string | null
+          payment_method_details?: string | null
           phone?: string | null
           status?: string
           updated_at?: string
@@ -458,6 +462,8 @@ export type Database = {
           national_id?: string | null
           normalized_phone?: string | null
           organization_id?: string
+          payment_method?: string | null
+          payment_method_details?: string | null
           phone?: string | null
           status?: string
           updated_at?: string
