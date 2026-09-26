@@ -18,6 +18,8 @@ import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellTasksRouteImport } from './routes/_authenticated/_shell/tasks'
 import { Route as AuthenticatedShellCustomersIndexRouteImport } from './routes/_authenticated/_shell/customers.index'
 import { Route as AuthenticatedShellCustomersIdRouteImport } from './routes/_authenticated/_shell/customers.$id'
+import { Route as AuthenticatedShellInventoryIndexRouteImport } from './routes/_authenticated/_shell/inventory.index'
+import { Route as AuthenticatedShellInventoryIdRouteImport } from './routes/_authenticated/_shell/inventory.$id'
 import { Route as AuthenticatedShellLeadsIndexRouteImport } from './routes/_authenticated/_shell/leads.index'
 import { Route as AuthenticatedShellLeadsIdRouteImport } from './routes/_authenticated/_shell/leads.$id'
 
@@ -67,6 +69,18 @@ const AuthenticatedShellCustomersIdRoute =
     path: '/customers/$id',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
+const AuthenticatedShellInventoryIndexRoute =
+  AuthenticatedShellInventoryIndexRouteImport.update({
+    id: '/inventory/',
+    path: '/inventory/',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellInventoryIdRoute =
+  AuthenticatedShellInventoryIdRouteImport.update({
+    id: '/inventory/$id',
+    path: '/inventory/$id',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
 const AuthenticatedShellLeadsIndexRoute =
   AuthenticatedShellLeadsIndexRouteImport.update({
     id: '/leads/',
@@ -87,8 +101,10 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/tasks': typeof AuthenticatedShellTasksRoute
   '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
+  '/inventory/$id': typeof AuthenticatedShellInventoryIdRoute
   '/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/customers/': typeof AuthenticatedShellCustomersIndexRoute
+  '/inventory/': typeof AuthenticatedShellInventoryIndexRoute
   '/leads/': typeof AuthenticatedShellLeadsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -98,8 +114,10 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/tasks': typeof AuthenticatedShellTasksRoute
   '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
+  '/inventory/$id': typeof AuthenticatedShellInventoryIdRoute
   '/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/customers': typeof AuthenticatedShellCustomersIndexRoute
+  '/inventory': typeof AuthenticatedShellInventoryIndexRoute
   '/leads': typeof AuthenticatedShellLeadsIndexRoute
 }
 export interface FileRoutesById {
@@ -112,8 +130,10 @@ export interface FileRoutesById {
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
   '/_authenticated/_shell/tasks': typeof AuthenticatedShellTasksRoute
   '/_authenticated/_shell/customers/$id': typeof AuthenticatedShellCustomersIdRoute
+  '/_authenticated/_shell/inventory/$id': typeof AuthenticatedShellInventoryIdRoute
   '/_authenticated/_shell/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/_authenticated/_shell/customers/': typeof AuthenticatedShellCustomersIndexRoute
+  '/_authenticated/_shell/inventory/': typeof AuthenticatedShellInventoryIndexRoute
   '/_authenticated/_shell/leads/': typeof AuthenticatedShellLeadsIndexRoute
 }
 export interface FileRouteTypes {
@@ -125,8 +145,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/tasks'
     | '/customers/$id'
+    | '/inventory/$id'
     | '/leads/$id'
     | '/customers/'
+    | '/inventory/'
     | '/leads/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -136,8 +158,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/tasks'
     | '/customers/$id'
+    | '/inventory/$id'
     | '/leads/$id'
     | '/customers'
+    | '/inventory'
     | '/leads'
   id:
     | '__root__'
@@ -149,8 +173,10 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/dashboard'
     | '/_authenticated/_shell/tasks'
     | '/_authenticated/_shell/customers/$id'
+    | '/_authenticated/_shell/inventory/$id'
     | '/_authenticated/_shell/leads/$id'
     | '/_authenticated/_shell/customers/'
+    | '/_authenticated/_shell/inventory/'
     | '/_authenticated/_shell/leads/'
   fileRoutesById: FileRoutesById
 }
@@ -226,6 +252,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellCustomersIdRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
+    '/_authenticated/_shell/inventory/': {
+      id: '/_authenticated/_shell/inventory/'
+      path: '/inventory'
+      fullPath: '/inventory/'
+      preLoaderRoute: typeof AuthenticatedShellInventoryIndexRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/inventory/$id': {
+      id: '/_authenticated/_shell/inventory/$id'
+      path: '/inventory/$id'
+      fullPath: '/inventory/$id'
+      preLoaderRoute: typeof AuthenticatedShellInventoryIdRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
     '/_authenticated/_shell/leads/': {
       id: '/_authenticated/_shell/leads/'
       path: '/leads'
@@ -247,8 +287,10 @@ interface AuthenticatedShellRouteChildren {
   AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
   AuthenticatedShellTasksRoute: typeof AuthenticatedShellTasksRoute
   AuthenticatedShellCustomersIdRoute: typeof AuthenticatedShellCustomersIdRoute
+  AuthenticatedShellInventoryIdRoute: typeof AuthenticatedShellInventoryIdRoute
   AuthenticatedShellLeadsIdRoute: typeof AuthenticatedShellLeadsIdRoute
   AuthenticatedShellCustomersIndexRoute: typeof AuthenticatedShellCustomersIndexRoute
+  AuthenticatedShellInventoryIndexRoute: typeof AuthenticatedShellInventoryIndexRoute
   AuthenticatedShellLeadsIndexRoute: typeof AuthenticatedShellLeadsIndexRoute
 }
 
@@ -256,8 +298,10 @@ const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
   AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
   AuthenticatedShellTasksRoute: AuthenticatedShellTasksRoute,
   AuthenticatedShellCustomersIdRoute: AuthenticatedShellCustomersIdRoute,
+  AuthenticatedShellInventoryIdRoute: AuthenticatedShellInventoryIdRoute,
   AuthenticatedShellLeadsIdRoute: AuthenticatedShellLeadsIdRoute,
   AuthenticatedShellCustomersIndexRoute: AuthenticatedShellCustomersIndexRoute,
+  AuthenticatedShellInventoryIndexRoute: AuthenticatedShellInventoryIndexRoute,
   AuthenticatedShellLeadsIndexRoute: AuthenticatedShellLeadsIndexRoute,
 }
 
