@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 type SearchField = "all" | "name" | "phone" | "nid" | "nid4";
 const FIELD_PLACEHOLDER: Record<SearchField, string> = {
-  all: "חיפוש לפי שם, טלפון או ת״ז",
+  all: "חיפוש",
   name: "הקלד שם מלא",
   phone: "הקלד מספר טלפון",
   nid: "הקלד מספר תעודת זהות",
