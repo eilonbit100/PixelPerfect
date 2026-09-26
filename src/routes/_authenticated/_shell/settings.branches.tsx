@@ -1,3 +1,4 @@
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,7 +29,7 @@ function Branches() {
     if (error) return toast.error(friendlyError(error));
     setName(""); setAddress(""); toast.success("הסניף נוסף"); refresh();
   }
-  async function patch(id: string, p: Record<string, unknown>) {
+  async function patch(id: string, p: TablesUpdate<"branches">) {
     const { error } = await supabase.from("branches").update(p).eq("id", id);
     if (error) return toast.error(friendlyError(error));
     refresh();

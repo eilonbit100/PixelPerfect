@@ -1,3 +1,4 @@
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -69,7 +70,7 @@ function LeadDetail() {
   const issues = (insights.data ?? []).filter((i) => i.entity_type === "lead" && i.entity_id === id);
   const w = worst(issues);
 
-  async function update(patch: Record<string, unknown>, msg = "עודכן") {
+  async function update(patch: TablesUpdate<"leads">, msg = "עודכן") {
     const { error } = await supabase.from("leads").update(patch).eq("id", id);
     if (error) return toast.error(friendlyError(error));
     toast.success(msg);

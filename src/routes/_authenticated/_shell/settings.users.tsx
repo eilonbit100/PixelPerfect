@@ -1,3 +1,4 @@
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -30,7 +31,7 @@ function Users() {
   });
   const refresh = () => { qc.invalidateQueries({ queryKey: orgQueryKey }); qc.invalidateQueries({ queryKey: ["member-access"] }); };
 
-  async function patch(id: string, p: Record<string, unknown>) {
+  async function patch(id: string, p: TablesUpdate<"organization_members">) {
     const { error } = await supabase.from("organization_members").update(p).eq("id", id);
     if (error) return toast.error(friendlyError(error));
     toast.success("עודכן"); refresh();
