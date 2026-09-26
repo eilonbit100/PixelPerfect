@@ -227,10 +227,11 @@ function CustomersPage() {
           all.length ? <EmptyState title="אין לקוחות שתואמים לסינון" /> : <EmptyState title="אין עדיין לקוחות" text="לקוחות חדשים ולידים שהומרו יופיעו כאן." action={<NewCustomer />} />
         ) : (
           <table className="data-table">
-            <thead><tr><th>שם</th><th>טלפון</th><th>מנוי</th><th>סטטוס מנוי</th><th>סניף</th><th>הצטרפות</th><th>תקינות</th></tr></thead>
+            <thead><tr><th>שם</th><th>טלפון</th><th>ת״ז</th><th>מנוי</th><th>סטטוס מנוי</th><th>רכישות</th><th>סניף</th><th>הצטרפות</th><th>תקינות</th></tr></thead>
             <tbody>
-              {rows.map((c) => {
+              {visible.map((c) => {
                 const m = data.data!.ms.get(c.id);
+                const b = data.data!.buys.get(c.id);
                 const iss = byCust.get(c.id) ?? [];
                 const w = worst(iss);
                 return (
@@ -238,8 +239,10 @@ function CustomersPage() {
                     <td className="font-medium"><Link to="/customers/$id" params={{ id: c.id }} onClick={(e) => e.stopPropagation()}>{c.full_name}</Link>
                       {c.status !== "ACTIVE" && <span className="ms-2 text-xs text-muted-foreground">{CUSTOMER_STATUS[c.status]}</span>}</td>
                     <td className="num text-muted-foreground">{c.phone ?? "—"}</td>
+                    <td className="num text-muted-foreground">{c.national_id ? "•••" + c.national_id.slice(-4) : "—"}</td>
                     <td>{m?.display_name ?? "—"}</td>
                     <td>{m ? <StatusBadge tone={m.status === "ACTIVE" ? "ok" : m.status === "CANCELLED" ? "critical" : "neutral"}>{MEMBERSHIP_STATUS[m.status]}</StatusBadge> : <StatusBadge tone="attention">ללא מנוי</StatusBadge>}</td>
+                    <td className="text-muted-foreground">{b ? <><span className="num">{b.count}</span>{b.last && <span className="ms-1 text-xs">· אחרונה {fmtDate(b.last)}</span>}</> : "—"}</td>
                     <td className="text-muted-foreground">{branchName(c.home_branch_id)}</td>
                     <td className="num text-muted-foreground">{fmtDate(c.joined_at)}</td>
                     <td>{w ? <SeverityBadge severity={w} label={iss.length > 1 ? `${healthLabel(iss.find((i) => i.severity === w)!)} +${iss.length - 1}` : healthLabel(iss[0])} /> : <SeverityBadge severity="OK" />}</td>
@@ -248,6 +251,11 @@ function CustomersPage() {
               })}
             </tbody>
           </table>
+        )}
+        {rows.length > limit && (
+          <div className="border-t p-3 text-center">
+            <Button variant="outline" size="sm" onClick={() => setLimit((l) => l + 100)}>הצג עוד {Math.min(100, rows.length - limit)}</Button>
+          </div>
         )}
       </div>
     </div>
