@@ -266,7 +266,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button className="flex size-9 items-center justify-center rounded-md hover:bg-muted lg:hidden" onClick={() => setDrawer(true)} aria-label="פתח תפריט">
             <Menu className="size-5" />
           </button>
-          <GlobalSearch />
           <div className="ms-auto flex items-center gap-1">
             <Notifications />
             <UserMenu />
