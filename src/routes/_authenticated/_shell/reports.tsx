@@ -165,8 +165,53 @@ function Reports() {
         </section>
       </div>
 
+      <CheckInReport />
       <HealthReport />
     </div>
+  );
+}
+
+function CheckInReport() {
+  const { org, branchId, branches, branchName } = useOrg();
+  const q = useQuery({
+    queryKey: ["checkin-report", org.id, branchId],
+    queryFn: async () => {
+      const start = new Date(); start.setHours(0, 0, 0, 0);
+      let cq = supabase.from("check_ins").select("id,branch_id,allowed,reasons,created_at,customer:customers(id,full_name)").eq("organization_id", org.id).gte("created_at", start.toISOString()).order("created_at", { ascending: false }).limit(5000);
+      if (branchId) cq = cq.eq("branch_id", branchId);
+      const { data, error } = await cq;
+      if (error) throw error;
+      return data;
+    },
+  });
+  const rows = q.data ?? [];
+  const blocked = rows.filter((r) => !r.allowed);
+  return (
+    <section className="panel mt-4 p-4">
+      <div className="mb-3 text-sm font-medium">כניסות היום</div>
+      <div className="mb-4 grid gap-3 sm:grid-cols-4">
+        {(branchId ? branches.filter((b) => b.id === branchId) : branches).map((b) => (
+          <Stat key={b.id} label={b.name} value={rows.filter((r) => r.branch_id === b.id && r.allowed).length} />
+        ))}
+        <Stat label="ניסיונות שנחסמו" value={blocked.length} />
+      </div>
+      {!!blocked.length && (
+        <table className="data-table">
+          <thead><tr><th>לקוח</th><th>סניף</th><th>שעה</th><th>סיבה</th></tr></thead>
+          <tbody>{blocked.slice(0, 50).map((r) => {
+            const c = r.customer as { id: string; full_name: string } | null;
+            return (
+              <tr key={r.id}>
+                <td>{c ? <Link to="/customers/$id" params={{ id: c.id }} className="font-medium hover:underline">{c.full_name}</Link> : "—"}</td>
+                <td>{branchName(r.branch_id)}</td>
+                <td className="num">{fmtTime(r.created_at)}</td>
+                <td className="text-critical">{r.reasons.map((x) => ENTRY_REASON[x] ?? x).join(", ")}</td>
+              </tr>
+            );
+          })}</tbody>
+        </table>
+      )}
+    </section>
   );
 }
 
