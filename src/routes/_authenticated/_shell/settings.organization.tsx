@@ -26,7 +26,7 @@ function OrgSettings() {
   }
   return (
     <div className="panel max-w-xl space-y-4 p-5">
-      {!isAdmin && <p className="text-sm text-muted-foreground">רק בעלים או מנהל מערכת יכולים לערוך את פרטי הארגון.</p>}
+      {!isAdmin && <p className="text-sm text-muted-foreground">רק משתמשי מטה יכולים לערוך את פרטי הארגון.</p>}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5"><Label>שם</Label><Input disabled={!isAdmin} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
         <div className="space-y-1.5"><Label>שם משפטי</Label><Input disabled={!isAdmin} value={f.legal_name} onChange={(e) => setF({ ...f, legal_name: e.target.value })} /></div>
