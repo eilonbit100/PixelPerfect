@@ -268,6 +268,8 @@ function Dashboard() {
           </div>
         </aside>
       </div>
+      {role === "HQ" && !branchId && <BranchComparison insights={insights.data ?? []} />}
+      {role !== "EMPLOYEE" && <TeamFollowUp />}
     </div>
   );
 }
