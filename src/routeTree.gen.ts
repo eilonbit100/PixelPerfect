@@ -10,33 +10,270 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedShellRouteImport } from './routes/_authenticated/_shell'
+import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
+import { Route as AuthenticatedShellReportsRouteImport } from './routes/_authenticated/_shell/reports'
+import { Route as AuthenticatedShellSettingsRouteImport } from './routes/_authenticated/_shell/settings'
+import { Route as AuthenticatedShellTasksRouteImport } from './routes/_authenticated/_shell/tasks'
+import { Route as AuthenticatedShellCustomersIndexRouteImport } from './routes/_authenticated/_shell/customers.index'
+import { Route as AuthenticatedShellCustomersIdRouteImport } from './routes/_authenticated/_shell/customers.$id'
+import { Route as AuthenticatedShellInventoryIndexRouteImport } from './routes/_authenticated/_shell/inventory.index'
+import { Route as AuthenticatedShellInventoryIdRouteImport } from './routes/_authenticated/_shell/inventory.$id'
+import { Route as AuthenticatedShellLeadsIndexRouteImport } from './routes/_authenticated/_shell/leads.index'
+import { Route as AuthenticatedShellLeadsIdRouteImport } from './routes/_authenticated/_shell/leads.$id'
+import { Route as AuthenticatedShellSettingsIndexRouteImport } from './routes/_authenticated/_shell/settings.index'
+import { Route as AuthenticatedShellSettingsBranchesRouteImport } from './routes/_authenticated/_shell/settings.branches'
+import { Route as AuthenticatedShellSettingsOrganizationRouteImport } from './routes/_authenticated/_shell/settings.organization'
+import { Route as AuthenticatedShellSettingsRulesRouteImport } from './routes/_authenticated/_shell/settings.rules'
+import { Route as AuthenticatedShellSettingsUsersRouteImport } from './routes/_authenticated/_shell/settings.users'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedShellRoute = AuthenticatedShellRouteImport.update({
+  id: '/_shell',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedShellDashboardRoute =
+  AuthenticatedShellDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellReportsRoute =
+  AuthenticatedShellReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellSettingsRoute =
+  AuthenticatedShellSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellTasksRoute = AuthenticatedShellTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AuthenticatedShellRoute,
+} as any)
+const AuthenticatedShellCustomersIndexRoute =
+  AuthenticatedShellCustomersIndexRouteImport.update({
+    id: '/customers/',
+    path: '/customers/',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellCustomersIdRoute =
+  AuthenticatedShellCustomersIdRouteImport.update({
+    id: '/customers/$id',
+    path: '/customers/$id',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellInventoryIndexRoute =
+  AuthenticatedShellInventoryIndexRouteImport.update({
+    id: '/inventory/',
+    path: '/inventory/',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellInventoryIdRoute =
+  AuthenticatedShellInventoryIdRouteImport.update({
+    id: '/inventory/$id',
+    path: '/inventory/$id',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellLeadsIndexRoute =
+  AuthenticatedShellLeadsIndexRouteImport.update({
+    id: '/leads/',
+    path: '/leads/',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellLeadsIdRoute =
+  AuthenticatedShellLeadsIdRouteImport.update({
+    id: '/leads/$id',
+    path: '/leads/$id',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellSettingsIndexRoute =
+  AuthenticatedShellSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedShellSettingsRoute,
+  } as any)
+const AuthenticatedShellSettingsBranchesRoute =
+  AuthenticatedShellSettingsBranchesRouteImport.update({
+    id: '/branches',
+    path: '/branches',
+    getParentRoute: () => AuthenticatedShellSettingsRoute,
+  } as any)
+const AuthenticatedShellSettingsOrganizationRoute =
+  AuthenticatedShellSettingsOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
+    getParentRoute: () => AuthenticatedShellSettingsRoute,
+  } as any)
+const AuthenticatedShellSettingsRulesRoute =
+  AuthenticatedShellSettingsRulesRouteImport.update({
+    id: '/rules',
+    path: '/rules',
+    getParentRoute: () => AuthenticatedShellSettingsRoute,
+  } as any)
+const AuthenticatedShellSettingsUsersRoute =
+  AuthenticatedShellSettingsUsersRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => AuthenticatedShellSettingsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/reports': typeof AuthenticatedShellReportsRoute
+  '/settings': typeof AuthenticatedShellSettingsRouteWithChildren
+  '/tasks': typeof AuthenticatedShellTasksRoute
+  '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
+  '/inventory/$id': typeof AuthenticatedShellInventoryIdRoute
+  '/leads/$id': typeof AuthenticatedShellLeadsIdRoute
+  '/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
+  '/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
+  '/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
+  '/settings/users': typeof AuthenticatedShellSettingsUsersRoute
+  '/customers/': typeof AuthenticatedShellCustomersIndexRoute
+  '/inventory/': typeof AuthenticatedShellInventoryIndexRoute
+  '/leads/': typeof AuthenticatedShellLeadsIndexRoute
+  '/settings/': typeof AuthenticatedShellSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/reports': typeof AuthenticatedShellReportsRoute
+  '/tasks': typeof AuthenticatedShellTasksRoute
+  '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
+  '/inventory/$id': typeof AuthenticatedShellInventoryIdRoute
+  '/leads/$id': typeof AuthenticatedShellLeadsIdRoute
+  '/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
+  '/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
+  '/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
+  '/settings/users': typeof AuthenticatedShellSettingsUsersRoute
+  '/customers': typeof AuthenticatedShellCustomersIndexRoute
+  '/inventory': typeof AuthenticatedShellInventoryIndexRoute
+  '/leads': typeof AuthenticatedShellLeadsIndexRoute
+  '/settings': typeof AuthenticatedShellSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/_shell': typeof AuthenticatedShellRouteWithChildren
+  '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/_authenticated/_shell/reports': typeof AuthenticatedShellReportsRoute
+  '/_authenticated/_shell/settings': typeof AuthenticatedShellSettingsRouteWithChildren
+  '/_authenticated/_shell/tasks': typeof AuthenticatedShellTasksRoute
+  '/_authenticated/_shell/customers/$id': typeof AuthenticatedShellCustomersIdRoute
+  '/_authenticated/_shell/inventory/$id': typeof AuthenticatedShellInventoryIdRoute
+  '/_authenticated/_shell/leads/$id': typeof AuthenticatedShellLeadsIdRoute
+  '/_authenticated/_shell/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
+  '/_authenticated/_shell/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
+  '/_authenticated/_shell/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
+  '/_authenticated/_shell/settings/users': typeof AuthenticatedShellSettingsUsersRoute
+  '/_authenticated/_shell/customers/': typeof AuthenticatedShellCustomersIndexRoute
+  '/_authenticated/_shell/inventory/': typeof AuthenticatedShellInventoryIndexRoute
+  '/_authenticated/_shell/leads/': typeof AuthenticatedShellLeadsIndexRoute
+  '/_authenticated/_shell/settings/': typeof AuthenticatedShellSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/dashboard'
+    | '/reports'
+    | '/settings'
+    | '/tasks'
+    | '/customers/$id'
+    | '/inventory/$id'
+    | '/leads/$id'
+    | '/settings/branches'
+    | '/settings/organization'
+    | '/settings/rules'
+    | '/settings/users'
+    | '/customers/'
+    | '/inventory/'
+    | '/leads/'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/dashboard'
+    | '/reports'
+    | '/tasks'
+    | '/customers/$id'
+    | '/inventory/$id'
+    | '/leads/$id'
+    | '/settings/branches'
+    | '/settings/organization'
+    | '/settings/rules'
+    | '/settings/users'
+    | '/customers'
+    | '/inventory'
+    | '/leads'
+    | '/settings'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/reset-password'
+    | '/_authenticated/_shell'
+    | '/_authenticated/_shell/dashboard'
+    | '/_authenticated/_shell/reports'
+    | '/_authenticated/_shell/settings'
+    | '/_authenticated/_shell/tasks'
+    | '/_authenticated/_shell/customers/$id'
+    | '/_authenticated/_shell/inventory/$id'
+    | '/_authenticated/_shell/leads/$id'
+    | '/_authenticated/_shell/settings/branches'
+    | '/_authenticated/_shell/settings/organization'
+    | '/_authenticated/_shell/settings/rules'
+    | '/_authenticated/_shell/settings/users'
+    | '/_authenticated/_shell/customers/'
+    | '/_authenticated/_shell/inventory/'
+    | '/_authenticated/_shell/leads/'
+    | '/_authenticated/_shell/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +285,211 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/_shell': {
+      id: '/_authenticated/_shell'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedShellRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/_shell/dashboard': {
+      id: '/_authenticated/_shell/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedShellDashboardRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/reports': {
+      id: '/_authenticated/_shell/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedShellReportsRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/settings': {
+      id: '/_authenticated/_shell/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedShellSettingsRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/tasks': {
+      id: '/_authenticated/_shell/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof AuthenticatedShellTasksRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/customers/': {
+      id: '/_authenticated/_shell/customers/'
+      path: '/customers'
+      fullPath: '/customers/'
+      preLoaderRoute: typeof AuthenticatedShellCustomersIndexRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/customers/$id': {
+      id: '/_authenticated/_shell/customers/$id'
+      path: '/customers/$id'
+      fullPath: '/customers/$id'
+      preLoaderRoute: typeof AuthenticatedShellCustomersIdRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/inventory/': {
+      id: '/_authenticated/_shell/inventory/'
+      path: '/inventory'
+      fullPath: '/inventory/'
+      preLoaderRoute: typeof AuthenticatedShellInventoryIndexRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/inventory/$id': {
+      id: '/_authenticated/_shell/inventory/$id'
+      path: '/inventory/$id'
+      fullPath: '/inventory/$id'
+      preLoaderRoute: typeof AuthenticatedShellInventoryIdRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/leads/': {
+      id: '/_authenticated/_shell/leads/'
+      path: '/leads'
+      fullPath: '/leads/'
+      preLoaderRoute: typeof AuthenticatedShellLeadsIndexRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/leads/$id': {
+      id: '/_authenticated/_shell/leads/$id'
+      path: '/leads/$id'
+      fullPath: '/leads/$id'
+      preLoaderRoute: typeof AuthenticatedShellLeadsIdRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/settings/': {
+      id: '/_authenticated/_shell/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedShellSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedShellSettingsRoute
+    }
+    '/_authenticated/_shell/settings/branches': {
+      id: '/_authenticated/_shell/settings/branches'
+      path: '/branches'
+      fullPath: '/settings/branches'
+      preLoaderRoute: typeof AuthenticatedShellSettingsBranchesRouteImport
+      parentRoute: typeof AuthenticatedShellSettingsRoute
+    }
+    '/_authenticated/_shell/settings/organization': {
+      id: '/_authenticated/_shell/settings/organization'
+      path: '/organization'
+      fullPath: '/settings/organization'
+      preLoaderRoute: typeof AuthenticatedShellSettingsOrganizationRouteImport
+      parentRoute: typeof AuthenticatedShellSettingsRoute
+    }
+    '/_authenticated/_shell/settings/rules': {
+      id: '/_authenticated/_shell/settings/rules'
+      path: '/rules'
+      fullPath: '/settings/rules'
+      preLoaderRoute: typeof AuthenticatedShellSettingsRulesRouteImport
+      parentRoute: typeof AuthenticatedShellSettingsRoute
+    }
+    '/_authenticated/_shell/settings/users': {
+      id: '/_authenticated/_shell/settings/users'
+      path: '/users'
+      fullPath: '/settings/users'
+      preLoaderRoute: typeof AuthenticatedShellSettingsUsersRouteImport
+      parentRoute: typeof AuthenticatedShellSettingsRoute
+    }
   }
 }
 
+interface AuthenticatedShellSettingsRouteChildren {
+  AuthenticatedShellSettingsBranchesRoute: typeof AuthenticatedShellSettingsBranchesRoute
+  AuthenticatedShellSettingsOrganizationRoute: typeof AuthenticatedShellSettingsOrganizationRoute
+  AuthenticatedShellSettingsRulesRoute: typeof AuthenticatedShellSettingsRulesRoute
+  AuthenticatedShellSettingsUsersRoute: typeof AuthenticatedShellSettingsUsersRoute
+  AuthenticatedShellSettingsIndexRoute: typeof AuthenticatedShellSettingsIndexRoute
+}
+
+const AuthenticatedShellSettingsRouteChildren: AuthenticatedShellSettingsRouteChildren =
+  {
+    AuthenticatedShellSettingsBranchesRoute:
+      AuthenticatedShellSettingsBranchesRoute,
+    AuthenticatedShellSettingsOrganizationRoute:
+      AuthenticatedShellSettingsOrganizationRoute,
+    AuthenticatedShellSettingsRulesRoute: AuthenticatedShellSettingsRulesRoute,
+    AuthenticatedShellSettingsUsersRoute: AuthenticatedShellSettingsUsersRoute,
+    AuthenticatedShellSettingsIndexRoute: AuthenticatedShellSettingsIndexRoute,
+  }
+
+const AuthenticatedShellSettingsRouteWithChildren =
+  AuthenticatedShellSettingsRoute._addFileChildren(
+    AuthenticatedShellSettingsRouteChildren,
+  )
+
+interface AuthenticatedShellRouteChildren {
+  AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
+  AuthenticatedShellReportsRoute: typeof AuthenticatedShellReportsRoute
+  AuthenticatedShellSettingsRoute: typeof AuthenticatedShellSettingsRouteWithChildren
+  AuthenticatedShellTasksRoute: typeof AuthenticatedShellTasksRoute
+  AuthenticatedShellCustomersIdRoute: typeof AuthenticatedShellCustomersIdRoute
+  AuthenticatedShellInventoryIdRoute: typeof AuthenticatedShellInventoryIdRoute
+  AuthenticatedShellLeadsIdRoute: typeof AuthenticatedShellLeadsIdRoute
+  AuthenticatedShellCustomersIndexRoute: typeof AuthenticatedShellCustomersIndexRoute
+  AuthenticatedShellInventoryIndexRoute: typeof AuthenticatedShellInventoryIndexRoute
+  AuthenticatedShellLeadsIndexRoute: typeof AuthenticatedShellLeadsIndexRoute
+}
+
+const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
+  AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
+  AuthenticatedShellReportsRoute: AuthenticatedShellReportsRoute,
+  AuthenticatedShellSettingsRoute: AuthenticatedShellSettingsRouteWithChildren,
+  AuthenticatedShellTasksRoute: AuthenticatedShellTasksRoute,
+  AuthenticatedShellCustomersIdRoute: AuthenticatedShellCustomersIdRoute,
+  AuthenticatedShellInventoryIdRoute: AuthenticatedShellInventoryIdRoute,
+  AuthenticatedShellLeadsIdRoute: AuthenticatedShellLeadsIdRoute,
+  AuthenticatedShellCustomersIndexRoute: AuthenticatedShellCustomersIndexRoute,
+  AuthenticatedShellInventoryIndexRoute: AuthenticatedShellInventoryIndexRoute,
+  AuthenticatedShellLeadsIndexRoute: AuthenticatedShellLeadsIndexRoute,
+}
+
+const AuthenticatedShellRouteWithChildren =
+  AuthenticatedShellRoute._addFileChildren(AuthenticatedShellRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedShellRoute: typeof AuthenticatedShellRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedShellRoute: AuthenticatedShellRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
