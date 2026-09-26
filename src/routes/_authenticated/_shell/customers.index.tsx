@@ -17,6 +17,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+type SearchField = "all" | "name" | "phone" | "nid" | "nid4";
+const FIELD_PLACEHOLDER: Record<SearchField, string> = {
+  all: "חיפוש לפי שם, טלפון או ת״ז",
+  name: "הקלד שם מלא",
+  phone: "הקלד מספר טלפון",
+  nid: "הקלד מספר תעודת זהות",
+  nid4: "4 ספרות אחרונות",
+};
+
 type Search = { filter?: string; rule?: string; q?: string };
 
 export const Route = createFileRoute("/_authenticated/_shell/customers/")({
@@ -227,6 +236,7 @@ function CustomersPage() {
               <X className="size-3.5" />
             </button>
           )}
+        </div>
         </div>
         <FilterChips
           value={filter}
