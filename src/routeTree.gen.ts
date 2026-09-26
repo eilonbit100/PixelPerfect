@@ -12,8 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedShellRouteImport } from './routes/_authenticated/_shell'
+import { Route as AuthenticatedShellApprovalsRouteImport } from './routes/_authenticated/_shell/approvals'
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
 import { Route as AuthenticatedShellReportsRouteImport } from './routes/_authenticated/_shell/reports'
 import { Route as AuthenticatedShellSettingsRouteImport } from './routes/_authenticated/_shell/settings'
@@ -44,15 +44,16 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedShellRoute = AuthenticatedShellRouteImport.update({
   id: '/_shell',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedShellApprovalsRoute =
+  AuthenticatedShellApprovalsRouteImport.update({
+    id: '/approvals',
+    path: '/approvals',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
 const AuthenticatedShellDashboardRoute =
   AuthenticatedShellDashboardRouteImport.update({
     id: '/dashboard',
@@ -146,7 +147,7 @@ const AuthenticatedShellSettingsUsersRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/reset-password': typeof ResetPasswordRoute
+  '/approvals': typeof AuthenticatedShellApprovalsRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/reports': typeof AuthenticatedShellReportsRoute
   '/settings': typeof AuthenticatedShellSettingsRouteWithChildren
@@ -166,7 +167,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/reset-password': typeof ResetPasswordRoute
+  '/approvals': typeof AuthenticatedShellApprovalsRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/reports': typeof AuthenticatedShellReportsRoute
   '/tasks': typeof AuthenticatedShellTasksRoute
@@ -187,8 +188,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteWithChildren
+  '/_authenticated/_shell/approvals': typeof AuthenticatedShellApprovalsRoute
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
   '/_authenticated/_shell/reports': typeof AuthenticatedShellReportsRoute
   '/_authenticated/_shell/settings': typeof AuthenticatedShellSettingsRouteWithChildren
@@ -210,7 +211,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/reset-password'
+    | '/approvals'
     | '/dashboard'
     | '/reports'
     | '/settings'
@@ -230,7 +231,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/reset-password'
+    | '/approvals'
     | '/dashboard'
     | '/reports'
     | '/tasks'
@@ -250,8 +251,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/reset-password'
     | '/_authenticated/_shell'
+    | '/_authenticated/_shell/approvals'
     | '/_authenticated/_shell/dashboard'
     | '/_authenticated/_shell/reports'
     | '/_authenticated/_shell/settings'
@@ -273,7 +274,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -299,19 +299,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/_shell': {
       id: '/_authenticated/_shell'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedShellRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/_shell/approvals': {
+      id: '/_authenticated/_shell/approvals'
+      path: '/approvals'
+      fullPath: '/approvals'
+      preLoaderRoute: typeof AuthenticatedShellApprovalsRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
     }
     '/_authenticated/_shell/dashboard': {
       id: '/_authenticated/_shell/dashboard'
@@ -446,6 +446,7 @@ const AuthenticatedShellSettingsRouteWithChildren =
   )
 
 interface AuthenticatedShellRouteChildren {
+  AuthenticatedShellApprovalsRoute: typeof AuthenticatedShellApprovalsRoute
   AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
   AuthenticatedShellReportsRoute: typeof AuthenticatedShellReportsRoute
   AuthenticatedShellSettingsRoute: typeof AuthenticatedShellSettingsRouteWithChildren
@@ -459,6 +460,7 @@ interface AuthenticatedShellRouteChildren {
 }
 
 const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
+  AuthenticatedShellApprovalsRoute: AuthenticatedShellApprovalsRoute,
   AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
   AuthenticatedShellReportsRoute: AuthenticatedShellReportsRoute,
   AuthenticatedShellSettingsRoute: AuthenticatedShellSettingsRouteWithChildren,
@@ -489,7 +491,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

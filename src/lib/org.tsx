@@ -68,12 +68,12 @@ export function OrgProvider({ children, fallback, noOrg }: { children: ReactNode
     const d = q.data;
     if (!d || !d.me) return null;
     const role = d.me.role;
-    const isAdmin = role === "OWNER" || role === "ADMIN";
+    const isAdmin = role === "HQ";
     const accessible = isAdmin ? d.branches : d.branches.filter((b) => d.accessIds.includes(b.id));
     const selected = branchId && accessible.some((b) => b.id === branchId) ? branchId : accessible.length === 1 ? accessible[0].id : null;
     return {
       userId: d.user.id, email: d.user.email ?? "", profileName: d.profileName,
-      org: d.org, me: d.me, role, isAdmin, isManager: isAdmin || role === "MANAGER",
+      org: d.org, me: d.me, role, isAdmin, isManager: isAdmin || role === "BRANCH_MANAGER",
       members: d.members,
       memberName: (id) => d.members.find((m) => m.id === id)?.display_name ?? "—",
       branches: accessible, allBranches: d.branches,

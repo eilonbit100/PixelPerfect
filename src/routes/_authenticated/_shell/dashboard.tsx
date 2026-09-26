@@ -12,6 +12,7 @@ import { EmptyState, ErrorState } from "@/components/app/states";
 import { RuleLink } from "@/components/app/InsightLink";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BranchComparison, MyWorkStrip, PendingApprovals, TeamFollowUp } from "@/components/app/RoleWidgets";
 
 export const Route = createFileRoute("/_authenticated/_shell/dashboard")({
   head: () => ({
@@ -133,7 +134,7 @@ function Copilot({ groups }: { groups: { rule: string; list: Insight[] }[] }) {
 }
 
 function Dashboard() {
-  const { org, branchId, profileName, me, memberName } = useOrg();
+  const { org, branchId, profileName, me, memberName, role, branchName } = useOrg();
   useRefreshInsights();
   const insights = useInsights();
   const navigate = useNavigate();
@@ -170,13 +171,18 @@ function Dashboard() {
   const conv = k && k.closed_leads ? Math.round((k.won_leads / k.closed_leads) * 100) : 0;
   const firstName = (profileName || "").split(" ")[0];
 
+  const scope = role === "HQ" ? (branchId ? `סניף ${branchName(branchId)}` : "כל הארגון") : role === "BRANCH_MANAGER" ? `סניף ${branchName(branchId)}` : "הסניף שלך";
+
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">{greeting()}{firstName ? `, ${firstName}` : ""}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">הנה מה שדורש את תשומת הלב שלך היום.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {role === "EMPLOYEE" ? "הנה מה שדורש ממך טיפול היום." : `הנה מה שדורש את תשומת הלב שלך היום · ${scope}`}
+        </p>
       </div>
 
+      {role === "EMPLOYEE" ? <MyWorkStrip /> : (
       <div className="panel mb-8 grid grid-cols-2 divide-x divide-y divide-x-reverse sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5">
         {kpis.isLoading || !k ? (
           Array.from({ length: 5 }).map((_, i) => <div key={i} className="px-4 py-3"><Skeleton className="h-3 w-20" /><Skeleton className="mt-2 h-6 w-16" /></div>)
@@ -190,9 +196,10 @@ function Dashboard() {
           </>
         )}
       </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <section>
+        <section className="min-w-0 overflow-hidden">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold">דורש טיפול</h2>
             {!!groups.length && <span className="text-xs text-muted-foreground num">{insights.data?.length} פריטים פתוחים</span>}
@@ -228,6 +235,7 @@ function Dashboard() {
         </section>
 
         <aside className="space-y-6">
+          {role !== "EMPLOYEE" && <PendingApprovals />}
           <Copilot groups={groups} />
           <div className="panel">
             <div className="flex items-center justify-between border-b px-4 py-3">
@@ -260,6 +268,8 @@ function Dashboard() {
           </div>
         </aside>
       </div>
+      {role === "HQ" && !branchId && <BranchComparison insights={insights.data ?? []} />}
+      {role !== "EMPLOYEE" && <TeamFollowUp />}
     </div>
   );
 }

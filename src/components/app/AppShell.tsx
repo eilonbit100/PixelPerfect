@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  LayoutDashboard, Users, UserPlus, ListTodo, Package, BarChart3, Settings, Search, Bell, Menu, LogOut, Building2, ChevronDown, Activity,
+  LayoutDashboard, Users, UserPlus, ListTodo, Package, BarChart3, Settings, Search, Bell, Menu, LogOut, Building2, ChevronDown, Activity, CheckSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
@@ -20,6 +20,7 @@ const NAV = [
   { to: "/tasks", label: "משימות", icon: ListTodo },
   { to: "/inventory", label: "מלאי", icon: Package },
   { to: "/reports", label: "דוחות", icon: BarChart3 },
+  { to: "/approvals", label: "אישורים", icon: CheckSquare },
   { to: "/settings", label: "הגדרות", icon: Settings },
 ] as const;
 
@@ -54,7 +55,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
         <span className="text-[15px] font-semibold tracking-tight">Pulse</span>
       </div>
       <nav className="flex-1 space-y-0.5 px-2">
-        {NAV.map((n) => {
+        {NAV.filter((n) => n.to !== "/approvals" || role !== "EMPLOYEE").map((n) => {
           const active = path === n.to || path.startsWith(n.to + "/");
           return (
             <Link
@@ -219,7 +220,7 @@ function Notifications() {
 }
 
 function UserMenu() {
-  const { profileName, email, role } = useOrg();
+  const { profileName, me, role } = useOrg();
   const qc = useQueryClient();
   const navigate = useNavigate();
   async function signOut() {
@@ -237,11 +238,11 @@ function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
           <div className="text-sm font-medium">{profileName}</div>
-          <div className="text-xs text-muted-foreground">{email} · {ROLE[role]}</div>
+          <div className="text-xs text-muted-foreground">{me.username ?? ""} · {ROLE[role]}{me.job_title ? ` · ${me.job_title}` : ""}</div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate({ to: "/settings/organization" })}><Settings className="size-4" /> הגדרות</DropdownMenuItem>
-        <DropdownMenuItem onClick={signOut}><LogOut className="size-4" /> התנתקות</DropdownMenuItem>
+        <DropdownMenuItem onClick={signOut}><LogOut className="size-4" /> החלפת משתמש</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -60,7 +60,7 @@ export const PAYMENT_STATUS: Record<string, string> = { PENDING: "ממתין", P
 export const COMPLIANCE_STATUS: Record<string, string> = { MISSING: "חסר", PENDING: "ממתין", VALID: "תקין", EXPIRED: "פג תוקף", NOT_REQUIRED: "לא נדרש" };
 export const TASK_STATUS: Record<string, string> = { OPEN: "פתוחה", IN_PROGRESS: "בטיפול", COMPLETED: "הושלמה", CANCELLED: "בוטלה" };
 export const TASK_PRIORITY: Record<string, string> = { LOW: "נמוכה", NORMAL: "רגילה", HIGH: "גבוהה", URGENT: "דחופה" };
-export const ROLE: Record<string, string> = { OWNER: "בעלים", ADMIN: "מנהל מערכת", MANAGER: "מנהל", EMPLOYEE: "עובד" };
+export const ROLE: Record<string, string> = { EMPLOYEE: "עובד", BRANCH_MANAGER: "מנהל סניף", HQ: "מטה" };
 export const MEMBER_STATUS: Record<string, string> = { INVITED: "הוזמן", ACTIVE: "פעיל", SUSPENDED: "מושעה", REMOVED: "הוסר" };
 export const TX_TYPE: Record<string, string> = {
   RECEIPT: "קבלת סחורה", SALE: "מכירה", RETURN_TO_SUPPLIER: "החזרה לספק", MANUAL_ADJUSTMENT: "תיקון ידני",
