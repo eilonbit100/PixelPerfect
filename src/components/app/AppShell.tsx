@@ -254,11 +254,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [drawer, setDrawer] = useState(false);
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-e border-sidebar-border bg-sidebar lg:block">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-e border-sidebar-border bg-sidebar text-sidebar-foreground lg:block">
         <SidebarBody />
       </aside>
       <Sheet open={drawer} onOpenChange={setDrawer}>
-        <SheetContent side="right" className="w-64 bg-sidebar p-0" dir="rtl">
+        <SheetContent side="right" className="w-64 bg-sidebar p-0 text-sidebar-foreground" dir="rtl">
           <SheetTitle className="sr-only">ניווט</SheetTitle>
           <SidebarBody onNavigate={() => setDrawer(false)} />
         </SheetContent>
