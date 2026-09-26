@@ -7,9 +7,8 @@ import { useOrg } from "@/lib/org";
 import { useInsights, useRefreshInsights } from "@/lib/queries";
 import { RULES, sevRank, worst, type Insight } from "@/lib/rules";
 import { fmtMoney, fmtNum, fmtRelative, greeting } from "@/lib/format";
-import { SEVERITY_LABEL } from "@/components/app/badges";
+import { SEVERITY_UI } from "@/components/app/badges";
 import { DailyPlanEmployee, DailyPlanManager } from "@/components/app/DailyPlan";
-const SeverityLabel = ({ severity }: { severity: string }) => <>{SEVERITY_LABEL[severity] ?? severity}</>;
 import { EmptyState, ErrorState } from "@/components/app/states";
 import { RuleLink } from "@/components/app/InsightLink";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -217,14 +216,15 @@ function Dashboard() {
             ) : (
               groups.map(({ rule, list }) => {
                 const sev = worst(list)!;
-                const tone = sevRank(sev) <= 0 ? "bg-critical" : sevRank(sev) === 1 ? "bg-warning" : sevRank(sev) === 2 ? "bg-attention" : "bg-ok";
+                const ui = SEVERITY_UI[sev];
+                const Icon = ui.icon;
                 return (
                   <RuleLink key={rule} rule={rule} className="group flex items-center gap-3 px-4 py-3 hover:bg-accent">
-                    <span className={"size-2 shrink-0 rounded-full " + tone} />
+                    <Icon className={"size-4 shrink-0 " + ui.cls.split(" ")[1]} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline gap-2">
                         <span className="truncate text-sm font-medium">{RULES[rule].group(list.length)}</span>
-                        <span className="shrink-0 text-xs text-muted-foreground"><SeverityLabel severity={sev} /></span>
+                        <span className={"shrink-0 text-xs " + ui.cls.split(" ")[1]}>{ui.label}</span>
                       </div>
                       <p className="truncate text-xs text-muted-foreground">{breakdown(rule, list)}</p>
                     </div>
