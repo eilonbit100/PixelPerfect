@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedShellRouteImport } from './routes/_authenticated/_shell'
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
 import { Route as AuthenticatedShellLeadsIndexRouteImport } from './routes/_authenticated/_shell/leads.index'
+import { Route as AuthenticatedShellLeadsIdRouteImport } from './routes/_authenticated/_shell/leads.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,12 +53,19 @@ const AuthenticatedShellLeadsIndexRoute =
     path: '/leads/',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
+const AuthenticatedShellLeadsIdRoute =
+  AuthenticatedShellLeadsIdRouteImport.update({
+    id: '/leads/$id',
+    path: '/leads/$id',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/leads/': typeof AuthenticatedShellLeadsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -65,6 +73,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/leads': typeof AuthenticatedShellLeadsIndexRoute
 }
 export interface FileRoutesById {
@@ -75,13 +84,15 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteWithChildren
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/_authenticated/_shell/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/_authenticated/_shell/leads/': typeof AuthenticatedShellLeadsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/reset-password' | '/dashboard' | '/leads/'
+  fullPaths:
+    '/' | '/auth' | '/reset-password' | '/dashboard' | '/leads/$id' | '/leads/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/reset-password' | '/dashboard' | '/leads'
+  to: '/' | '/auth' | '/reset-password' | '/dashboard' | '/leads/$id' | '/leads'
   id:
     | '__root__'
     | '/'
@@ -90,6 +101,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/_shell'
     | '/_authenticated/_shell/dashboard'
+    | '/_authenticated/_shell/leads/$id'
     | '/_authenticated/_shell/leads/'
   fileRoutesById: FileRoutesById
 }
@@ -151,16 +163,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellLeadsIndexRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
+    '/_authenticated/_shell/leads/$id': {
+      id: '/_authenticated/_shell/leads/$id'
+      path: '/leads/$id'
+      fullPath: '/leads/$id'
+      preLoaderRoute: typeof AuthenticatedShellLeadsIdRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
   }
 }
 
 interface AuthenticatedShellRouteChildren {
   AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
+  AuthenticatedShellLeadsIdRoute: typeof AuthenticatedShellLeadsIdRoute
   AuthenticatedShellLeadsIndexRoute: typeof AuthenticatedShellLeadsIndexRoute
 }
 
 const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
   AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
+  AuthenticatedShellLeadsIdRoute: AuthenticatedShellLeadsIdRoute,
   AuthenticatedShellLeadsIndexRoute: AuthenticatedShellLeadsIndexRoute,
 }
 
