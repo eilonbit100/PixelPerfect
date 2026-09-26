@@ -212,7 +212,7 @@ function CustomersPage() {
           <Select value={field} onValueChange={(v) => setField(v as SearchField)}>
             <SelectTrigger className="w-40 shrink-0" aria-label="חיפוש לפי"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">כל השדות</SelectItem>
+              <SelectItem value="all">סינון לפי</SelectItem>
               <SelectItem value="name">שם מלא</SelectItem>
               <SelectItem value="phone">טלפון</SelectItem>
               <SelectItem value="nid">תעודת זהות</SelectItem>
