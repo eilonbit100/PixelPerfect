@@ -259,7 +259,8 @@ function CustomersPage() {
         {data.isLoading || insights.isLoading ? <TableSkeleton cols={4} /> : data.error ? <ErrorState onRetry={() => data.refetch()} /> : !rows.length ? (
           all.length ? <EmptyState title="אין לקוחות שתואמים לסינון" /> : <EmptyState title="אין עדיין לקוחות" text="לקוחות חדשים ולידים שהומרו יופיעו כאן." action={<NewCustomer />} />
         ) : (
-          <table className="data-table">
+          <table className="data-table table-fixed w-full">
+            <colgroup><col className="w-[34%]" /><col className="w-[22%]" /><col className="w-[18%]" /><col className="w-[26%]" /></colgroup>
             <thead><tr><th>שם</th><th>טלפון</th><th>מנוי</th><th>תקינות</th></tr></thead>
             <tbody>
               {visible.map((c) => {
@@ -268,7 +269,7 @@ function CustomersPage() {
                 const w = worst(iss);
                 return (
                   <tr key={c.id} className="cursor-pointer" onClick={() => setOpenId(c.id)}>
-                    <td className="font-medium">{c.full_name}
+                    <td className="truncate font-medium">{c.full_name}
                       {c.status !== "ACTIVE" && <span className="ms-2 text-xs text-muted-foreground">{CUSTOMER_STATUS[c.status]}</span>}</td>
                     <td className="num text-muted-foreground">{c.phone ?? "—"}</td>
                     <td>{m?.status === "ACTIVE" ? <StatusBadge tone="ok">מנוי פעיל</StatusBadge> : <StatusBadge tone="neutral">לא מנוי</StatusBadge>}</td>
