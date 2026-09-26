@@ -15,6 +15,8 @@ import { Timeline } from "@/components/app/Timeline";
 import { TaskDialog } from "@/components/app/TaskDialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { PAYMENT_METHOD, HEALTH_LABEL, healthState, healthSeverity, entryBlocked } from "@/lib/health";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/_authenticated/_shell/customers/$id")({
@@ -31,7 +33,9 @@ export const Route = createFileRoute("/_authenticated/_shell/customers/$id")({
 
 function Customer360() {
   const { id } = Route.useParams();
-  const { org, branchName, memberName } = useOrg();
+  const { org, branchName, memberName, isManager } = useOrg();
+  const [pm, setPm] = useState<{ method: string; details: string } | null>(null);
+  const [approveDate, setApproveDate] = useState(() => new Date(Date.now() + 365 * 864e5).toISOString().slice(0, 10));
   const insights = useInsights();
   const invalidate = useInvalidateAll();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -63,6 +67,28 @@ function Customer360() {
   const issues = (insights.data ?? []).filter((i) => insightTargetId(i) === id);
   const w = worst(issues);
   const activeM = m.find((x) => ["ACTIVE", "PENDING", "FROZEN"].includes(x.status));
+  const healthItem = ci.find((x) => (x.requirement as { key: string } | null)?.key === "HEALTH_DECLARATION");
+  const hs = healthState(healthItem);
+  const blocked = entryBlocked(hs, activeM?.status === "ACTIVE");
+  const pmItem = ci.find((x) => (x.requirement as { key: string } | null)?.key === "PAYMENT_METHOD");
+
+  async function savePaymentMethod() {
+    if (!pm?.method) return toast.error("יש לבחור אמצעי תשלום");
+    const { error } = await supabase.from("customers").update({ payment_method: pm.method, payment_method_details: pm.details.trim() || null }).eq("id", id);
+    if (error) return toast.error(friendlyError(error));
+    if (pmItem && pmItem.status !== "VALID") await supabase.from("customer_compliance_items").update({ status: "VALID", completed_at: new Date().toISOString() }).eq("id", pmItem.id);
+    toast.success("אמצעי התשלום נשמר");
+    setPm(null);
+    invalidate();
+  }
+  async function approveHealth() {
+    if (!healthItem) return;
+    if (!approveDate || new Date(approveDate).getTime() < Date.now()) return toast.error("יש לבחור תאריך תוקף עתידי");
+    const { error } = await supabase.from("customer_compliance_items").update({ status: "VALID", completed_at: new Date().toISOString(), expires_at: new Date(approveDate + "T23:59:00").toISOString() }).eq("id", healthItem.id);
+    if (error) return toast.error(friendlyError(error));
+    toast.success("הצהרת הבריאות אושרה");
+    invalidate();
+  }
 
   async function upload(file: File) {
     const path = `${org.id}/${id}/${Date.now()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
@@ -123,6 +149,7 @@ function Customer360() {
               <h1 className="text-xl font-semibold">{c.full_name}</h1>
               {activeM ? <StatusBadge tone={activeM.status === "ACTIVE" ? "ok" : "neutral"}>{MEMBERSHIP_STATUS[activeM.status]}</StatusBadge> : <StatusBadge tone="attention">ללא מנוי</StatusBadge>}
               {c.status !== "ACTIVE" && <StatusBadge>{CUSTOMER_STATUS[c.status]}</StatusBadge>}
+              {blocked && <StatusBadge tone="critical">כניסה חסומה עד חתימה ואישור הצהרת בריאות</StatusBadge>}
             </div>
             <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
               {c.phone && <a href={`tel:${c.phone}`} className="num inline-flex items-center gap-1 hover:text-foreground"><Phone className="size-3.5" />{c.phone}</a>}
@@ -130,6 +157,8 @@ function Customer360() {
               {activeM && <span>{activeM.display_name} · {fmtMoney(activeM.price)}</span>}
               <span>סניף: {branchName(c.home_branch_id)}</span>
               {c.national_id && <span className="num">ת״ז {c.national_id}</span>}
+              <span>אמצעי תשלום: {c.payment_method ? PAYMENT_METHOD[c.payment_method] : "לא הוגדר"}{c.payment_method_details && <span className="num"> ···{c.payment_method_details}</span>}</span>
+              <span>הצהרת בריאות: <span className={hs === "VALID" ? "" : hs === "EXPIRING" || hs === "PENDING" ? "text-attention" : "text-critical"}>{HEALTH_LABEL[hs]}</span>{healthItem?.expires_at && <span className="num"> · עד {fmtDate(healthItem.expires_at)}</span>}</span>
             </div>
           </div>
           <TaskDialog entityType="customer" entityId={id} branchId={c.home_branch_id} trigger={<Button variant="outline"><Plus className="size-4" /> משימה</Button>} />
@@ -173,6 +202,45 @@ function Customer360() {
               </li>
               {ci.filter((x) => x.status !== "NOT_REQUIRED").map((x) => {
                 const r = x.requirement as { key: string; name: string } | null;
+                if (r?.key === "HEALTH_DECLARATION") return (
+                  <li key={x.id} className="space-y-2 px-4 py-2.5 text-sm">
+                    <div className="flex items-center justify-between gap-2">
+                      <span>{r.name}{x.expires_at && <span className="num ms-2 text-xs text-muted-foreground">תוקף עד {fmtDate(x.expires_at)}</span>}</span>
+                      <div className="flex items-center gap-2">
+                        <SeverityBadge severity={healthSeverity(hs) as "OK"} label={HEALTH_LABEL[hs]} />
+                        {hs !== "PENDING" && hs !== "VALID" && <Button size="sm" variant="ghost" onClick={() => openUpload("HEALTH_DECLARATION")}><FileUp className="size-4" /> העלה חתומה</Button>}
+                      </div>
+                    </div>
+                    {hs === "PENDING" && (isManager ? (
+                      <div className="flex flex-wrap items-center gap-2 rounded-md bg-muted/50 p-2">
+                        <span className="text-xs text-muted-foreground">הצהרה חדשה ממתינה. תוקף עד:</span>
+                        <Input type="date" dir="ltr" value={approveDate} onChange={(e) => setApproveDate(e.target.value)} className="h-8 w-40" />
+                        <Button size="sm" onClick={approveHealth}>אשר הצהרה</Button>
+                      </div>
+                    ) : <p className="text-xs text-muted-foreground">ההצהרה ממתינה לאישור מנהל.</p>)}
+                  </li>
+                );
+                if (r?.key === "PAYMENT_METHOD") return (
+                  <li key={x.id} className="space-y-2 px-4 py-2.5 text-sm">
+                    <div className="flex items-center justify-between gap-2">
+                      <span>{r.name}{c.payment_method && <span className="ms-2 text-xs text-muted-foreground">{PAYMENT_METHOD[c.payment_method]}{c.payment_method_details ? ` ···${c.payment_method_details}` : ""}</span>}</span>
+                      <div className="flex items-center gap-2">
+                        {x.status === "VALID" ? <SeverityBadge severity="OK" /> : <SeverityBadge severity="HIGH" label={COMPLIANCE_STATUS[x.status]} />}
+                        <Button size="sm" variant="ghost" onClick={() => setPm(pm ? null : { method: c.payment_method ?? "", details: c.payment_method_details ?? "" })}>{c.payment_method ? "עדכון" : "הגדר"}</Button>
+                      </div>
+                    </div>
+                    {pm && (
+                      <div className="flex flex-wrap items-center gap-2 rounded-md bg-muted/50 p-2">
+                        <Select value={pm.method} onValueChange={(v) => setPm({ ...pm, method: v })}>
+                          <SelectTrigger className="h-8 w-40"><SelectValue placeholder="אמצעי תשלום" /></SelectTrigger>
+                          <SelectContent>{Object.entries(PAYMENT_METHOD).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <Input dir="ltr" value={pm.details} maxLength={4} inputMode="numeric" placeholder="4 ספרות אחרונות" onChange={(e) => setPm({ ...pm, details: e.target.value.replace(/\D/g, "") })} className="h-8 w-32" />
+                        <Button size="sm" onClick={savePaymentMethod}>שמור</Button>
+                      </div>
+                    )}
+                  </li>
+                );
                 const ok = x.status === "VALID";
                 return (
                   <li key={x.id} className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm">

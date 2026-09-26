@@ -9,6 +9,7 @@ import { useInsights, useInvalidateAll } from "@/lib/queries";
 import { friendlyError } from "@/lib/errors";
 import { RULES, healthLabel, insightTargetId, worst, type Insight } from "@/lib/rules";
 import { CUSTOMER_STATUS, MEMBERSHIP_STATUS, fmtDate, isValidIsraeliPhone } from "@/lib/format";
+import { PAYMENT_METHOD, HEALTH_LABEL, healthState, healthSeverity, entryBlocked } from "@/lib/health";
 import { SeverityBadge, StatusBadge } from "@/components/app/badges";
 import { EmptyState, ErrorState, FilterChips, PageHeader, TableSkeleton } from "@/components/app/states";
 import { Button } from "@/components/ui/button";
@@ -115,11 +116,15 @@ function CustomersPage() {
     queryFn: async () => {
       let q = supabase.from("customers").select("*").eq("organization_id", org.id).is("deleted_at", null).order("joined_at", { ascending: false }).limit(5000);
       if (branchId) q = q.eq("home_branch_id", branchId);
-      const [c, m, p] = await Promise.all([
+      const [c, m, p, h] = await Promise.all([
         q,
         supabase.from("memberships").select("customer_id,display_name,status,price").eq("organization_id", org.id).order("created_at", { ascending: false }),
         supabase.from("payments").select("customer_id,paid_at,amount").eq("organization_id", org.id).eq("status", "PAID").limit(20000),
+        supabase.from("customer_compliance_items").select("customer_id,status,expires_at,requirement:compliance_requirements!inner(key)").eq("organization_id", org.id).eq("requirement.key", "HEALTH_DECLARATION").limit(20000),
       ]);
+      if (h.error) throw h.error;
+      const health = new Map<string, { status: string; expires_at: string | null }>();
+      h.data.forEach((x) => health.set(x.customer_id, x));
       if (c.error) throw c.error;
       if (m.error) throw m.error;
       if (p.error) throw p.error;
@@ -132,7 +137,7 @@ function CustomersPage() {
         if (x.paid_at && (!cur.last || x.paid_at > cur.last)) cur.last = x.paid_at;
         buys.set(x.customer_id, cur);
       });
-      return { customers: c.data, ms, buys };
+      return { customers: c.data, ms, buys, health };
     },
   });
 
@@ -292,6 +297,9 @@ function CustomersPage() {
         const m = data.data?.ms?.get(c.id);
         const b = data.data?.buys?.get(c.id);
         const iss = byCust.get(c.id) ?? [];
+        const hItem = data.data?.health?.get(c.id);
+        const hs = healthState(hItem);
+        const blocked = entryBlocked(hs, m?.status === "ACTIVE");
         const Row = ({ k, v }: { k: string; v: React.ReactNode }) => (
           <div className="flex items-center justify-between gap-4 border-b py-2 last:border-0"><span className="text-sm text-muted-foreground">{k}</span><span className="text-sm">{v}</span></div>
         );
@@ -306,6 +314,9 @@ function CustomersPage() {
                 <Row k="אימייל" v={<span dir="ltr">{c.email ?? "—"}</span>} />
                 <Row k="מנוי" v={m?.display_name ?? "ללא מנוי"} />
                 <Row k="סטטוס מנוי" v={m ? <StatusBadge tone={m.status === "ACTIVE" ? "ok" : m.status === "CANCELLED" ? "critical" : "neutral"}>{MEMBERSHIP_STATUS[m.status]}</StatusBadge> : "—"} />
+                <Row k="אמצעי תשלום" v={c.payment_method ? <>{PAYMENT_METHOD[c.payment_method]}{c.payment_method_details && <span className="num"> ···{c.payment_method_details}</span>}</> : "לא הוגדר"} />
+                <Row k="הצהרת בריאות" v={<span className="flex items-center gap-2">{hItem?.expires_at && <span className="num text-xs text-muted-foreground">עד {fmtDate(hItem.expires_at)}</span>}<SeverityBadge severity={healthSeverity(hs) as "OK"} label={HEALTH_LABEL[hs]} /></span>} />
+                {blocked && <div className="my-2 rounded-md bg-critical-soft px-3 py-2 text-sm text-critical">כניסה חסומה עד שהלקוח יחתום מחדש על הצהרת בריאות והיא תאושר.</div>}
                 <Row k="רכישות" v={b ? <><span className="num">{b.count}</span>{b.last && <span className="ms-1 text-xs text-muted-foreground">· אחרונה {fmtDate(b.last)}</span>}</> : "—"} />
                 <Row k="סניף" v={branchName(c.home_branch_id)} />
                 <Row k="הצטרפות" v={<span className="num">{fmtDate(c.joined_at)}</span>} />
