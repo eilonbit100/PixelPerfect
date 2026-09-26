@@ -17,6 +17,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+type SearchField = "all" | "name" | "phone" | "nid" | "nid4";
+const FIELD_PLACEHOLDER: Record<SearchField, string> = {
+  all: "חיפוש לפי שם, טלפון או ת״ז",
+  name: "הקלד שם מלא",
+  phone: "הקלד מספר טלפון",
+  nid: "הקלד מספר תעודת זהות",
+  nid4: "4 ספרות אחרונות",
+};
+
 type Search = { filter?: string; rule?: string; q?: string };
 
 export const Route = createFileRoute("/_authenticated/_shell/customers/")({
@@ -88,6 +97,7 @@ function CustomersPage() {
   const { org, branchId, branchName } = useOrg();
   const insights = useInsights();
   const filter = search.filter ?? "all";
+  const [field, setField] = useState<SearchField>("all");
   const [qInput, setQInput] = useState(search.q ?? "");
   const [q, setQ] = useState(search.q ?? "");
   useEffect(() => {
@@ -143,19 +153,26 @@ function CustomersPage() {
     if (!q) return all;
     const text = q.toLowerCase();
     const digits = q.replace(/\D/g, "");
+    const byName = (c: (typeof all)[number]) => c.full_name.toLowerCase().includes(text);
+    const byPhone = (c: (typeof all)[number]) => {
+      if (!digits) return false;
+      const phone = (c.phone ?? "").replace(/\D/g, "");
+      const local = phone.startsWith("972") ? "0" + phone.slice(3) : phone;
+      return local.includes(digits) || phone.includes(digits);
+    };
+    const nidOf = (c: (typeof all)[number]) => (c.national_id ?? "").replace(/\D/g, "");
     return all.filter((c) => {
-      if (c.full_name.toLowerCase().includes(text)) return true;
-      if (c.email && c.email.toLowerCase().includes(text)) return true;
-      if (digits.length >= 3) {
-        const phone = (c.phone ?? "").replace(/\D/g, "");
-        const local = phone.startsWith("972") ? "0" + phone.slice(3) : phone;
-        if (local.includes(digits) || phone.includes(digits)) return true;
-        const nid = (c.national_id ?? "").replace(/\D/g, "");
-        if (digits.length === 4 ? nid.endsWith(digits) : nid.includes(digits)) return true;
+      switch (field) {
+        case "name": return byName(c);
+        case "phone": return byPhone(c);
+        case "nid": return !!digits && nidOf(c).includes(digits);
+        case "nid4": return !!digits && nidOf(c).endsWith(digits);
+        default:
+          return byName(c) || (!!c.email && c.email.toLowerCase().includes(text)) ||
+            (digits.length >= 3 && (byPhone(c) || (digits.length === 4 ? nidOf(c).endsWith(digits) : nidOf(c).includes(digits))));
       }
-      return false;
     });
-  }, [all, q]);
+  }, [all, q, field]);
 
   const rows = useMemo(() => {
     let list = searched;
@@ -191,12 +208,26 @@ function CustomersPage() {
         </div>
       )}
       <div className="mb-3 flex flex-col gap-3">
-        <div className="relative max-w-md">
+        <div className="flex max-w-xl gap-2">
+          <Select value={field} onValueChange={(v) => setField(v as SearchField)}>
+            <SelectTrigger className="w-40 shrink-0" aria-label="חיפוש לפי"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל השדות</SelectItem>
+              <SelectItem value="name">שם מלא</SelectItem>
+              <SelectItem value="phone">טלפון</SelectItem>
+              <SelectItem value="nid">תעודת זהות</SelectItem>
+              <SelectItem value="nid4">4 ספרות אחרונות ת״ז</SelectItem>
+            </SelectContent>
+          </Select>
+        <div className="relative flex-1">
           <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={qInput}
             onChange={(e) => setQInput(e.target.value)}
-            placeholder="חיפוש לפי שם מלא, טלפון או 4 ספרות אחרונות של ת״ז"
+            placeholder={FIELD_PLACEHOLDER[field]}
+            dir={field === "name" || field === "all" ? "rtl" : "ltr"}
+            inputMode={field === "name" || field === "all" ? "text" : "numeric"}
+            maxLength={field === "nid4" ? 4 : undefined}
             className="ps-9 pe-9"
             aria-label="חיפוש לקוחות"
           />
@@ -205,6 +236,7 @@ function CustomersPage() {
               <X className="size-3.5" />
             </button>
           )}
+        </div>
         </div>
         <FilterChips
           value={filter}
