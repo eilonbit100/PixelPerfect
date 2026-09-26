@@ -100,7 +100,7 @@ function CustomersPage() {
   }, [qInput]);
 
   const data = useQuery({
-    queryKey: ["customers", org.id, branchId],
+    queryKey: ["customers-list", org.id, branchId],
     queryFn: async () => {
       let q = supabase.from("customers").select("*").eq("organization_id", org.id).is("deleted_at", null).order("joined_at", { ascending: false }).limit(5000);
       if (branchId) q = q.eq("home_branch_id", branchId);
@@ -230,8 +230,8 @@ function CustomersPage() {
             <thead><tr><th>שם</th><th>טלפון</th><th>ת״ז</th><th>מנוי</th><th>סטטוס מנוי</th><th>רכישות</th><th>סניף</th><th>הצטרפות</th><th>תקינות</th></tr></thead>
             <tbody>
               {visible.map((c) => {
-                const m = data.data!.ms.get(c.id);
-                const b = data.data!.buys.get(c.id);
+                const m = data.data?.ms?.get(c.id);
+                const b = data.data?.buys?.get(c.id);
                 const iss = byCust.get(c.id) ?? [];
                 const w = worst(iss);
                 return (
