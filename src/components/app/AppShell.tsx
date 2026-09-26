@@ -55,7 +55,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
         <span className="text-[15px] font-semibold tracking-tight">Pulse</span>
       </div>
       <nav className="flex-1 space-y-0.5 px-2">
-        {NAV.map((n) => {
+        {NAV.filter((n) => n.to !== "/approvals" || role !== "EMPLOYEE").map((n) => {
           const active = path === n.to || path.startsWith(n.to + "/");
           return (
             <Link
