@@ -78,11 +78,11 @@ export function DailyPlanManager() {
       {q.isLoading ? <div className="p-4"><Skeleton className="h-4 w-full" /></div> : !d?.tasks.length ? (
         <p className="px-4 py-5 text-sm text-muted-foreground">המערכת תסדר את המשימות הפתוחות לפי דחיפות ותחלק אותן לעובדים לפי תפקיד ועומס. אחר כך תוכל לשנות ולאשר.</p>
       ) : (
-        <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 [&>div]:border-b [&>div]:border-e">
           {byMember.map(([mid, list]) => {
             const c = list.filter((t) => t.status === "COMPLETED").length;
             return (
-              <div key={mid} className="bg-card p-3">
+              <div key={mid} className="p-3">
                 <div className="mb-2 flex items-center justify-between text-xs">
                   <span className="font-medium text-foreground">{mid === "none" ? "ללא אחראי" : memberName(mid)}</span>
                   <span className="num text-muted-foreground">{c}/{list.length}</span>
