@@ -2,7 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, X, Search as SearchIcon } from "lucide-react";
+import { Plus, X, Search as SearchIcon, Megaphone } from "lucide-react";
+import { CustomerPhoto } from "@/components/app/CustomerPhoto";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { useInsights, useInvalidateAll } from "@/lib/queries";
@@ -306,7 +307,8 @@ function CustomersPage() {
         return (
           <Dialog open onOpenChange={(o) => !o && setOpenId(null)}>
             <DialogContent dir="rtl" className="sm:max-w-md">
-              <DialogHeader><DialogTitle>{c.full_name}</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle className="flex items-center gap-3"><CustomerPhoto name={c.full_name} path={c.photo_path} size={48} />{c.full_name}</DialogTitle></DialogHeader>
+              {c.desk_note && <div className="flex items-center gap-2 rounded-md bg-attention-soft px-3 py-2 text-sm font-medium"><Megaphone className="size-4 text-attention" />{c.desk_note}</div>}
               <div>
                 <Row k="סטטוס לקוח" v={CUSTOMER_STATUS[c.status]} />
                 <Row k="טלפון" v={<span className="num" dir="ltr">{c.phone ?? "—"}</span>} />

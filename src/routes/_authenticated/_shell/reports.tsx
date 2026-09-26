@@ -11,7 +11,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, fmtTime } from "@/lib/format";
+import { ENTRY_REASON } from "@/lib/entry";
 import { RuleLink } from "@/components/app/InsightLink";
 
 export const Route = createFileRoute("/_authenticated/_shell/reports")({
