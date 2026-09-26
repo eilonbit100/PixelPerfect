@@ -32,9 +32,9 @@ function BranchSelector() {
   if (branches.length <= 1) return <div className="truncate text-sm">{branches[0]?.name ?? "—"}</div>;
   return (
     <DropdownMenu dir="rtl">
-      <DropdownMenuTrigger className="flex w-full items-center justify-between gap-2 rounded-md border bg-surface px-2.5 py-1.5 text-sm hover:bg-muted">
-        <span className="flex items-center gap-2 truncate"><Building2 className="size-4 text-muted-foreground" />{branchId ? branchName(branchId) : "כל הסניפים"}</span>
-        <ChevronDown className="size-4 text-muted-foreground" />
+      <DropdownMenuTrigger className="flex w-full items-center justify-between gap-2 rounded-md border border-sidebar-border bg-sidebar-accent px-2.5 py-1.5 text-sm hover:bg-sidebar-accent/80">
+        <span className="flex items-center gap-2 truncate"><Building2 className="size-4 text-sidebar-foreground/60" />{branchId ? branchName(branchId) : "כל הסניפים"}</span>
+        <ChevronDown className="size-4 text-sidebar-foreground/60" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuItem onClick={() => { setBranchId(null); qc.invalidateQueries(); }}>כל הסניפים</DropdownMenuItem>
@@ -53,7 +53,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 px-4 pt-5 pb-6">
-        <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground"><Activity className="size-4" /></span>
+        <span className="flex size-7 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground"><Activity className="size-4" /></span>
         <span className="text-[15px] font-semibold tracking-tight">Pulse</span>
       </div>
       <nav className="flex-1 space-y-0.5 px-2">
@@ -69,7 +69,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
                 active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60",
               )}
             >
-              <n.icon className={cn("size-4", active ? "text-primary" : "text-muted-foreground")} />
+              <n.icon className={cn("size-4", active ? "text-sidebar-primary" : "text-sidebar-foreground/60")} />
               {n.label}
             </Link>
           );
@@ -77,18 +77,18 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
       <div className="space-y-3 border-t border-sidebar-border p-3">
         <div>
-          <div className="eyebrow mb-1">ארגון</div>
+          <div className="text-[0.72rem] font-semibold text-sidebar-foreground/60 mb-1">ארגון</div>
           <div className="truncate text-sm font-medium">{org.name}</div>
         </div>
         <div>
-          <div className="eyebrow mb-1">סניף</div>
+          <div className="text-[0.72rem] font-semibold text-sidebar-foreground/60 mb-1">סניף</div>
           <BranchSelector />
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <span className="flex size-7 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">{profileName.slice(0, 1)}</span>
+          <span className="flex size-7 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">{profileName.slice(0, 1)}</span>
           <div className="min-w-0 leading-tight">
             <div className="truncate text-sm">{profileName}</div>
-            <div className="text-xs text-muted-foreground">{ROLE[role]}</div>
+            <div className="text-xs text-sidebar-foreground/60">{ROLE[role]}</div>
           </div>
         </div>
       </div>
@@ -234,7 +234,7 @@ function UserMenu() {
   return (
     <DropdownMenu dir="rtl">
       <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-muted" aria-label="תפריט משתמש">
-        <span className="flex size-7 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">{profileName.slice(0, 1)}</span>
+        <span className="flex size-7 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">{profileName.slice(0, 1)}</span>
         <span className="hidden text-sm md:inline">{profileName}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -254,11 +254,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [drawer, setDrawer] = useState(false);
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-e border-sidebar-border bg-sidebar lg:block">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-e border-sidebar-border bg-sidebar text-sidebar-foreground lg:block">
         <SidebarBody />
       </aside>
       <Sheet open={drawer} onOpenChange={setDrawer}>
-        <SheetContent side="right" className="w-64 bg-sidebar p-0" dir="rtl">
+        <SheetContent side="right" className="w-64 bg-sidebar p-0 text-sidebar-foreground" dir="rtl">
           <SheetTitle className="sr-only">ניווט</SheetTitle>
           <SidebarBody onNavigate={() => setDrawer(false)} />
         </SheetContent>
