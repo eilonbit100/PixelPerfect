@@ -32,9 +32,9 @@ function BranchSelector() {
   if (branches.length <= 1) return <div className="truncate text-sm">{branches[0]?.name ?? "—"}</div>;
   return (
     <DropdownMenu dir="rtl">
-      <DropdownMenuTrigger className="flex w-full items-center justify-between gap-2 rounded-md border bg-surface px-2.5 py-1.5 text-sm hover:bg-muted">
-        <span className="flex items-center gap-2 truncate"><Building2 className="size-4 text-muted-foreground" />{branchId ? branchName(branchId) : "כל הסניפים"}</span>
-        <ChevronDown className="size-4 text-muted-foreground" />
+      <DropdownMenuTrigger className="flex w-full items-center justify-between gap-2 rounded-md border border-sidebar-border bg-sidebar-accent px-2.5 py-1.5 text-sm hover:bg-sidebar-accent/80">
+        <span className="flex items-center gap-2 truncate"><Building2 className="size-4 text-sidebar-foreground/60" />{branchId ? branchName(branchId) : "כל הסניפים"}</span>
+        <ChevronDown className="size-4 text-sidebar-foreground/60" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuItem onClick={() => { setBranchId(null); qc.invalidateQueries(); }}>כל הסניפים</DropdownMenuItem>
@@ -85,7 +85,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
           <BranchSelector />
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <span className="flex size-7 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">{profileName.slice(0, 1)}</span>
+          <span className="flex size-7 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">{profileName.slice(0, 1)}</span>
           <div className="min-w-0 leading-tight">
             <div className="truncate text-sm">{profileName}</div>
             <div className="text-xs text-sidebar-foreground/60">{ROLE[role]}</div>
@@ -234,7 +234,7 @@ function UserMenu() {
   return (
     <DropdownMenu dir="rtl">
       <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-muted" aria-label="תפריט משתמש">
-        <span className="flex size-7 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">{profileName.slice(0, 1)}</span>
+        <span className="flex size-7 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">{profileName.slice(0, 1)}</span>
         <span className="hidden text-sm md:inline">{profileName}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
