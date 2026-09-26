@@ -78,12 +78,12 @@ function Schedule() {
       {q.isLoading ? <TableSkeleton /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : !q.data?.tpl.length ? (
         <div className="panel"><EmptyState title="אין עדיין שיעורים בסניף" text={isManager ? "הוסף שיעור קבוע כדי להתחיל." : "מנהל הסניף יוסיף שיעורים."} /></div>
       ) : (
-        <div className="grid gap-3 overflow-x-auto md:grid-cols-7">
+        <div className="overflow-x-auto"><div className="grid min-w-[900px] grid-cols-7 gap-2">
           {days.map((d, wd) => {
             const ds = isoDay(d);
             const isToday = ds === isoDay(new Date());
             return (
-              <div key={ds} className={`panel min-w-36 ${isToday ? "ring-2 ring-primary" : ""}`}>
+              <div key={ds} className={`panel min-w-0 ${isToday ? "ring-2 ring-primary" : ""}`}>
                 <div className="border-b px-3 py-2 text-sm font-medium">{WEEKDAYS[wd]} <span className="num text-xs text-muted-foreground">{d.getDate()}/{d.getMonth() + 1}</span></div>
                 <div className="space-y-2 p-2">
                   {q.data.tpl.filter((t) => t.weekday === wd).map((t) => {
@@ -103,7 +103,7 @@ function Schedule() {
               </div>
             );
           })}
-        </div>
+        </div></div>
       )}
       {open && q.data && (() => {
         const t = q.data.tpl.find((x) => x.id === open.id)!;

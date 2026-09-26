@@ -19,3 +19,6 @@
 - Demo login: username only; `demoLogin` server fn links an organization_members seat (by `username`) to an internal account and returns a one-time sign-in token — keeps auth.uid()/RLS intact so real auth can replace it later.
 - tsconfig relaxes noUncheckedIndexedAccess/exactOptionalPropertyTypes/noPropertyAccessFromIndexSignature/noImplicitReturns — generated DB types and jsonb metadata made them noise.
 - Roles: EMPLOYEE / BRANCH_MANAGER / HQ (permission) are separate from job_title (description only); approvals use approval_requests with DRAFT→PENDING_APPROVAL→APPROVED/REJECTED.
+- Entry decisions come only from `check_in_customer` RPC (uses `entry_block_reasons`) and are logged in `check_ins`; clients never decide or insert check-ins.
+- Freezes are inserted into `customer_freezes`; a trigger extends membership end_date and toggles FROZEN via `apply_freezes`.
+- Class schedule = recurring `class_templates` (weekday+time); bookings keyed by (template, session_date) via `book_class`/`cancel_booking` RPCs for atomic capacity/waitlist.
