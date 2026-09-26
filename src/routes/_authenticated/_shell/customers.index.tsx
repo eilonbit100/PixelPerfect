@@ -219,7 +219,7 @@ function CustomersPage() {
               <SelectItem value="nid4">4 ספרות אחרונות ת״ז</SelectItem>
             </SelectContent>
           </Select>
-        <div className="relative flex-1">
+        <div className="relative w-52">
           <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={qInput}
