@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "לוח בקרה", icon: LayoutDashboard },
   { to: "/checkin", label: "כניסה", icon: ScanLine },
   { to: "/customers", label: "לקוחות", icon: Users },
   { to: "/schedule", label: "מערכת שעות", icon: CalendarDays },
