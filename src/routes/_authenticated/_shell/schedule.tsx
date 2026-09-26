@@ -1,3 +1,4 @@
+import type React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -223,8 +224,8 @@ function NewClass({ orgId, branch, rooms, instructors, template, trigger, onDone
   );
 }
 
-function SessionDialog({ t, date, roomName, instructor, orgId, onClose }: {
-  t: { id: string; name: string; capacity: number; start_time: string }; date: string; roomName: string; instructor: string; orgId: string; onClose: () => void;
+function SessionDialog({ t, date, roomName, instructor, orgId, onClose, edit }: {
+  t: { id: string; name: string; capacity: number; start_time: string }; date: string; roomName: string; instructor: string; orgId: string; onClose: () => void; edit?: React.ReactNode;
 }) {
   const qc = useQueryClient();
   const [s, setS] = useState("");
@@ -305,7 +306,7 @@ function SessionDialog({ t, date, roomName, instructor, orgId, onClose }: {
             </>
           )}
         </div>
-        <DialogFooter><Button variant="ghost" onClick={onClose}>סגור</Button></DialogFooter>
+        <DialogFooter className="gap-2 sm:justify-between">{edit ?? <span />}<Button variant="ghost" onClick={onClose}>סגור</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
