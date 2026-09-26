@@ -1,8 +1,9 @@
+import type React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { friendlyError } from "@/lib/errors";
@@ -69,11 +70,25 @@ function Schedule() {
           )}
           {isManager && q.data && <NewClass orgId={org.id} branch={branch} rooms={q.data.rooms} instructors={instructors} />}
         </div>} />
-      <div className="mb-3 flex items-center gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <Button size="icon" variant="outline" onClick={() => setWeek(week - 1)} aria-label="שבוע קודם"><ChevronRight className="size-4" /></Button>
         <span className="num text-sm font-medium">{fmtDate(days[0].toISOString())} – {fmtDate(days[6].toISOString())}</span>
         <Button size="icon" variant="outline" onClick={() => setWeek(week + 1)} aria-label="שבוע הבא"><ChevronLeft className="size-4" /></Button>
         {week !== 0 && <Button size="sm" variant="ghost" onClick={() => setWeek(0)}>השבוע</Button>}
+        {q.data && q.data.tpl.length > 0 && (() => {
+          const cap = q.data.tpl.reduce((s, t) => s + t.capacity, 0);
+          const bk = q.data.bk.filter((b) => b.status === "BOOKED").length;
+          const wl = q.data.bk.filter((b) => b.status === "WAITLIST").length;
+          const full = q.data.tpl.filter((t) => days.some((d) => isoDay(d) && t.weekday === d.getDay() && count(t.id, isoDay(d), "BOOKED") >= t.capacity)).length;
+          return (
+            <div className="ms-auto flex flex-wrap gap-4 text-sm">
+              <span>שיעורים השבוע: <b className="num">{q.data.tpl.length}</b></span>
+              <span>הרשמות: <b className="num">{bk}/{cap}</b> <span className="num text-muted-foreground">({cap ? Math.round((bk / cap) * 100) : 0}%)</span></span>
+              <span>ממתינים: <b className="num">{wl}</b></span>
+              <span>שיעורים מלאים: <b className="num">{full}</b></span>
+            </div>
+          );
+        })()}
       </div>
       {q.isLoading ? <TableSkeleton /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : !q.data?.tpl.length ? (
         <div className="panel"><EmptyState title="אין עדיין שיעורים בסניף" text={isManager ? "הוסף שיעור קבוע כדי להתחיל." : "מנהל הסניף יוסיף שיעורים."} /></div>
@@ -88,15 +103,22 @@ function Schedule() {
                 <div className="space-y-2 p-2">
                   {q.data.tpl.filter((t) => t.weekday === wd).map((t) => {
                     const n = count(t.id, ds, "BOOKED"), w = count(t.id, ds, "WAITLIST");
-                    const full = n >= t.capacity;
+                    const pct = Math.min(100, Math.round((n / t.capacity) * 100));
+                    const tone = n >= t.capacity ? "bg-critical" : pct >= 75 ? "bg-warning" : "bg-primary";
                     return (
-                      <button key={t.id} onClick={() => setOpen({ id: t.id, date: ds })} className="w-full rounded-md border bg-background p-2 text-start text-xs hover:border-primary">
-                        <div className="num font-semibold">{t.start_time.slice(0, 5)}</div>
-                        <div className="text-sm font-medium">{t.name}</div>
-                        <div className="text-muted-foreground">{roomName(t.room_id)}</div>
-                        <div className="truncate text-muted-foreground">{memberName(t.instructor_member_id)}</div>
-                        <div className={`mt-1 num ${full ? "text-critical font-medium" : ""}`}>{n}/{t.capacity}{w > 0 && <span className="text-muted-foreground"> · המתנה {w}</span>}</div>
-                      </button>
+                      <div key={t.id} className="group relative rounded-md border bg-background text-xs hover:border-primary">
+                        <button onClick={() => setOpen({ id: t.id, date: ds })} className="w-full p-2 text-start">
+                          <div className="num font-semibold">{t.start_time.slice(0, 5)} <span className="font-normal text-muted-foreground">· {t.duration_min} ד׳</span></div>
+                          <div className="text-sm font-medium">{t.name}</div>
+                          <div className="truncate text-muted-foreground">{roomName(t.room_id)} · {memberName(t.instructor_member_id)}</div>
+                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted"><div className={`h-full ${tone}`} style={{ width: `${pct}%` }} /></div>
+                          <div className="mt-1 num">{n}/{t.capacity}{n >= t.capacity && <span className="text-critical font-medium"> · מלא</span>}{w > 0 && <span className="text-muted-foreground"> · המתנה {w}</span>}</div>
+                        </button>
+                        {isManager && (
+                          <NewClass orgId={org.id} branch={branch} rooms={q.data.rooms} instructors={instructors} template={t}
+                            trigger={<button className="absolute end-1 top-1 rounded p-1 text-muted-foreground opacity-0 hover:bg-muted group-hover:opacity-100 focus:opacity-100" aria-label="עריכת שיעור"><Pencil className="size-3.5" /></button>} />
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -106,19 +128,32 @@ function Schedule() {
         </div></div>
       )}
       {open && q.data && (() => {
-        const t = q.data.tpl.find((x) => x.id === open.id)!;
-        return <SessionDialog t={t} date={open.date} roomName={roomName(t.room_id)} instructor={memberName(t.instructor_member_id)} orgId={org.id} onClose={() => setOpen(null)} />;
+        const t = q.data.tpl.find((x) => x.id === open.id);
+        if (!t) return null;
+        return <SessionDialog t={t} date={open.date} roomName={roomName(t.room_id)} instructor={memberName(t.instructor_member_id)} orgId={org.id} onClose={() => setOpen(null)}
+          edit={isManager ? <NewClass orgId={org.id} branch={branch} rooms={q.data.rooms} instructors={instructors} template={t} onDone={() => setOpen(null)} trigger={<Button variant="outline" size="sm"><Pencil className="size-4" /> עריכת שיעור</Button>} /> : null} />;
       })()}
     </div>
   );
 }
 
-function NewClass({ orgId, branch, rooms, instructors }: { orgId: string; branch: string; rooms: { id: string; name: string }[]; instructors: { id: string; display_name: string | null }[] }) {
+type Tpl = { id: string; name: string; room_id: string; instructor_member_id: string | null; weekday: number; start_time: string; duration_min: number; capacity: number };
+
+function NewClass({ orgId, branch, rooms, instructors, template, trigger, onDone }: {
+  orgId: string; branch: string; rooms: { id: string; name: string }[]; instructors: { id: string; display_name: string | null }[];
+  template?: Tpl; trigger?: React.ReactNode; onDone?: () => void;
+}) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ name: "", room: rooms[0]?.id ?? "", newRoom: "", instructor: "", weekday: "0", time: "18:00", duration: "50", capacity: "20" });
+  const init = () => template
+    ? { name: template.name, room: template.room_id, newRoom: "", instructor: template.instructor_member_id ?? "", weekday: String(template.weekday), time: template.start_time.slice(0, 5), duration: String(template.duration_min), capacity: String(template.capacity) }
+    : { name: "", room: rooms[0]?.id ?? "", newRoom: "", instructor: "", weekday: "0", time: "18:00", duration: "50", capacity: "20" };
+  const [f, setF] = useState(init);
+  const done = () => { setOpen(false); qc.invalidateQueries({ queryKey: ["schedule"] }); qc.invalidateQueries({ queryKey: ["session"] }); onDone?.(); };
   async function save() {
     if (!f.name.trim()) return toast.error("יש להזין שם שיעור");
+    const cap = Number(f.capacity);
+    if (!cap || cap < 1) return toast.error("מספר המקומות חייב להיות לפחות 1");
     let room = f.room;
     if (f.newRoom.trim()) {
       const r = await supabase.from("class_rooms").insert({ organization_id: orgId, branch_id: branch, name: f.newRoom.trim() }).select("id").single();
@@ -126,22 +161,28 @@ function NewClass({ orgId, branch, rooms, instructors }: { orgId: string; branch
       room = r.data.id;
     }
     if (!room) return toast.error("יש לבחור חדר או להוסיף חדר חדש");
-    const { error } = await supabase.from("class_templates").insert({
-      organization_id: orgId, branch_id: branch, room_id: room, name: f.name.trim(), instructor_member_id: f.instructor || null,
-      weekday: Number(f.weekday), start_time: f.time, duration_min: Number(f.duration) || 50, capacity: Number(f.capacity) || 20,
-    });
+    const row = { room_id: room, name: f.name.trim(), instructor_member_id: f.instructor || null, weekday: Number(f.weekday), start_time: f.time, duration_min: Number(f.duration) || 50, capacity: cap };
+    const { error } = template
+      ? await supabase.from("class_templates").update(row).eq("id", template.id)
+      : await supabase.from("class_templates").insert({ organization_id: orgId, branch_id: branch, ...row });
     if (error) return toast.error(friendlyError(error));
-    toast.success("השיעור נוסף למערכת השעות");
-    setOpen(false);
-    qc.invalidateQueries({ queryKey: ["schedule"] });
+    toast.success(template ? "השיעור עודכן" : "השיעור נוסף למערכת השעות");
+    done();
+  }
+  async function remove() {
+    if (!template || !confirm("להסיר את השיעור ממערכת השעות? הרשמות קודמות יישמרו.")) return;
+    const { error } = await supabase.from("class_templates").update({ active: false }).eq("id", template.id);
+    if (error) return toast.error(friendlyError(error));
+    toast.success("השיעור הוסר ממערכת השעות");
+    done();
   }
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button><Plus className="size-4" /> שיעור חדש</Button></DialogTrigger>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setF(init()); }}>
+      <DialogTrigger asChild>{trigger ?? <Button><Plus className="size-4" /> שיעור חדש</Button>}</DialogTrigger>
       <DialogContent dir="rtl" className="sm:max-w-md">
-        <DialogHeader><DialogTitle>שיעור קבוע חדש</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{template ? "עריכת שיעור" : "שיעור קבוע חדש"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div className="space-y-1.5"><Label>שם השיעור</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} autoFocus /></div>
+          <div className="space-y-1.5"><Label>סוג האימון</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="למשל: יוגה, HIIT, פילאטיס מכשירים" autoFocus /></div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5"><Label>חדר</Label>
               <Select value={f.room} onValueChange={(v) => setF({ ...f, room: v })}>
@@ -151,10 +192,13 @@ function NewClass({ orgId, branch, rooms, instructors }: { orgId: string; branch
             </div>
             <div className="space-y-1.5"><Label>או חדר חדש</Label><Input value={f.newRoom} onChange={(e) => setF({ ...f, newRoom: e.target.value })} /></div>
           </div>
-          <div className="space-y-1.5"><Label>מדריך</Label>
-            <Select value={f.instructor} onValueChange={(v) => setF({ ...f, instructor: v })}>
+          <div className="space-y-1.5"><Label>מאמן</Label>
+            <Select value={f.instructor || "none"} onValueChange={(v) => setF({ ...f, instructor: v === "none" ? "" : v })}>
               <SelectTrigger><SelectValue placeholder="בחר מהצוות" /></SelectTrigger>
-              <SelectContent>{instructors.map((m) => <SelectItem key={m.id} value={m.id}>{m.display_name ?? "—"}</SelectItem>)}</SelectContent>
+              <SelectContent>
+                <SelectItem value="none">ללא מאמן</SelectItem>
+                {instructors.map((m) => <SelectItem key={m.id} value={m.id}>{m.display_name ?? "—"}</SelectItem>)}
+              </SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -167,18 +211,21 @@ function NewClass({ orgId, branch, rooms, instructors }: { orgId: string; branch
             <div className="space-y-1.5"><Label>שעה</Label><Input type="time" value={f.time} onChange={(e) => setF({ ...f, time: e.target.value })} /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>משך (דקות)</Label><Input type="number" value={f.duration} onChange={(e) => setF({ ...f, duration: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>מקסימום משתתפים</Label><Input type="number" value={f.capacity} onChange={(e) => setF({ ...f, capacity: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>משך (דקות)</Label><Input type="number" min={10} value={f.duration} onChange={(e) => setF({ ...f, duration: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>מקומות להרשמה</Label><Input type="number" min={1} value={f.capacity} onChange={(e) => setF({ ...f, capacity: e.target.value })} /></div>
           </div>
         </div>
-        <DialogFooter className="gap-2"><Button onClick={save}>הוסף</Button><Button variant="ghost" onClick={() => setOpen(false)}>ביטול</Button></DialogFooter>
+        <DialogFooter className="gap-2 sm:justify-between">
+          <div className="flex gap-2"><Button onClick={save}>{template ? "שמור" : "הוסף"}</Button><Button variant="ghost" onClick={() => setOpen(false)}>ביטול</Button></div>
+          {template && <Button variant="ghost" className="text-critical" onClick={remove}><Trash2 className="size-4" /> הסר שיעור</Button>}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-function SessionDialog({ t, date, roomName, instructor, orgId, onClose }: {
-  t: { id: string; name: string; capacity: number; start_time: string }; date: string; roomName: string; instructor: string; orgId: string; onClose: () => void;
+function SessionDialog({ t, date, roomName, instructor, orgId, onClose, edit }: {
+  t: { id: string; name: string; capacity: number; start_time: string }; date: string; roomName: string; instructor: string; orgId: string; onClose: () => void; edit?: React.ReactNode;
 }) {
   const qc = useQueryClient();
   const [s, setS] = useState("");
@@ -259,7 +306,7 @@ function SessionDialog({ t, date, roomName, instructor, orgId, onClose }: {
             </>
           )}
         </div>
-        <DialogFooter><Button variant="ghost" onClick={onClose}>סגור</Button></DialogFooter>
+        <DialogFooter className="gap-2 sm:justify-between">{edit ?? <span />}<Button variant="ghost" onClick={onClose}>סגור</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
