@@ -47,7 +47,7 @@ function LeadsPage() {
   const leads = useQuery({
     queryKey: ["leads", org.id, branchId],
     queryFn: async () => {
-      let q = supabase.from("leads").select("*").eq("organization_id", org.id).is("deleted_at", null).order("created_at", { ascending: false }).limit(1000);
+      let q = supabase.from("leads").select("*").eq("organization_id", org.id).is("deleted_at", null).is("converted_customer_id", null).neq("status", "WON").order("created_at", { ascending: false }).limit(1000);
       if (branchId) q = q.eq("branch_id", branchId);
       const { data, error } = await q;
       if (error) throw error;
@@ -109,7 +109,6 @@ function LeadsPage() {
     { value: "follow_up", label: "מעקב" },
     { value: "overdue", label: "משימות באיחור" },
     { value: "no_task", label: "ללא משימה" },
-    { value: "won", label: "נמכרו" },
     { value: "lost", label: "לא רלוונטיים" },
   ];
   const set = (patch: Partial<Search>) => navigate({ search: (p: Search) => ({ ...p, ...patch }) });
