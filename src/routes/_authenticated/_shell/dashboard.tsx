@@ -133,6 +133,44 @@ function Copilot({ groups }: { groups: { rule: string; list: Insight[] }[] }) {
   );
 }
 
+function InsightList({ title, hint, groups, empty }: { title: string; hint: string; groups: { rule: string; list: Insight[] }[]; empty: string }) {
+  const n = groups.reduce((s, g) => s + g.list.length, 0);
+  return (
+    <div>
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-base font-semibold">{title}</h2>
+          <span className="text-xs text-muted-foreground">{hint}</span>
+        </div>
+        {!!n && <span className="num text-xs text-muted-foreground">{n} פריטים</span>}
+      </div>
+      <div className="panel divide-y overflow-hidden">
+        {!groups.length ? <p className="px-4 py-4 text-sm text-muted-foreground">{empty}</p> : groups.map(({ rule, list }) => {
+          const sev = worst(list)!;
+          const ui = SEVERITY_UI[sev];
+          const Icon = ui.icon;
+          const tone = ui.cls.split(" ")[1];
+          return (
+            <RuleLink key={rule} rule={rule} className="group flex items-center gap-3 px-4 py-3 hover:bg-accent">
+              <Icon className={"size-4 shrink-0 " + tone} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="truncate text-sm font-medium">{RULES[rule].group(list.length)}</span>
+                  <span className={"shrink-0 text-xs " + tone}>{ui.label}</span>
+                </div>
+                <p className="truncate text-xs text-muted-foreground">{breakdown(rule, list)}</p>
+              </div>
+              <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground group-hover:text-foreground">
+                {RULES[rule].cta} <ArrowLeft className="size-3.5" />
+              </span>
+            </RuleLink>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Dashboard() {
   const { org, branchId, profileName, me, memberName, role, branchName } = useOrg();
   useRefreshInsights();
@@ -201,41 +239,19 @@ function Dashboard() {
       {role === "EMPLOYEE" ? <DailyPlanEmployee /> : <DailyPlanManager />}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <section className="min-w-0 overflow-hidden">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold">דורש טיפול</h2>
-            {!!groups.length && <span className="text-xs text-muted-foreground num">{insights.data?.length} פריטים פתוחים</span>}
-          </div>
-          <div className="panel divide-y overflow-hidden">
-            {insights.isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => <div key={i} className="flex gap-3 p-4"><Skeleton className="size-8" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-56" /><Skeleton className="h-3 w-80" /></div></div>)
-            ) : insights.error ? (
-              <ErrorState onRetry={() => insights.refetch()} />
-            ) : !groups.length ? (
-              <EmptyState icon={<CheckCircle2 className="size-5 text-ok" />} title="הכל תקין" text="אין כרגע בעיות שדורשות טיפול. המערכת ממשיכה לבדוק ברקע." />
-            ) : (
-              groups.map(({ rule, list }) => {
-                const sev = worst(list)!;
-                const ui = SEVERITY_UI[sev];
-                const Icon = ui.icon;
-                return (
-                  <RuleLink key={rule} rule={rule} className="group flex items-center gap-3 px-4 py-3 hover:bg-accent">
-                    <Icon className={"size-4 shrink-0 " + ui.cls.split(" ")[1]} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="truncate text-sm font-medium">{RULES[rule].group(list.length)}</span>
-                        <span className={"shrink-0 text-xs " + ui.cls.split(" ")[1]}>{ui.label}</span>
-                      </div>
-                      <p className="truncate text-xs text-muted-foreground">{breakdown(rule, list)}</p>
-                    </div>
-                    <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground group-hover:text-foreground">
-                      {RULES[rule].cta} <ArrowLeft className="size-3.5" />
-                    </span>
-                  </RuleLink>
-                );
-              })
-            )}
-          </div>
+        <section className="min-w-0 space-y-6 overflow-hidden">
+          {insights.isLoading ? (
+            <div className="panel divide-y">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="p-4"><Skeleton className="h-4 w-56" /><Skeleton className="mt-2 h-3 w-80" /></div>)}</div>
+          ) : insights.error ? (
+            <div className="panel"><ErrorState onRetry={() => insights.refetch()} /></div>
+          ) : !groups.length ? (
+            <div className="panel"><EmptyState icon={<CheckCircle2 className="size-5 text-ok" />} title="הכל תקין" text="אין כרגע בעיות שדורשות טיפול. המערכת ממשיכה לבדוק ברקע." /></div>
+          ) : (
+            <>
+              <InsightList title="לביצוע היום" hint="קריטי — לטפל עוד היום" groups={groups.filter((g) => sevRank(worst(g.list)!) <= sevRank("HIGH"))} empty="אין היום משהו קריטי" />
+              <InsightList title="דורש טיפול" hint="פחות דחוף — אפשר בימים הקרובים" groups={groups.filter((g) => sevRank(worst(g.list)!) > sevRank("HIGH"))} empty="אין נושאים פתוחים" />
+            </>
+          )}
         </section>
 
         <aside className="space-y-6">
