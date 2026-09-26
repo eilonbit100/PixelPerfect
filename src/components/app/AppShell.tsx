@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  LayoutDashboard, Users, UserPlus, ListTodo, Package, BarChart3, Settings, Search, Bell, Menu, LogOut, Building2, ChevronDown, Activity, CheckSquare,
+  LayoutDashboard, Users, UserPlus, ListTodo, Package, BarChart3, Settings, Search, Bell, Menu, LogOut, Building2, ChevronDown, Activity, CheckSquare, ScanLine, CalendarDays,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
@@ -15,7 +15,9 @@ import {
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/checkin", label: "כניסה", icon: ScanLine },
   { to: "/customers", label: "לקוחות", icon: Users },
+  { to: "/schedule", label: "מערכת שעות", icon: CalendarDays },
   { to: "/leads", label: "לידים", icon: UserPlus },
   { to: "/tasks", label: "משימות", icon: ListTodo },
   { to: "/inventory", label: "מלאי", icon: Package },

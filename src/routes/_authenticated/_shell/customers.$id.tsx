@@ -18,6 +18,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { PAYMENT_METHOD, HEALTH_LABEL, healthState, healthSeverity, entryBlocked } from "@/lib/health";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ENTRY_REASON, FREEZE_REASON } from "@/lib/entry";
+import { fmtDateTime } from "@/lib/format";
+import { EditablePhoto } from "@/components/app/CustomerPhoto";
+import { DeskNote, FreezeDialog } from "@/components/app/CustomerExtras";
 
 export const Route = createFileRoute("/_authenticated/_shell/customers/$id")({
   head: () => ({
@@ -45,7 +49,7 @@ function Customer360() {
   const q = useQuery({
     queryKey: ["customer", id],
     queryFn: async () => {
-      const [c, m, p, ci, d, t, plans] = await Promise.all([
+      const [c, m, p, ci, d, t, plans, v, fz] = await Promise.all([
         supabase.from("customers").select("*").eq("id", id).maybeSingle(),
         supabase.from("memberships").select("*").eq("customer_id", id).order("created_at", { ascending: false }),
         supabase.from("payments").select("*").eq("customer_id", id).order("created_at", { ascending: false }),
@@ -53,15 +57,17 @@ function Customer360() {
         supabase.from("customer_documents").select("*").eq("customer_id", id).order("uploaded_at", { ascending: false }),
         supabase.from("tasks").select("*").eq("entity_type", "customer").eq("entity_id", id).is("deleted_at", null).order("due_at", { ascending: false }),
         supabase.from("membership_plans").select("*").eq("organization_id", org.id).eq("active", true),
+        supabase.from("check_ins").select("*").eq("customer_id", id).order("created_at", { ascending: false }).limit(100),
+        supabase.from("customer_freezes").select("*").eq("customer_id", id).order("start_date", { ascending: false }),
       ]);
-      for (const r of [c, m, p, ci, d, t, plans]) if (r.error) throw r.error;
-      return { c: c.data, m: m.data!, p: p.data!, ci: ci.data!, d: d.data!, t: t.data!, plans: plans.data! };
+      for (const r of [c, m, p, ci, d, t, plans, v, fz]) if (r.error) throw r.error;
+      return { c: c.data, m: m.data!, p: p.data!, ci: ci.data!, d: d.data!, t: t.data!, plans: plans.data!, v: v.data!, fz: fz.data! };
     },
   });
 
   if (q.isLoading) return <TableSkeleton rows={6} cols={3} />;
   if (q.error) return <ErrorState onRetry={() => q.refetch()} />;
-  const { c, m, p, ci, d, t, plans } = q.data!;
+  const { c, m, p, ci, d, t, plans, v, fz } = q.data!;
   if (!c) return <EmptyState title="הלקוח לא נמצא" action={<Link to="/customers" className="text-primary">חזרה ללקוחות</Link>} />;
 
   const issues = (insights.data ?? []).filter((i) => insightTargetId(i) === id);
@@ -70,6 +76,8 @@ function Customer360() {
   const healthItem = ci.find((x) => (x.requirement as { key: string } | null)?.key === "HEALTH_DECLARATION");
   const hs = healthState(healthItem);
   const blocked = entryBlocked(hs, activeM?.status === "ACTIVE");
+  const todayS = new Date().toISOString().slice(0, 10);
+  const frozenNow = fz.find((x) => x.start_date <= todayS && x.end_date >= todayS);
   const pmItem = ci.find((x) => (x.requirement as { key: string } | null)?.key === "PAYMENT_METHOD");
 
   async function savePaymentMethod() {
@@ -144,12 +152,15 @@ function Customer360() {
 
       <div className="panel mb-4 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+          <EditablePhoto orgId={org.id} customerId={id} name={c.full_name} path={c.photo_path} onSaved={invalidate} />
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-semibold">{c.full_name}</h1>
               {activeM ? <StatusBadge tone={activeM.status === "ACTIVE" ? "ok" : "neutral"}>{MEMBERSHIP_STATUS[activeM.status]}</StatusBadge> : <StatusBadge tone="attention">ללא מנוי</StatusBadge>}
               {c.status !== "ACTIVE" && <StatusBadge>{CUSTOMER_STATUS[c.status]}</StatusBadge>}
               {blocked && <StatusBadge tone="critical">כניסה חסומה עד חתימה ואישור הצהרת בריאות</StatusBadge>}
+              {frozenNow && <StatusBadge tone="attention">מוקפא עד {fmtDate(frozenNow.end_date)}</StatusBadge>}
             </div>
             <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
               {c.phone && <a href={`tel:${c.phone}`} className="num inline-flex items-center gap-1 hover:text-foreground"><Phone className="size-3.5" />{c.phone}</a>}
@@ -161,8 +172,13 @@ function Customer360() {
               <span>הצהרת בריאות: <span className={hs === "VALID" ? "" : hs === "EXPIRING" || hs === "PENDING" ? "text-attention" : "text-critical"}>{HEALTH_LABEL[hs]}</span>{healthItem?.expires_at && <span className="num"> · עד {fmtDate(healthItem.expires_at)}</span>}</span>
             </div>
           </div>
-          <TaskDialog entityType="customer" entityId={id} branchId={c.home_branch_id} trigger={<Button variant="outline"><Plus className="size-4" /> משימה</Button>} />
+          </div>
+          <div className="flex gap-2">
+            {!c.desk_note && <DeskNote customerId={id} note={null} onSaved={invalidate} />}
+            <TaskDialog entityType="customer" entityId={id} branchId={c.home_branch_id} trigger={<Button variant="outline"><Plus className="size-4" /> משימה</Button>} />
+          </div>
         </div>
+        {c.desk_note && <div className="mt-4"><DeskNote customerId={id} note={c.desk_note} onSaved={invalidate} /></div>}
 
         {issues.length ? (
           <div className="mt-4 space-y-2">
@@ -275,7 +291,7 @@ function Customer360() {
                     <td className="font-medium">{x.display_name}</td><td className="num">{fmtMoney(x.price)}</td>
                     <td className="num">{fmtDate(x.start_date)}</td><td className="num">{fmtDate(x.end_date)}</td>
                     <td><StatusBadge tone={x.status === "ACTIVE" ? "ok" : "neutral"}>{MEMBERSHIP_STATUS[x.status]}</StatusBadge></td>
-                    <td className="text-end">{x.status === "ACTIVE" && <Button size="sm" variant="ghost" onClick={() => confirm("לבטל את המנוי?") && setMembershipStatus(x.id, "CANCELLED")}>ביטול מנוי</Button>}</td>
+                    <td className="text-end">{x.status === "ACTIVE" && <div className="flex justify-end gap-1"><FreezeDialog orgId={org.id} customerId={id} membershipId={x.id} onSaved={invalidate} /><Button size="sm" variant="ghost" onClick={() => confirm("לבטל את המנוי?") && setMembershipStatus(x.id, "CANCELLED")}>ביטול מנוי</Button></div>}</td>
                   </tr>))}</tbody>
               </table>
             )}
@@ -298,7 +314,23 @@ function Customer360() {
         </TabsContent>
 
         <TabsContent value="visits" className="panel mt-4">
-          <EmptyState title="מעקב כניסות עדיין לא מחובר" text="היסטוריית כניסות תופיע כאן לאחר חיבור מערכת בקרת הכניסה למועדון." />
+          {!v.length ? <EmptyState title="אין כניסות עדיין" text="כל בדיקה בעמדת הכניסה תירשם כאן." /> : (
+            <table className="data-table">
+              <thead><tr><th>מועד</th><th>סניף</th><th>תוצאה</th><th>סיבה</th></tr></thead>
+              <tbody>{v.map((x) => (
+                <tr key={x.id}>
+                  <td className="num">{fmtDateTime(x.created_at)}</td><td>{branchName(x.branch_id)}</td>
+                  <td>{x.allowed ? <StatusBadge tone="ok">אושרה</StatusBadge> : <StatusBadge tone="critical">נחסמה</StatusBadge>}</td>
+                  <td className="text-muted-foreground">{x.reasons.map((r) => ENTRY_REASON[r] ?? r).join(", ")}</td>
+                </tr>))}</tbody>
+            </table>
+          )}
+          {!!fz.length && (
+            <div className="border-t p-4">
+              <div className="mb-2 text-sm font-medium">היסטוריית הקפאות</div>
+              <ul className="space-y-1 text-sm">{fz.map((x) => <li key={x.id}><span className="num">{fmtDate(x.start_date)} – {fmtDate(x.end_date)}</span> · {FREEZE_REASON[x.reason]}{x.note && ` · ${x.note}`}</li>)}</ul>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="docs" className="mt-4 space-y-3">
