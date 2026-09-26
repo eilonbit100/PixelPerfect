@@ -1423,7 +1423,41 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _skip_automation: { Args: never; Returns: boolean }
+      _sync_rule: {
+        Args: {
+          _action: string
+          _entity: string
+          _org: string
+          _rows: Json
+          _rule: string
+          _sev: string
+        }
+        Returns: undefined
+      }
+      apply_inventory_transaction: {
+        Args: {
+          _branch: string
+          _expiry_date?: string
+          _lot_number?: string
+          _notes?: string
+          _override?: boolean
+          _override_reason?: string
+          _product: string
+          _quantity: number
+          _reference?: string
+          _type: string
+        }
+        Returns: Json
+      }
+      bootstrap_current_user: { Args: { _full_name?: string }; Returns: Json }
+      convert_lead_to_customer: { Args: { _lead: string }; Returns: string }
       current_member_id: { Args: { _org: string }; Returns: string }
+      evaluate_rules: { Args: { _org: string }; Returns: undefined }
+      get_dashboard_kpis: {
+        Args: { _branch?: string; _org: string }
+        Returns: Json
+      }
       has_branch_access: {
         Args: { _branch: string; _org: string }
         Returns: boolean
@@ -1433,6 +1467,21 @@ export type Database = {
       is_org_member: { Args: { _org: string }; Returns: boolean }
       member_role: { Args: { _org: string }; Returns: string }
       normalize_phone: { Args: { _p: string }; Returns: string }
+      refresh_insights: { Args: { _org: string }; Returns: string }
+      rule_setting: {
+        Args: { _key: string; _org: string }
+        Returns: Record<string, unknown>
+      }
+      search_entities: {
+        Args: { _limit?: number; _q: string }
+        Returns: {
+          entity_type: string
+          id: string
+          phone: string
+          status: string
+          title: string
+        }[]
+      }
       shares_org_with: { Args: { _user: string }; Returns: boolean }
     }
     Enums: {
