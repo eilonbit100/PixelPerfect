@@ -198,8 +198,8 @@ function Dashboard() {
       </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <section>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="min-w-0">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold">דורש טיפול</h2>
             {!!groups.length && <span className="text-xs text-muted-foreground num">{insights.data?.length} פריטים פתוחים</span>}
