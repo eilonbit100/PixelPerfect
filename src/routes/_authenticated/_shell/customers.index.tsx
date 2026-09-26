@@ -271,7 +271,7 @@ function CustomersPage() {
                   <tr key={c.id} className="cursor-pointer" onClick={() => setOpenId(c.id)}>
                     <td className="truncate font-medium">{c.full_name}
                       {c.status !== "ACTIVE" && <span className="ms-2 text-xs text-muted-foreground">{CUSTOMER_STATUS[c.status]}</span>}</td>
-                    <td className="num text-muted-foreground">{c.phone ?? "—"}</td>
+                    <td className="text-muted-foreground"><span className="num" dir="ltr">{c.phone ?? "—"}</span></td>
                     <td>{m?.status === "ACTIVE" ? <StatusBadge tone="ok">מנוי פעיל</StatusBadge> : <StatusBadge tone="neutral">לא מנוי</StatusBadge>}</td>
                     <td>{w ? <SeverityBadge severity={w} label={iss.length > 1 ? `${healthLabel(iss.find((i) => i.severity === w)!)} +${iss.length - 1}` : healthLabel(iss[0])} /> : <SeverityBadge severity="OK" />}</td>
                   </tr>
