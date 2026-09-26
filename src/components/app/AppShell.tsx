@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "לוח בקרה", icon: LayoutDashboard },
   { to: "/checkin", label: "כניסה", icon: ScanLine },
   { to: "/customers", label: "לקוחות", icon: Users },
   { to: "/schedule", label: "מערכת שעות", icon: CalendarDays },
@@ -66,7 +66,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
               onClick={onNavigate}
               className={cn(
                 "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60",
+                active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-[inset_-3px_0_0_var(--color-primary)]" : "text-sidebar-foreground hover:bg-sidebar-accent/60",
               )}
             >
               <n.icon className={cn("size-4", active ? "text-primary" : "text-muted-foreground")} />
