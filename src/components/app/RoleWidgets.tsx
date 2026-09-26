@@ -30,7 +30,7 @@ export function MyWorkStrip() {
   const cells = [
     { label: "המשימות שלי", value: d?.open, to: "/tasks" as const, search: { filter: "mine" } },
     { label: "משימות באיחור", value: d?.overdue, to: "/tasks" as const, search: { filter: "overdue" }, bad: true },
-    { label: "הלידים שלי", value: d?.leads, to: "/leads" as const, search: {} },
+    { label: "הלידים שלי", value: d?.leads, to: "/leads" as const, search: { filter: "mine" } },
   ];
   return (
     <div className="panel mb-8 grid grid-cols-3 divide-x divide-x-reverse">
