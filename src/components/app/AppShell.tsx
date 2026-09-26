@@ -53,7 +53,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 px-4 pt-5 pb-6">
-        <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground"><Activity className="size-4" /></span>
+        <span className="flex size-7 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground"><Activity className="size-4" /></span>
         <span className="text-[15px] font-semibold tracking-tight">Pulse</span>
       </div>
       <nav className="flex-1 space-y-0.5 px-2">
@@ -69,7 +69,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
                 active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60",
               )}
             >
-              <n.icon className={cn("size-4", active ? "text-primary" : "text-muted-foreground")} />
+              <n.icon className={cn("size-4", active ? "text-sidebar-primary" : "text-sidebar-foreground/60")} />
               {n.label}
             </Link>
           );
@@ -77,18 +77,18 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
       <div className="space-y-3 border-t border-sidebar-border p-3">
         <div>
-          <div className="eyebrow mb-1">ארגון</div>
+          <div className="text-[0.72rem] font-semibold text-sidebar-foreground/60 mb-1">ארגון</div>
           <div className="truncate text-sm font-medium">{org.name}</div>
         </div>
         <div>
-          <div className="eyebrow mb-1">סניף</div>
+          <div className="text-[0.72rem] font-semibold text-sidebar-foreground/60 mb-1">סניף</div>
           <BranchSelector />
         </div>
         <div className="flex items-center gap-2 pt-1">
           <span className="flex size-7 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">{profileName.slice(0, 1)}</span>
           <div className="min-w-0 leading-tight">
             <div className="truncate text-sm">{profileName}</div>
-            <div className="text-xs text-muted-foreground">{ROLE[role]}</div>
+            <div className="text-xs text-sidebar-foreground/60">{ROLE[role]}</div>
           </div>
         </div>
       </div>
