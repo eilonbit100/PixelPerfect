@@ -98,6 +98,7 @@ function CustomersPage() {
   const insights = useInsights();
   const filter = search.filter ?? "all";
   const [field, setField] = useState<SearchField>("all");
+  const [openId, setOpenId] = useState<string | null>(null);
   const [qInput, setQInput] = useState(search.q ?? "");
   const [q, setQ] = useState(search.q ?? "");
   useEffect(() => {
@@ -255,28 +256,22 @@ function CustomersPage() {
         {!data.isLoading && <p className="text-xs text-muted-foreground">מציג <span className="num">{visible.length}</span> מתוך <span className="num">{rows.length}</span> לקוחות</p>}
       </div>
       <div className="panel overflow-x-auto">
-        {data.isLoading || insights.isLoading ? <TableSkeleton cols={7} /> : data.error ? <ErrorState onRetry={() => data.refetch()} /> : !rows.length ? (
+        {data.isLoading || insights.isLoading ? <TableSkeleton cols={4} /> : data.error ? <ErrorState onRetry={() => data.refetch()} /> : !rows.length ? (
           all.length ? <EmptyState title="אין לקוחות שתואמים לסינון" /> : <EmptyState title="אין עדיין לקוחות" text="לקוחות חדשים ולידים שהומרו יופיעו כאן." action={<NewCustomer />} />
         ) : (
           <table className="data-table">
-            <thead><tr><th>שם</th><th>טלפון</th><th>ת״ז</th><th>מנוי</th><th>סטטוס מנוי</th><th>רכישות</th><th>סניף</th><th>הצטרפות</th><th>תקינות</th></tr></thead>
+            <thead><tr><th>שם</th><th>טלפון</th><th>מנוי</th><th>תקינות</th></tr></thead>
             <tbody>
               {visible.map((c) => {
                 const m = data.data?.ms?.get(c.id);
-                const b = data.data?.buys?.get(c.id);
                 const iss = byCust.get(c.id) ?? [];
                 const w = worst(iss);
                 return (
-                  <tr key={c.id} className="cursor-pointer" onClick={() => navigate({ to: "/customers/$id", params: { id: c.id } })}>
-                    <td className="font-medium"><Link to="/customers/$id" params={{ id: c.id }} onClick={(e) => e.stopPropagation()}>{c.full_name}</Link>
+                  <tr key={c.id} className="cursor-pointer" onClick={() => setOpenId(c.id)}>
+                    <td className="font-medium">{c.full_name}
                       {c.status !== "ACTIVE" && <span className="ms-2 text-xs text-muted-foreground">{CUSTOMER_STATUS[c.status]}</span>}</td>
                     <td className="num text-muted-foreground">{c.phone ?? "—"}</td>
-                    <td className="num text-muted-foreground">{c.national_id ? "•••" + c.national_id.slice(-4) : "—"}</td>
-                    <td>{m?.display_name ?? "—"}</td>
-                    <td>{m ? <StatusBadge tone={m.status === "ACTIVE" ? "ok" : m.status === "CANCELLED" ? "critical" : "neutral"}>{MEMBERSHIP_STATUS[m.status]}</StatusBadge> : <StatusBadge tone="attention">ללא מנוי</StatusBadge>}</td>
-                    <td className="text-muted-foreground">{b ? <><span className="num">{b.count}</span>{b.last && <span className="ms-1 text-xs">· אחרונה {fmtDate(b.last)}</span>}</> : "—"}</td>
-                    <td className="text-muted-foreground">{branchName(c.home_branch_id)}</td>
-                    <td className="num text-muted-foreground">{fmtDate(c.joined_at)}</td>
+                    <td>{m?.status === "ACTIVE" ? <StatusBadge tone="ok">מנוי פעיל</StatusBadge> : <StatusBadge tone="neutral">לא מנוי</StatusBadge>}</td>
                     <td>{w ? <SeverityBadge severity={w} label={iss.length > 1 ? `${healthLabel(iss.find((i) => i.severity === w)!)} +${iss.length - 1}` : healthLabel(iss[0])} /> : <SeverityBadge severity="OK" />}</td>
                   </tr>
                 );
@@ -290,6 +285,39 @@ function CustomersPage() {
           </div>
         )}
       </div>
+      {(() => {
+        const c = all.find((x) => x.id === openId);
+        if (!c) return null;
+        const m = data.data?.ms?.get(c.id);
+        const b = data.data?.buys?.get(c.id);
+        const iss = byCust.get(c.id) ?? [];
+        const Row = ({ k, v }: { k: string; v: React.ReactNode }) => (
+          <div className="flex items-center justify-between gap-4 border-b py-2 last:border-0"><span className="text-sm text-muted-foreground">{k}</span><span className="text-sm">{v}</span></div>
+        );
+        return (
+          <Dialog open onOpenChange={(o) => !o && setOpenId(null)}>
+            <DialogContent dir="rtl" className="sm:max-w-md">
+              <DialogHeader><DialogTitle>{c.full_name}</DialogTitle></DialogHeader>
+              <div>
+                <Row k="סטטוס לקוח" v={CUSTOMER_STATUS[c.status]} />
+                <Row k="טלפון" v={<span className="num" dir="ltr">{c.phone ?? "—"}</span>} />
+                <Row k="ת״ז" v={<span className="num" dir="ltr">{c.national_id ?? "—"}</span>} />
+                <Row k="אימייל" v={<span dir="ltr">{c.email ?? "—"}</span>} />
+                <Row k="מנוי" v={m?.display_name ?? "ללא מנוי"} />
+                <Row k="סטטוס מנוי" v={m ? <StatusBadge tone={m.status === "ACTIVE" ? "ok" : m.status === "CANCELLED" ? "critical" : "neutral"}>{MEMBERSHIP_STATUS[m.status]}</StatusBadge> : "—"} />
+                <Row k="רכישות" v={b ? <><span className="num">{b.count}</span>{b.last && <span className="ms-1 text-xs text-muted-foreground">· אחרונה {fmtDate(b.last)}</span>}</> : "—"} />
+                <Row k="סניף" v={branchName(c.home_branch_id)} />
+                <Row k="הצטרפות" v={<span className="num">{fmtDate(c.joined_at)}</span>} />
+                <Row k="תקינות" v={iss.length ? <div className="flex flex-wrap justify-end gap-1">{iss.map((i) => <SeverityBadge key={i.id} severity={i.severity} label={healthLabel(i)} />)}</div> : <SeverityBadge severity="OK" />} />
+              </div>
+              <DialogFooter className="gap-2">
+                <Button asChild><Link to="/customers/$id" params={{ id: c.id }}>לכרטיס המלא</Link></Button>
+                <Button variant="ghost" onClick={() => setOpenId(null)}>סגור</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
     </div>
   );
 }
