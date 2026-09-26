@@ -14,8 +14,10 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedShellRouteImport } from './routes/_authenticated/_shell'
 import { Route as AuthenticatedShellApprovalsRouteImport } from './routes/_authenticated/_shell/approvals'
+import { Route as AuthenticatedShellCheckinRouteImport } from './routes/_authenticated/_shell/checkin'
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
 import { Route as AuthenticatedShellReportsRouteImport } from './routes/_authenticated/_shell/reports'
+import { Route as AuthenticatedShellScheduleRouteImport } from './routes/_authenticated/_shell/schedule'
 import { Route as AuthenticatedShellSettingsRouteImport } from './routes/_authenticated/_shell/settings'
 import { Route as AuthenticatedShellTasksRouteImport } from './routes/_authenticated/_shell/tasks'
 import { Route as AuthenticatedShellCustomersIndexRouteImport } from './routes/_authenticated/_shell/customers.index'
@@ -54,6 +56,12 @@ const AuthenticatedShellApprovalsRoute =
     path: '/approvals',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
+const AuthenticatedShellCheckinRoute =
+  AuthenticatedShellCheckinRouteImport.update({
+    id: '/checkin',
+    path: '/checkin',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
 const AuthenticatedShellDashboardRoute =
   AuthenticatedShellDashboardRouteImport.update({
     id: '/dashboard',
@@ -64,6 +72,12 @@ const AuthenticatedShellReportsRoute =
   AuthenticatedShellReportsRouteImport.update({
     id: '/reports',
     path: '/reports',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellScheduleRoute =
+  AuthenticatedShellScheduleRouteImport.update({
+    id: '/schedule',
+    path: '/schedule',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
 const AuthenticatedShellSettingsRoute =
@@ -148,8 +162,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/approvals': typeof AuthenticatedShellApprovalsRoute
+  '/checkin': typeof AuthenticatedShellCheckinRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/reports': typeof AuthenticatedShellReportsRoute
+  '/schedule': typeof AuthenticatedShellScheduleRoute
   '/settings': typeof AuthenticatedShellSettingsRouteWithChildren
   '/tasks': typeof AuthenticatedShellTasksRoute
   '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
@@ -168,8 +184,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/approvals': typeof AuthenticatedShellApprovalsRoute
+  '/checkin': typeof AuthenticatedShellCheckinRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/reports': typeof AuthenticatedShellReportsRoute
+  '/schedule': typeof AuthenticatedShellScheduleRoute
   '/tasks': typeof AuthenticatedShellTasksRoute
   '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
   '/inventory/$id': typeof AuthenticatedShellInventoryIdRoute
@@ -190,8 +208,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteWithChildren
   '/_authenticated/_shell/approvals': typeof AuthenticatedShellApprovalsRoute
+  '/_authenticated/_shell/checkin': typeof AuthenticatedShellCheckinRoute
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
   '/_authenticated/_shell/reports': typeof AuthenticatedShellReportsRoute
+  '/_authenticated/_shell/schedule': typeof AuthenticatedShellScheduleRoute
   '/_authenticated/_shell/settings': typeof AuthenticatedShellSettingsRouteWithChildren
   '/_authenticated/_shell/tasks': typeof AuthenticatedShellTasksRoute
   '/_authenticated/_shell/customers/$id': typeof AuthenticatedShellCustomersIdRoute
@@ -212,8 +232,10 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/approvals'
+    | '/checkin'
     | '/dashboard'
     | '/reports'
+    | '/schedule'
     | '/settings'
     | '/tasks'
     | '/customers/$id'
@@ -232,8 +254,10 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/approvals'
+    | '/checkin'
     | '/dashboard'
     | '/reports'
+    | '/schedule'
     | '/tasks'
     | '/customers/$id'
     | '/inventory/$id'
@@ -253,8 +277,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/_shell'
     | '/_authenticated/_shell/approvals'
+    | '/_authenticated/_shell/checkin'
     | '/_authenticated/_shell/dashboard'
     | '/_authenticated/_shell/reports'
+    | '/_authenticated/_shell/schedule'
     | '/_authenticated/_shell/settings'
     | '/_authenticated/_shell/tasks'
     | '/_authenticated/_shell/customers/$id'
@@ -313,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellApprovalsRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
+    '/_authenticated/_shell/checkin': {
+      id: '/_authenticated/_shell/checkin'
+      path: '/checkin'
+      fullPath: '/checkin'
+      preLoaderRoute: typeof AuthenticatedShellCheckinRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
     '/_authenticated/_shell/dashboard': {
       id: '/_authenticated/_shell/dashboard'
       path: '/dashboard'
@@ -325,6 +358,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedShellReportsRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/schedule': {
+      id: '/_authenticated/_shell/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof AuthenticatedShellScheduleRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
     '/_authenticated/_shell/settings': {
@@ -447,8 +487,10 @@ const AuthenticatedShellSettingsRouteWithChildren =
 
 interface AuthenticatedShellRouteChildren {
   AuthenticatedShellApprovalsRoute: typeof AuthenticatedShellApprovalsRoute
+  AuthenticatedShellCheckinRoute: typeof AuthenticatedShellCheckinRoute
   AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
   AuthenticatedShellReportsRoute: typeof AuthenticatedShellReportsRoute
+  AuthenticatedShellScheduleRoute: typeof AuthenticatedShellScheduleRoute
   AuthenticatedShellSettingsRoute: typeof AuthenticatedShellSettingsRouteWithChildren
   AuthenticatedShellTasksRoute: typeof AuthenticatedShellTasksRoute
   AuthenticatedShellCustomersIdRoute: typeof AuthenticatedShellCustomersIdRoute
@@ -461,8 +503,10 @@ interface AuthenticatedShellRouteChildren {
 
 const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
   AuthenticatedShellApprovalsRoute: AuthenticatedShellApprovalsRoute,
+  AuthenticatedShellCheckinRoute: AuthenticatedShellCheckinRoute,
   AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
   AuthenticatedShellReportsRoute: AuthenticatedShellReportsRoute,
+  AuthenticatedShellScheduleRoute: AuthenticatedShellScheduleRoute,
   AuthenticatedShellSettingsRoute: AuthenticatedShellSettingsRouteWithChildren,
   AuthenticatedShellTasksRoute: AuthenticatedShellTasksRoute,
   AuthenticatedShellCustomersIdRoute: AuthenticatedShellCustomersIdRoute,

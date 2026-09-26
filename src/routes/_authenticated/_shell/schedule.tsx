@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -228,7 +228,7 @@ function SessionDialog({ t, date, roomName, instructor, orgId, onClose }: {
     return (
       <li className="flex items-center gap-2 py-2 text-sm">
         {b.status === "BOOKED" && <Checkbox checked={b.attended} onCheckedChange={(v) => attend(b.id, !!v)} aria-label="נוכחות" />}
-        <CustomerPhoto name={c?.full_name ?? ""} path={c?.photo_MAYBE ?? c?.photo_path} size={28} />
+        <CustomerPhoto name={c?.full_name ?? ""} path={c?.photo_path} size={28} />
         <span className="flex-1 truncate">{c?.full_name}</span>
         {b.attended && <StatusBadge tone="ok">הגיע</StatusBadge>}
         {!past && <button onClick={() => cancel(b.id)} className="rounded p-1 text-muted-foreground hover:bg-muted" aria-label="ביטול רישום"><X className="size-3.5" /></button>}
