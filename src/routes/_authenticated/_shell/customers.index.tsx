@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Search as SearchIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { useInsights, useInvalidateAll } from "@/lib/queries";
@@ -17,12 +17,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type Search = { filter?: string; rule?: string };
+type Search = { filter?: string; rule?: string; q?: string };
 
 export const Route = createFileRoute("/_authenticated/_shell/customers/")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     filter: typeof s.filter === "string" ? s.filter : undefined,
     rule: typeof s.rule === "string" ? s.rule : undefined,
+    q: typeof s.q === "string" ? s.q : typeof s.q === "number" ? String(s.q) : undefined,
   }),
   head: () => ({
     meta: [
@@ -87,18 +88,40 @@ function CustomersPage() {
   const { org, branchId, branchName } = useOrg();
   const insights = useInsights();
   const filter = search.filter ?? "all";
+  const [qInput, setQInput] = useState(search.q ?? "");
+  const [q, setQ] = useState(search.q ?? "");
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setQ(qInput.trim());
+      navigate({ search: (s: Search) => ({ ...s, q: qInput.trim() || undefined }), replace: true });
+    }, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qInput]);
 
   const data = useQuery({
     queryKey: ["customers", org.id, branchId],
     queryFn: async () => {
-      let q = supabase.from("customers").select("*").eq("organization_id", org.id).is("deleted_at", null).order("joined_at", { ascending: false }).limit(1000);
+      let q = supabase.from("customers").select("*").eq("organization_id", org.id).is("deleted_at", null).order("joined_at", { ascending: false }).limit(5000);
       if (branchId) q = q.eq("home_branch_id", branchId);
-      const [c, m] = await Promise.all([q, supabase.from("memberships").select("customer_id,display_name,status,price").eq("organization_id", org.id).order("created_at", { ascending: false })]);
+      const [c, m, p] = await Promise.all([
+        q,
+        supabase.from("memberships").select("customer_id,display_name,status,price").eq("organization_id", org.id).order("created_at", { ascending: false }),
+        supabase.from("payments").select("customer_id,paid_at,amount").eq("organization_id", org.id).eq("status", "PAID").limit(20000),
+      ]);
       if (c.error) throw c.error;
       if (m.error) throw m.error;
+      if (p.error) throw p.error;
       const ms = new Map<string, (typeof m.data)[number]>();
       m.data.forEach((x) => { if (!ms.has(x.customer_id)) ms.set(x.customer_id, x); });
-      return { customers: c.data, ms };
+      const buys = new Map<string, { count: number; last: string | null }>();
+      p.data.forEach((x) => {
+        const cur = buys.get(x.customer_id) ?? { count: 0, last: null };
+        cur.count++;
+        if (x.paid_at && (!cur.last || x.paid_at > cur.last)) cur.last = x.paid_at;
+        buys.set(x.customer_id, cur);
+      });
+      return { customers: c.data, ms, buys };
     },
   });
 
@@ -110,22 +133,51 @@ function CustomersPage() {
   }, [insights.data]);
 
   const all = data.data?.customers ?? [];
+  const ms = data.data?.ms;
+  const buys = data.data?.buys;
   const has = (id: string, rule: string) => byCust.get(id)?.some((i) => i.rule_key === rule);
+  const activeMember = (id: string) => ms?.get(id)?.status === "ACTIVE";
+  const noMemberBuyer = (id: string) => !activeMember(id) && (buys?.get(id)?.count ?? 0) > 0;
+
+  const searched = useMemo(() => {
+    if (!q) return all;
+    const text = q.toLowerCase();
+    const digits = q.replace(/\D/g, "");
+    return all.filter((c) => {
+      if (c.full_name.toLowerCase().includes(text)) return true;
+      if (c.email && c.email.toLowerCase().includes(text)) return true;
+      if (digits.length >= 3) {
+        const phone = (c.phone ?? "").replace(/\D/g, "");
+        const local = phone.startsWith("972") ? "0" + phone.slice(3) : phone;
+        if (local.includes(digits) || phone.includes(digits)) return true;
+        const nid = (c.national_id ?? "").replace(/\D/g, "");
+        if (digits.length === 4 ? nid.endsWith(digits) : nid.includes(digits)) return true;
+      }
+      return false;
+    });
+  }, [all, q]);
+
   const rows = useMemo(() => {
-    let list = all;
+    let list = searched;
     if (search.rule) list = list.filter((c) => has(c.id, search.rule!));
     const month = Date.now() - 30 * 864e5;
     switch (filter) {
       case "active": list = list.filter((c) => c.status === "ACTIVE"); break;
       case "inactive": list = list.filter((c) => c.status === "INACTIVE"); break;
       case "new": list = list.filter((c) => new Date(c.joined_at).getTime() > month); break;
+      case "buyers": list = list.filter((c) => noMemberBuyer(c.id)); break;
       case "docs": list = list.filter((c) => has(c.id, "MISSING_COMPLIANCE")); break;
       case "payment": list = list.filter((c) => has(c.id, "FAILED_PAYMENT")); break;
       case "attention": list = list.filter((c) => byCust.has(c.id)); break;
     }
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [all, byCust, filter, search.rule]);
+  }, [searched, byCust, filter, search.rule, ms, buys]);
+
+  const [limit, setLimit] = useState(100);
+  useEffect(() => setLimit(100), [q, filter, search.rule]);
+  const visible = rows.slice(0, limit);
+  const month = Date.now() - 30 * 864e5;
 
   const set = (p: Partial<Search>) => navigate({ search: (s: Search) => ({ ...s, ...p }) });
 
@@ -138,30 +190,48 @@ function CustomersPage() {
           <button onClick={() => set({ rule: undefined })} className="ms-auto inline-flex items-center gap-1 text-xs hover:underline"><X className="size-3.5" /> נקה</button>
         </div>
       )}
-      <div className="mb-3">
+      <div className="mb-3 flex flex-col gap-3">
+        <div className="relative max-w-md">
+          <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={qInput}
+            onChange={(e) => setQInput(e.target.value)}
+            placeholder="חיפוש לפי שם מלא, טלפון או 4 ספרות אחרונות של ת״ז"
+            className="ps-9 pe-9"
+            aria-label="חיפוש לקוחות"
+          />
+          {qInput && (
+            <button onClick={() => setQInput("")} className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted" aria-label="נקה חיפוש">
+              <X className="size-3.5" />
+            </button>
+          )}
+        </div>
         <FilterChips
           value={filter}
           onChange={(v) => set({ filter: v === "all" ? undefined : v })}
           options={[
-            { value: "all", label: "כולם", count: all.length },
-            { value: "active", label: "פעילים" },
-            { value: "inactive", label: "לא פעילים" },
-            { value: "new", label: "לקוחות חדשים" },
-            { value: "docs", label: "מסמכים חסרים", count: all.filter((c) => has(c.id, "MISSING_COMPLIANCE")).length },
-            { value: "payment", label: "בעיית תשלום", count: all.filter((c) => has(c.id, "FAILED_PAYMENT")).length },
-            { value: "attention", label: "דורשים טיפול", count: all.filter((c) => byCust.has(c.id)).length },
+            { value: "all", label: "כולם", count: searched.length },
+            { value: "active", label: "פעילים", count: searched.filter((c) => c.status === "ACTIVE").length },
+            { value: "inactive", label: "לא פעילים", count: searched.filter((c) => c.status === "INACTIVE").length },
+            { value: "new", label: "לקוחות חדשים", count: searched.filter((c) => new Date(c.joined_at).getTime() > month).length },
+            { value: "buyers", label: "ללא מנוי, עם רכישות", count: searched.filter((c) => noMemberBuyer(c.id)).length },
+            { value: "docs", label: "מסמכים חסרים", count: searched.filter((c) => has(c.id, "MISSING_COMPLIANCE")).length },
+            { value: "payment", label: "בעיית תשלום", count: searched.filter((c) => has(c.id, "FAILED_PAYMENT")).length },
+            { value: "attention", label: "דורשים טיפול", count: searched.filter((c) => byCust.has(c.id)).length },
           ]}
         />
+        {!data.isLoading && <p className="text-xs text-muted-foreground">מציג <span className="num">{visible.length}</span> מתוך <span className="num">{rows.length}</span> לקוחות</p>}
       </div>
       <div className="panel overflow-x-auto">
         {data.isLoading || insights.isLoading ? <TableSkeleton cols={7} /> : data.error ? <ErrorState onRetry={() => data.refetch()} /> : !rows.length ? (
           all.length ? <EmptyState title="אין לקוחות שתואמים לסינון" /> : <EmptyState title="אין עדיין לקוחות" text="לקוחות חדשים ולידים שהומרו יופיעו כאן." action={<NewCustomer />} />
         ) : (
           <table className="data-table">
-            <thead><tr><th>שם</th><th>טלפון</th><th>מנוי</th><th>סטטוס מנוי</th><th>סניף</th><th>הצטרפות</th><th>תקינות</th></tr></thead>
+            <thead><tr><th>שם</th><th>טלפון</th><th>ת״ז</th><th>מנוי</th><th>סטטוס מנוי</th><th>רכישות</th><th>סניף</th><th>הצטרפות</th><th>תקינות</th></tr></thead>
             <tbody>
-              {rows.map((c) => {
+              {visible.map((c) => {
                 const m = data.data!.ms.get(c.id);
+                const b = data.data!.buys.get(c.id);
                 const iss = byCust.get(c.id) ?? [];
                 const w = worst(iss);
                 return (
@@ -169,8 +239,10 @@ function CustomersPage() {
                     <td className="font-medium"><Link to="/customers/$id" params={{ id: c.id }} onClick={(e) => e.stopPropagation()}>{c.full_name}</Link>
                       {c.status !== "ACTIVE" && <span className="ms-2 text-xs text-muted-foreground">{CUSTOMER_STATUS[c.status]}</span>}</td>
                     <td className="num text-muted-foreground">{c.phone ?? "—"}</td>
+                    <td className="num text-muted-foreground">{c.national_id ? "•••" + c.national_id.slice(-4) : "—"}</td>
                     <td>{m?.display_name ?? "—"}</td>
                     <td>{m ? <StatusBadge tone={m.status === "ACTIVE" ? "ok" : m.status === "CANCELLED" ? "critical" : "neutral"}>{MEMBERSHIP_STATUS[m.status]}</StatusBadge> : <StatusBadge tone="attention">ללא מנוי</StatusBadge>}</td>
+                    <td className="text-muted-foreground">{b ? <><span className="num">{b.count}</span>{b.last && <span className="ms-1 text-xs">· אחרונה {fmtDate(b.last)}</span>}</> : "—"}</td>
                     <td className="text-muted-foreground">{branchName(c.home_branch_id)}</td>
                     <td className="num text-muted-foreground">{fmtDate(c.joined_at)}</td>
                     <td>{w ? <SeverityBadge severity={w} label={iss.length > 1 ? `${healthLabel(iss.find((i) => i.severity === w)!)} +${iss.length - 1}` : healthLabel(iss[0])} /> : <SeverityBadge severity="OK" />}</td>
@@ -179,6 +251,11 @@ function CustomersPage() {
               })}
             </tbody>
           </table>
+        )}
+        {rows.length > limit && (
+          <div className="border-t p-3 text-center">
+            <Button variant="outline" size="sm" onClick={() => setLimit((l) => l + 100)}>הצג עוד {Math.min(100, rows.length - limit)}</Button>
+          </div>
         )}
       </div>
     </div>
