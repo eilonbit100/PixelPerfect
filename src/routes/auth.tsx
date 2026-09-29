@@ -27,6 +27,7 @@ function AuthPage() {
   const qc = useQueryClient();
   const [username, setUsername] = useState("");
   const [busy, setBusy] = useState(false);
+  const [password, setPassword] = useState("");
   const users = useQuery({ queryKey: ["demo-users"], queryFn: () => listDemoUsers() });
 
   useEffect(() => {
@@ -35,9 +36,10 @@ function AuthPage() {
 
   async function login(name: string) {
     if (!name.trim()) return;
+    if (!password) { toast.error("יש להזין סיסמה"); return; }
     setBusy(true);
     try {
-      const r = await demoLogin({ data: { username: name } });
+      const r = await demoLogin({ data: { username: name, password } });
       if (!r.ok) { toast.error(r.error); return; }
       await supabase.auth.signOut();
       const { error } = await supabase.auth.verifyOtp({ token_hash: r.tokenHash, type: "magiclink" });
@@ -66,6 +68,10 @@ function AuthPage() {
             <Label htmlFor="u">שם משתמש</Label>
             <Input id="u" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="עובד1" autoFocus required />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="p">סיסמה</Label>
+            <Input id="p" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+          </div>
           <Button type="submit" className="w-full" disabled={busy}>{busy ? "רגע…" : "כניסה למערכת"}</Button>
         </form>
 
@@ -84,7 +90,7 @@ function AuthPage() {
             ))}
             {users.isLoading && <p className="px-4 py-3 text-sm text-muted-foreground">טוען…</p>}
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">כניסה ללא סיסמה — לסביבת הדגמה בלבד.</p>
+          <p className="mt-2 text-xs text-muted-foreground">הזן סיסמה ואז בחר משתמש מהרשימה.</p>
         </div>
       </div>
     </div>
