@@ -28,8 +28,14 @@ export const listDemoUsers = createServerFn({ method: "GET" }).handler(async () 
 });
 
 export const demoLogin = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ username: z.string().trim().min(1).max(50) }).parse(d))
+  .inputValidator((d) => z.object({ username: z.string().trim().min(1).max(50), password: z.string().max(200) }).parse(d))
   .handler(async ({ data }) => {
+    const { createHash, timingSafeEqual } = await import("node:crypto");
+    const expected = process.env["DEMO_PASSWORD"] ?? "";
+    const h = (s: string) => createHash("sha256").update(s, "utf8").digest();
+    if (!expected || !timingSafeEqual(h(data.password), h(expected))) {
+      return { ok: false as const, error: "שם משתמש או סיסמה שגויים" };
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: m, error } = await supabaseAdmin
       .from("organization_members")
