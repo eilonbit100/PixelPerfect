@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Ban, FileX, History, Pencil, Repeat, Snowflake } from "lucide-react";
@@ -20,11 +20,25 @@ export const REQUEST_STATUS: Record<string, string> = { OPEN: "ממתינה לט
 export const BILLING: Record<string, string> = { MONTHLY: "חודשי", YEARLY: "שנתי", PUNCH_CARD: "כרטיסייה" };
 const today = () => new Date().toISOString().slice(0, 10);
 
-type Membership = { id: string; display_name: string; status: string; start_date: string; end_date: string | null; price: number; branch_id: string | null; membership_plan_id: string | null; cancelled_at: string | null; cancel_reason: string | null; cancel_note: string | null; cancel_performed_at: string | null; cancelled_by: string | null; cancellation_request_id: string | null };
+type Membership = { id: string; display_name: string; status: string; start_date: string; end_date: string | null; price: number; branch_id: string | null; membership_plan_id: string | null; cancelled_at: string | null; cancel_reason: string | null; cancel_note: string | null; cancel_performed_at: string | null; cancelled_by: string | null; cancellation_request_id: string | null; scheduled_cancel_date?: string | null; cancel_override_reason?: string | null };
 type Plan = { id: string; name: string; price: number; billing_period: string };
-type Req = { id: string; membership_id: string | null; status: string; reason: string | null; note: string | null; requested_at: string; handled_at: string | null; assigned_member_id: string | null; created_by: string | null };
+type Req = { id: string; membership_id: string | null; status: string; reason: string | null; note: string | null; requested_at: string; handled_at: string | null; effective_date?: string | null; assigned_member_id: string | null; created_by: string | null };
 
 const live = (s: string) => ["ACTIVE", "FROZEN", "PENDING"].includes(s);
+const cancellable = (m: Membership) => live(m.status) && !m.scheduled_cancel_date;
+export const NOTICE_LABEL = (p?: { unit?: string; value?: number } | null) =>
+  !p ? "" : p.unit === "IMMEDIATE" ? "ביטול מיידי" : p.unit === "DAYS" ? `${p.value} ימים` : p.value === 1 ? "חודש קלנדרי אחד" : `${p.value} חודשים`;
+
+function usePreview(m: string, date: string) {
+  const [v, setV] = useState<{ effective_date: string; unit: string; value: number } | null>(null);
+  useEffect(() => {
+    if (!m || !date) return setV(null);
+    let on = true;
+    supabase.rpc("preview_cancellation_date", { _membership: m, _requested: date }).then(({ data }) => { if (on) setV(data as never); });
+    return () => { on = false; };
+  }, [m, date]);
+  return v;
+}
 
 /* ---------- Personal details ---------- */
 type Cust = { id: string; full_name: string; phone: string | null; email: string | null; national_id: string | null; address: string | null; birth_date: string | null; home_branch_id: string | null; affiliation_id: string | null; affiliation_other: string | null };
@@ -107,9 +121,10 @@ export function EditDetailsDialog({ c, onSaved, trigger }: { c: Cust; onSaved: (
 /* ---------- Cancellation request ---------- */
 export function CancelRequestDialog({ memberships, onSaved, trigger }: { memberships: Membership[]; onSaved: () => void; trigger: React.ReactNode }) {
   const { members, me } = useOrg();
-  const options = memberships.filter((m) => live(m.status));
+  const options = memberships.filter(cancellable);
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({ m: "", date: today(), reason: "", note: "", assigned: me.id });
+  const pv = usePreview(f.m, f.date);
   async function save() {
     if (!f.m) return toast.error("יש לבחור מנוי");
     if (!f.reason.trim()) return toast.error("יש לציין סיבה");
@@ -137,7 +152,8 @@ export function CancelRequestDialog({ memberships, onSaved, trigger }: { members
             </div>
             <div className="space-y-1.5"><Label>סיבת הבקשה</Label><Input value={f.reason} onChange={(e) => setF({ ...f, reason: e.target.value })} /></div>
             <div className="space-y-1.5"><Label>הערה (לא חובה)</Label><Textarea rows={2} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></div>
-            <p className="text-xs text-muted-foreground">הבקשה נפתחת בסטטוס "ממתינה לטיפול". המנוי לא מבוטל עד לביצוע "ביטול מנוי" בפועל.</p>
+            {pv && <div className="rounded-md bg-muted/60 p-2 text-sm">תקופת הודעה מוקדמת: {NOTICE_LABEL(pv)} · הביטול ייכנס לתוקף ב־<span className="num font-semibold">{fmtDate(pv.effective_date)}</span></div>}
+            <p className="text-xs text-muted-foreground">הבקשה נפתחת בסטטוס "ממתינה לטיפול". המנוי נשאר פעיל עד שמנהל יאשר את הביטול ועד תאריך כניסתו לתוקף.</p>
           </div>
         )}
         <DialogFooter className="gap-2">{!!options.length && <Button onClick={save}>שמור בקשה</Button>}<Button variant="ghost" onClick={() => setOpen(false)}>סגור</Button></DialogFooter>
@@ -148,22 +164,28 @@ export function CancelRequestDialog({ memberships, onSaved, trigger }: { members
 
 /* ---------- Actual cancellation (manager) ---------- */
 export function CancelMembershipDialog({ memberships, requests, onSaved, trigger, preset }: { memberships: Membership[]; requests: Req[]; onSaved: () => void; trigger: React.ReactNode; preset?: { m?: string; req?: string } }) {
-  const options = memberships.filter((m) => live(m.status));
+  const options = memberships.filter(cancellable);
   const [open, setOpen] = useState(false);
   const init = () => {
     const m = preset?.m ?? options[0]?.id ?? "";
     const req = preset?.req ?? requests.find((r) => r.membership_id === m && ["OPEN", "IN_PROGRESS"].includes(r.status))?.id ?? "none";
-    return { m, req, effective: "", reason: requests.find((r) => r.id === req)?.reason ?? "", note: "" };
+    return { m, req, effective: "", reason: requests.find((r) => r.id === req)?.reason ?? "", note: "", override: "" };
   };
   const [f, setF] = useState(init);
+  const linked = requests.find((r) => r.id === f.req);
+  const pv = usePreview(f.m, linked ? linked.requested_at.slice(0, 10) : today());
+  const minimum = linked?.effective_date ?? pv?.effective_date ?? "";
+  useEffect(() => { if (open && minimum && !f.effective) setF((x) => ({ ...x, effective: minimum })); }, [open, minimum]); // eslint-disable-line react-hooks/exhaustive-deps
+  const early = !!minimum && !!f.effective && f.effective < minimum;
   const reqs = requests.filter((r) => r.membership_id === f.m && ["OPEN", "IN_PROGRESS"].includes(r.status));
   async function save() {
     if (!f.m) return toast.error("יש לבחור מנוי");
     if (!f.effective) return toast.error("חובה לבחור תאריך כניסת הביטול לתוקף");
     if (!f.reason.trim()) return toast.error("יש לציין סיבת ביטול");
-    const { error } = await supabase.rpc("cancel_membership", { _membership: f.m, _effective: f.effective, _reason: f.reason, _note: f.note, _request: f.req === "none" ? null as unknown as string : f.req });
+    if (early && !f.override.trim()) return toast.error("התאריך מוקדם מתקופת ההודעה — יש לציין סיבת חריגה");
+    const { data, error } = await supabase.rpc("cancel_membership", { _membership: f.m, _effective: f.effective, _reason: f.reason, _note: f.note, _request: f.req === "none" ? null as unknown as string : f.req, _override_reason: early ? f.override : undefined });
     if (error) return toast.error(friendlyError(error));
-    toast.success("המנוי בוטל");
+    toast.success((data as { immediate?: boolean })?.immediate ? "המנוי בוטל" : `הביטול אושר ויכנס לתוקף ב־${fmtDate(f.effective)}`);
     setOpen(false);
     onSaved();
   }
@@ -171,27 +193,29 @@ export function CancelMembershipDialog({ memberships, requests, onSaved, trigger
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setF(init()); }}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent dir="rtl" className="sm:max-w-md">
-        <DialogHeader><DialogTitle>ביטול מנוי</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>אישור ביטול מנוי</DialogTitle></DialogHeader>
         {!options.length ? <p className="text-sm text-muted-foreground">אין מנוי פעיל לביטול.</p> : (
           <div className="space-y-3">
             <div className="space-y-1.5"><Label>מנוי</Label>
-              <Select value={f.m} onValueChange={(v) => setF({ ...f, m: v, req: "none" })}><SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={f.m} onValueChange={(v) => setF({ ...f, m: v, req: "none", effective: "" })}><SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{options.map((m) => <SelectItem key={m.id} value={m.id}>{m.display_name} · מ־{fmtDate(m.start_date)}</SelectItem>)}</SelectContent></Select></div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label>תאריך ביצוע</Label><Input value={fmtDate(today())} disabled /></div>
               <div className="space-y-1.5"><Label>ביטול בתוקף מתאריך *</Label><Input type="date" value={f.effective} onChange={(e) => setF({ ...f, effective: e.target.value })} /></div>
             </div>
             <div className="space-y-1.5"><Label>קישור לבקשת ביטול</Label>
-              <Select value={f.req} onValueChange={(v) => setF({ ...f, req: v, reason: requests.find((r) => r.id === v)?.reason ?? f.reason })}><SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={f.req} onValueChange={(v) => setF({ ...f, req: v, effective: "", reason: requests.find((r) => r.id === v)?.reason ?? f.reason })}><SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem value="none">ללא בקשה</SelectItem>{reqs.map((r) => <SelectItem key={r.id} value={r.id}>בקשה מ־{fmtDate(r.requested_at)} · {REQUEST_STATUS[r.status]}</SelectItem>)}</SelectContent></Select></div>
+            {minimum && <p className="text-xs text-muted-foreground">לפי מדיניות ההודעה המוקדמת{pv ? ` (${NOTICE_LABEL(pv)})` : ""}, התאריך המוקדם ביותר: <span className="num font-medium">{fmtDate(minimum)}</span>{linked ? " — מחושב מתאריך קבלת הבקשה" : " — מחושב מהיום"}</p>}
+            {early && <div className="space-y-1.5 rounded-md border border-attention/50 bg-attention-soft p-2"><Label>חריגה מתקופת ההודעה — סיבה *</Label><Input value={f.override} onChange={(e) => setF({ ...f, override: e.target.value })} /><p className="text-xs text-muted-foreground">החריגה תתועד עם שמך, התאריך והשעה בהיסטוריית הלקוח.</p></div>}
             <div className="space-y-1.5"><Label>סיבת הביטול *</Label><Input value={f.reason} onChange={(e) => setF({ ...f, reason: e.target.value })} /></div>
             <div className="space-y-1.5"><Label>הערה</Label><Textarea rows={2} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></div>
             <p className="rounded-md bg-muted/60 p-2 text-xs text-muted-foreground">
-              לא מוגדרים במערכת כללי הודעה מוקדמת, קנסות או החזרים, ואין עדיין חיבור לספק חיובים — לכן לא יבוצע החזר כספי ולא תופסק הוראת קבע אוטומטית. יש לטפל בכך ידנית מול ספק התשלומים.
+              המנוי יישאר פעיל, כולל כניסה וחיובים לפי המסלול, עד תאריך הביטול, ואז יבוטל אוטומטית. אין עדיין חיבור לספק חיובים — לא יבוצע החזר כספי ולא תופסק הוראת קבע אוטומטית; יש לטפל בכך ידנית.
             </p>
           </div>
         )}
-        <DialogFooter className="gap-2">{!!options.length && <Button variant="destructive" onClick={save}>בצע ביטול</Button>}<Button variant="ghost" onClick={() => setOpen(false)}>סגור</Button></DialogFooter>
+        <DialogFooter className="gap-2">{!!options.length && <Button variant="destructive" onClick={save}>אשר ביטול</Button>}<Button variant="ghost" onClick={() => setOpen(false)}>סגור</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -274,8 +298,9 @@ export function MembershipsPanel({ customerId, orgId, memberships, plans, reques
         const plan = plans.find((p) => p.id === m.membership_plan_id);
         const openReq = requests.find((r) => r.membership_id === m.id && ["OPEN", "IN_PROGRESS"].includes(r.status));
         const freeze = freezes.find((f) => f.membership_id === m.id && f.start_date <= todayS && f.end_date >= todayS);
-        const status = m.status === "CANCELLED" ? "בוטל" : m.status === "EXPIRED" || (m.end_date && m.end_date < todayS && m.status !== "FROZEN") ? "הסתיים" : openReq ? "בקשת ביטול" : MEMBERSHIP_STATUS[m.status];
-        const tone = m.status === "ACTIVE" && !openReq ? "ok" : m.status === "CANCELLED" ? "critical" : openReq || m.status === "FROZEN" ? "attention" : "neutral";
+        const scheduled = m.status !== "CANCELLED" && m.scheduled_cancel_date;
+        const status = m.status === "CANCELLED" ? "בוטל" : scheduled ? `ביטול מתוכנן · ${fmtDate(m.scheduled_cancel_date)}` : m.status === "EXPIRED" || (m.end_date && m.end_date < todayS && m.status !== "FROZEN") ? "הסתיים" : openReq ? "בקשת ביטול" : MEMBERSHIP_STATUS[m.status];
+        const tone = scheduled ? "attention" : m.status === "ACTIVE" && !openReq ? "ok" : m.status === "CANCELLED" ? "critical" : openReq || m.status === "FROZEN" ? "attention" : "neutral";
         const isLive = live(m.status);
         return (
           <div key={m.id} className="panel p-4">
@@ -289,8 +314,8 @@ export function MembershipsPanel({ customerId, orgId, memberships, plans, reques
                 {isLive && !freeze && m.status === "ACTIVE" && <FreezeButton membershipId={m.id} />}
                 {freeze && <Button size="sm" variant="ghost" onClick={() => endFreeze(freeze.id)}><Snowflake className="size-4" /> סיום הקפאה</Button>}
                 {isLive && isManager && <ChangePlanDialog m={m} plans={plans} onSaved={onSaved} />}
-                {isLive && !openReq && <CancelRequestDialog memberships={[m]} onSaved={onSaved} trigger={<Button size="sm" variant="ghost"><FileX className="size-4" /> בקשת ביטול</Button>} />}
-                {isLive && isManager && <CancelMembershipDialog memberships={[m]} requests={requests} preset={{ m: m.id }} onSaved={onSaved} trigger={<Button size="sm" variant="ghost" className="text-critical"><Ban className="size-4" /> ביטול מנוי</Button>} />}
+                {isLive && !openReq && !scheduled && <CancelRequestDialog memberships={[m]} onSaved={onSaved} trigger={<Button size="sm" variant="ghost"><FileX className="size-4" /> בקשת ביטול</Button>} />}
+                {isLive && isManager && !scheduled && <CancelMembershipDialog memberships={[m]} requests={requests} preset={{ m: m.id }} onSaved={onSaved} trigger={<Button size="sm" variant="ghost" className="text-critical"><Ban className="size-4" /> ביטול מנוי</Button>} />}
                 <MembershipHistory customerId={customerId} m={m} />
               </div>
             </div>
@@ -302,6 +327,10 @@ export function MembershipsPanel({ customerId, orgId, memberships, plans, reques
               <div><dt className="text-xs text-muted-foreground">סניף מורשה</dt><dd>{branchName(m.branch_id)}</dd></div>
               <div><dt className="text-xs text-muted-foreground">יתרות וזכאויות</dt><dd className="text-muted-foreground">אין נתוני זכאות במערכת</dd></div>
               {freeze && <div><dt className="text-xs text-muted-foreground">הקפאה</dt><dd className="num">{fmtDate(freeze.start_date)} – {fmtDate(freeze.end_date)}</dd></div>}
+              {scheduled && <div className="col-span-2"><dt className="text-xs text-muted-foreground">ביטול מתוכנן</dt><dd>
+                המנוי פעיל עד <span className="num">{fmtDate(m.scheduled_cancel_date)}</span>{m.cancel_reason && <> · {m.cancel_reason}</>}
+                {m.cancel_override_reason && <span className="block text-xs text-attention">חריגה מתקופת ההודעה: {m.cancel_override_reason}</span>}
+              </dd></div>}
               {m.status === "CANCELLED" && <div className="col-span-2"><dt className="text-xs text-muted-foreground">ביטול</dt><dd>
                 {m.cancelled_at ? <>בתוקף מ־<span className="num">{fmtDate(m.cancelled_at)}</span></> : <span className="text-attention">חסר תאריך ביטול</span>}
                 {m.cancel_reason && <> · {m.cancel_reason}</>}{m.cancel_performed_at && <span className="text-xs text-muted-foreground"> · בוצע <span className="num">{fmtDate(m.cancel_performed_at)}</span></span>}
@@ -329,7 +358,7 @@ export function CancelRequestsPanel({ requests, memberships, onSaved }: { reques
     <div className="panel">
       <div className="border-b px-4 py-3 text-sm font-medium">בקשות ביטול</div>
       <table className="data-table">
-        <thead><tr><th>מנוי</th><th>התקבלה</th><th>סיבה</th><th>מטפל</th><th>סטטוס</th><th /></tr></thead>
+        <thead><tr><th>מנוי</th><th>התקבלה</th><th>בתוקף מ־</th><th>סיבה</th><th>מטפל</th><th>סטטוס</th><th /></tr></thead>
         <tbody>{requests.map((r) => {
           const m = memberships.find((x) => x.id === r.membership_id);
           const openR = ["OPEN", "IN_PROGRESS"].includes(r.status);
@@ -337,6 +366,7 @@ export function CancelRequestsPanel({ requests, memberships, onSaved }: { reques
             <tr key={r.id}>
               <td>{m?.display_name ?? "—"}</td>
               <td className="num">{fmtDate(r.requested_at)}</td>
+              <td className="num">{r.effective_date ? fmtDate(r.effective_date) : "—"}</td>
               <td>{r.reason}{r.note && <div className="text-xs text-muted-foreground">{r.note}</div>}</td>
               <td>{r.assigned_member_id ? memberName(r.assigned_member_id) : members.find((x) => x.user_id === r.created_by)?.display_name ?? "—"}</td>
               <td><StatusBadge tone={openR ? "attention" : r.status === "HANDLED" ? "ok" : "neutral"}>{REQUEST_STATUS[r.status]}</StatusBadge></td>

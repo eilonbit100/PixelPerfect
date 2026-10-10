@@ -171,6 +171,7 @@ function Customer360() {
               {activeM ? <StatusBadge tone={activeM.status === "ACTIVE" ? "ok" : "neutral"}>{MEMBERSHIP_STATUS[activeM.status]}</StatusBadge> : <StatusBadge tone="attention">ללא מנוי</StatusBadge>}
               <StatusBadge tone={activeM ? "ok" : "neutral"}>{activeM ? "לקוח פעיל" : "לקוח לא פעיל"}</StatusBadge>
               {openReqs.length > 0 && <StatusBadge tone="attention">בקשת ביטול פתוחה</StatusBadge>}
+              {activeM?.scheduled_cancel_date && <StatusBadge tone="attention">ביטול מתוכנן · {fmtDate(activeM.scheduled_cancel_date)}</StatusBadge>}
               {failedByMembership.size > 0 && <StatusBadge tone="critical">חיוב נכשל</StatusBadge>}
               {blocked && <StatusBadge tone="critical">כניסה חסומה עד חתימה ואישור הצהרת בריאות</StatusBadge>}
               {frozenNow && <StatusBadge tone="attention">מוקפא עד {fmtDate(frozenNow.end_date)}</StatusBadge>}
@@ -195,8 +196,8 @@ function Customer360() {
             {!c.desk_note && <DeskNote customerId={id} note={null} onSaved={invalidate} />}
             {health.some((i) => i.category === "HEALTH" || i.category === "DOCS") && <Button size="sm" variant="outline" onClick={() => setTab("docs")}><FileUp className="size-4" /> מסמך חסר</Button>}
             {activeM?.status === "ACTIVE" && !frozenNow && <FreezeDialog orgId={org.id} customerId={id} membershipId={activeM.id} onSaved={invalidate} />}
-            {activeM && <CancelRequestDialog memberships={m as never} onSaved={invalidate} trigger={<Button size="sm" variant="outline"><FileX className="size-4" /> בקשת ביטול</Button>} />}
-            {activeM && isManager && <CancelMembershipDialog memberships={m as never} requests={cr} onSaved={invalidate} trigger={<Button size="sm" variant="outline" className="text-critical"><Ban className="size-4" /> ביטול מנוי</Button>} />}
+            {activeM && !activeM.scheduled_cancel_date && <CancelRequestDialog memberships={m as never} onSaved={invalidate} trigger={<Button size="sm" variant="outline"><FileX className="size-4" /> בקשת ביטול</Button>} />}
+            {activeM && isManager && !activeM.scheduled_cancel_date && <CancelMembershipDialog memberships={m as never} requests={cr} onSaved={invalidate} trigger={<Button size="sm" variant="outline" className="text-critical"><Ban className="size-4" /> ביטול מנוי</Button>} />}
             {debt > 0 && <Button size="sm" variant="outline" onClick={() => setTab("payments")}><CreditCard className="size-4" /> טיפול בחוב</Button>}
             <Button size="sm" variant="outline" asChild><Link to="/schedule"><CalendarPlus className="size-4" /> תיאום שיעור</Link></Button>
           </div>
