@@ -26,7 +26,9 @@ import { Route as AuthenticatedShellInventoryIndexRouteImport } from './routes/_
 import { Route as AuthenticatedShellInventoryIdRouteImport } from './routes/_authenticated/_shell/inventory.$id'
 import { Route as AuthenticatedShellLeadsIndexRouteImport } from './routes/_authenticated/_shell/leads.index'
 import { Route as AuthenticatedShellLeadsIdRouteImport } from './routes/_authenticated/_shell/leads.$id'
+import { Route as AuthenticatedShellReportsIndexRouteImport } from './routes/_authenticated/_shell/reports.index'
 import { Route as AuthenticatedShellReportsKeyRouteImport } from './routes/_authenticated/_shell/reports.$key'
+import { Route as AuthenticatedShellReportsBuilderRouteImport } from './routes/_authenticated/_shell/reports.builder'
 import { Route as AuthenticatedShellReportsHealthRouteImport } from './routes/_authenticated/_shell/reports.health'
 import { Route as AuthenticatedShellSettingsIndexRouteImport } from './routes/_authenticated/_shell/settings.index'
 import { Route as AuthenticatedShellSettingsBranchesRouteImport } from './routes/_authenticated/_shell/settings.branches'
@@ -129,10 +131,22 @@ const AuthenticatedShellLeadsIdRoute =
     path: '/leads/$id',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
+const AuthenticatedShellReportsIndexRoute =
+  AuthenticatedShellReportsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedShellReportsRoute,
+  } as any)
 const AuthenticatedShellReportsKeyRoute =
   AuthenticatedShellReportsKeyRouteImport.update({
     id: '/$key',
     path: '/$key',
+    getParentRoute: () => AuthenticatedShellReportsRoute,
+  } as any)
+const AuthenticatedShellReportsBuilderRoute =
+  AuthenticatedShellReportsBuilderRouteImport.update({
+    id: '/builder',
+    path: '/builder',
     getParentRoute: () => AuthenticatedShellReportsRoute,
   } as any)
 const AuthenticatedShellReportsHealthRoute =
@@ -186,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/inventory/$id': typeof AuthenticatedShellInventoryIdRoute
   '/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/reports/$key': typeof AuthenticatedShellReportsKeyRoute
+  '/reports/builder': typeof AuthenticatedShellReportsBuilderRoute
   '/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
@@ -194,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/customers/': typeof AuthenticatedShellCustomersIndexRoute
   '/inventory/': typeof AuthenticatedShellInventoryIndexRoute
   '/leads/': typeof AuthenticatedShellLeadsIndexRoute
+  '/reports/': typeof AuthenticatedShellReportsIndexRoute
   '/settings/': typeof AuthenticatedShellSettingsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -202,13 +218,13 @@ export interface FileRoutesByTo {
   '/approvals': typeof AuthenticatedShellApprovalsRoute
   '/checkin': typeof AuthenticatedShellCheckinRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
-  '/reports': typeof AuthenticatedShellReportsRouteWithChildren
   '/schedule': typeof AuthenticatedShellScheduleRoute
   '/tasks': typeof AuthenticatedShellTasksRoute
   '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
   '/inventory/$id': typeof AuthenticatedShellInventoryIdRoute
   '/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/reports/$key': typeof AuthenticatedShellReportsKeyRoute
+  '/reports/builder': typeof AuthenticatedShellReportsBuilderRoute
   '/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
@@ -217,6 +233,7 @@ export interface FileRoutesByTo {
   '/customers': typeof AuthenticatedShellCustomersIndexRoute
   '/inventory': typeof AuthenticatedShellInventoryIndexRoute
   '/leads': typeof AuthenticatedShellLeadsIndexRoute
+  '/reports': typeof AuthenticatedShellReportsIndexRoute
   '/settings': typeof AuthenticatedShellSettingsIndexRoute
 }
 export interface FileRoutesById {
@@ -236,6 +253,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/inventory/$id': typeof AuthenticatedShellInventoryIdRoute
   '/_authenticated/_shell/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/_authenticated/_shell/reports/$key': typeof AuthenticatedShellReportsKeyRoute
+  '/_authenticated/_shell/reports/builder': typeof AuthenticatedShellReportsBuilderRoute
   '/_authenticated/_shell/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/_authenticated/_shell/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/_authenticated/_shell/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
@@ -244,6 +262,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/customers/': typeof AuthenticatedShellCustomersIndexRoute
   '/_authenticated/_shell/inventory/': typeof AuthenticatedShellInventoryIndexRoute
   '/_authenticated/_shell/leads/': typeof AuthenticatedShellLeadsIndexRoute
+  '/_authenticated/_shell/reports/': typeof AuthenticatedShellReportsIndexRoute
   '/_authenticated/_shell/settings/': typeof AuthenticatedShellSettingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -262,6 +281,7 @@ export interface FileRouteTypes {
     | '/inventory/$id'
     | '/leads/$id'
     | '/reports/$key'
+    | '/reports/builder'
     | '/reports/health'
     | '/settings/branches'
     | '/settings/organization'
@@ -270,6 +290,7 @@ export interface FileRouteTypes {
     | '/customers/'
     | '/inventory/'
     | '/leads/'
+    | '/reports/'
     | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -278,13 +299,13 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/checkin'
     | '/dashboard'
-    | '/reports'
     | '/schedule'
     | '/tasks'
     | '/customers/$id'
     | '/inventory/$id'
     | '/leads/$id'
     | '/reports/$key'
+    | '/reports/builder'
     | '/reports/health'
     | '/settings/branches'
     | '/settings/organization'
@@ -293,6 +314,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/inventory'
     | '/leads'
+    | '/reports'
     | '/settings'
   id:
     | '__root__'
@@ -311,6 +333,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/inventory/$id'
     | '/_authenticated/_shell/leads/$id'
     | '/_authenticated/_shell/reports/$key'
+    | '/_authenticated/_shell/reports/builder'
     | '/_authenticated/_shell/reports/health'
     | '/_authenticated/_shell/settings/branches'
     | '/_authenticated/_shell/settings/organization'
@@ -319,6 +342,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/customers/'
     | '/_authenticated/_shell/inventory/'
     | '/_authenticated/_shell/leads/'
+    | '/_authenticated/_shell/reports/'
     | '/_authenticated/_shell/settings/'
   fileRoutesById: FileRoutesById
 }
@@ -449,11 +473,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellLeadsIdRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
+    '/_authenticated/_shell/reports/': {
+      id: '/_authenticated/_shell/reports/'
+      path: '/'
+      fullPath: '/reports/'
+      preLoaderRoute: typeof AuthenticatedShellReportsIndexRouteImport
+      parentRoute: typeof AuthenticatedShellReportsRoute
+    }
     '/_authenticated/_shell/reports/$key': {
       id: '/_authenticated/_shell/reports/$key'
       path: '/$key'
       fullPath: '/reports/$key'
       preLoaderRoute: typeof AuthenticatedShellReportsKeyRouteImport
+      parentRoute: typeof AuthenticatedShellReportsRoute
+    }
+    '/_authenticated/_shell/reports/builder': {
+      id: '/_authenticated/_shell/reports/builder'
+      path: '/builder'
+      fullPath: '/reports/builder'
+      preLoaderRoute: typeof AuthenticatedShellReportsBuilderRouteImport
       parentRoute: typeof AuthenticatedShellReportsRoute
     }
     '/_authenticated/_shell/reports/health': {
@@ -503,13 +541,18 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedShellReportsRouteChildren {
   AuthenticatedShellReportsKeyRoute: typeof AuthenticatedShellReportsKeyRoute
+  AuthenticatedShellReportsBuilderRoute: typeof AuthenticatedShellReportsBuilderRoute
   AuthenticatedShellReportsHealthRoute: typeof AuthenticatedShellReportsHealthRoute
+  AuthenticatedShellReportsIndexRoute: typeof AuthenticatedShellReportsIndexRoute
 }
 
 const AuthenticatedShellReportsRouteChildren: AuthenticatedShellReportsRouteChildren =
   {
     AuthenticatedShellReportsKeyRoute: AuthenticatedShellReportsKeyRoute,
+    AuthenticatedShellReportsBuilderRoute:
+      AuthenticatedShellReportsBuilderRoute,
     AuthenticatedShellReportsHealthRoute: AuthenticatedShellReportsHealthRoute,
+    AuthenticatedShellReportsIndexRoute: AuthenticatedShellReportsIndexRoute,
   }
 
 const AuthenticatedShellReportsRouteWithChildren =

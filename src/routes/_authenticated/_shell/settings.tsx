@@ -18,6 +18,7 @@ const TABS = [
   { to: "/settings/branches", label: "סניפים" },
   { to: "/settings/users", label: "משתמשים" },
   { to: "/settings/rules", label: "כללים עסקיים" },
+  { to: "/settings/report-permissions", label: "הרשאות דוחות" },
 ] as const;
 
 function SettingsLayout() {
