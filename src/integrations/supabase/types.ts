@@ -2551,6 +2551,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _ticket_link_ok: {
+        Args: { _id: string; _kind: string; _org: string }
+        Returns: boolean
+      }
       _ticket_log: {
         Args: { _body: string; _meta: Json; _t: string; _type: string }
         Returns: undefined

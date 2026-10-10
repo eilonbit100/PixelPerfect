@@ -11,6 +11,7 @@ import { EVENT_LABEL, TICKET_PRIORITY, TICKET_STATUS, TICKET_TYPE, isOverdue } f
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/app/states";
 import { StatusBadge } from "@/components/app/badges";
 import { uploadTicketFiles } from "@/components/app/TicketDialog";
+import { LinkPicker } from "@/components/app/TicketLinks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,7 @@ function TicketPage() {
   const [ask, setAsk] = useState<null | "reject" | "close">(null);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const [editLinks, setEditLinks] = useState(false);
 
   const q = useQuery({
     queryKey: ["ticket", id],
@@ -49,14 +51,17 @@ function TicketPage() {
       let supplier: string | null = null, product: string | null = null;
       if (t.data?.supplier_id) supplier = (await supabase.from("suppliers").select("name").eq("id", t.data.supplier_id).maybeSingle()).data?.name ?? null;
       if (t.data?.product_id) product = (await supabase.from("inventory_products").select("name").eq("id", t.data.product_id).maybeSingle()).data?.name ?? null;
-      return { t: t.data, ev: ev.data!, fl: fl.data!, supplier, product };
+      let customer: string | null = null, task: string | null = null;
+      if (t.data?.customer_id) customer = (await supabase.from("customers").select("full_name").eq("id", t.data.customer_id).maybeSingle()).data?.full_name ?? null;
+      if (t.data?.task_id) task = (await supabase.from("tasks").select("title").eq("id", t.data.task_id).maybeSingle()).data?.title ?? null;
+      return { t: t.data, ev: ev.data!, fl: fl.data!, supplier, product, customer, task };
     },
   });
   const refresh = () => { qc.invalidateQueries({ queryKey: ["ticket", id] }); qc.invalidateQueries({ queryKey: ["tickets"] }); qc.invalidateQueries({ queryKey: ["approvals-pending"] }); };
 
   if (q.isLoading) return <TableSkeleton rows={6} cols={2} />;
   if (q.error) return <ErrorState onRetry={() => q.refetch()} />;
-  const { t, ev, fl, supplier, product } = q.data!;
+  const { t, ev, fl, supplier, product, customer, task } = q.data!;
   if (!t) return <EmptyState title="הקריאה לא נמצאה או שאין לך הרשאה לצפות בה" action={<Link to="/tickets" className="text-primary">חזרה לקריאות</Link>} />;
 
   const closed = t.status === "CLOSED";
@@ -94,6 +99,7 @@ function TicketPage() {
     if (e.event_type === "STATUS" || e.event_type === "REOPENED") return `${TICKET_STATUS[m.from ?? ""]?.label ?? m.from} ← ${TICKET_STATUS[m.to ?? ""]?.label ?? m.to}`;
     if (e.event_type === "PRIORITY") return `${TICKET_PRIORITY[m.from ?? ""]} ← ${TICKET_PRIORITY[m.to ?? ""]}`;
     if (e.event_type === "ASSIGNED") return `${m.from ? memberName(m.from) : "לא שויך"} ← ${m.to ? memberName(m.to) : "לא שויך"}`;
+    if (e.event_type === "LINKED") return `${({ customer: "לקוח", task: "משימה", product: "ציוד / מלאי" } as Record<string, string>)[m.kind ?? ""] ?? ""}: ${m.to ? "קושר" : "הקישור הוסר"}`;
     if (e.event_type === "DUE") return `${m.from ? fmtDate(m.from) : "—"} ← ${m.to ? fmtDate(m.to) : "—"}`;
     return e.body ?? "";
   };
@@ -135,7 +141,7 @@ function TicketPage() {
           <Row k="סניף" v={branchName(t.branch_id)} />
           <Row k="נפתחה ע״י" v={<>{memberName(t.requested_by)} · <span className="num">{fmtDateTime(t.submitted_at ?? t.created_at)}</span></>} />
           <Row k="גורם מאשר" v={t.ticket_type === "FAULT" ? "לא נדרש" : t.approver_level === "HQ" ? "מטה" : "מנהל סניף"} />
-          <Row k="עובד אחראי" v={canManage && !closed ? (
+          <Row k="אחראי לטיפול" v={canManage && !closed ? (
             <Select value={t.assigned_member_id ?? "none"} onValueChange={(v) => update("assigned", v === "none" ? "" : v, "האחראי עודכן")}>
               <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="none">לא שויך</SelectItem>{members.filter((m) => m.status === "ACTIVE").map((m) => <SelectItem key={m.id} value={m.id}>{m.display_name ?? m.username}</SelectItem>)}</SelectContent>
@@ -158,11 +164,28 @@ function TicketPage() {
           {t.equipment && <Row k={t.ticket_type === "PURCHASE" ? "פריט מבוקש" : "מכשיר / ציוד"} v={t.equipment} />}
           {t.quantity != null && <Row k="כמות" v={<span className="num">{t.quantity}</span>} />}
           {t.location && <Row k="מיקום" v={t.location} />}
-          {product && <Row k="פריט במלאי" v={<Link to="/inventory/$id" params={{ id: t.product_id! }} className="text-primary hover:underline">{product}</Link>} />}
+          <Row k="אחראי לטיפול / מאשר" v={<span className="text-xs text-muted-foreground">הטיפול והאישור נפרדים — אישור אינו סוגר את הקריאה</span>} />
           {t.approval_kind && <Row k="סוג האישור" v={t.approval_kind} />}
           {t.approved_by && <Row k={t.status === "REJECTED" ? "נדחתה ע״י" : "החלטה ע״י"} v={<>{memberName(t.approved_by)} · <span className="num">{fmtDateTime(t.approved_at)}</span></>} />}
           {t.rejection_reason && <Row k="סיבת דחייה" v={<span className="text-critical">{t.rejection_reason}</span>} />}
         </dl>
+        <div className="mt-4 border-t pt-3">
+          <div className="mb-2 flex items-center justify-between"><span className="text-sm font-medium">קישורים</span>
+            {!closed && (canManage || mine || t.requested_by === me.id) && <Button size="sm" variant="ghost" onClick={() => setEditLinks((x) => !x)}>{editLinks ? "סיום" : "עריכת קישורים"}</Button>}</div>
+          {editLinks ? (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1"><Label>כרטיס לקוח</Label><LinkPicker kind="customer" value={t.customer_id ?? ""} onChange={(v) => update("customer", v, "הקישור עודכן")} /></div>
+              <div className="space-y-1"><Label>משימה</Label><LinkPicker kind="task" value={t.task_id ?? ""} onChange={(v) => update("task", v, "הקישור עודכן")} /></div>
+              <div className="space-y-1"><Label>ציוד / מלאי</Label><LinkPicker kind="product" value={t.product_id ?? ""} onChange={(v) => update("product", v, "הקישור עודכן")} /></div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              <span><span className="text-muted-foreground">לקוח: </span>{customer ? <Link to="/customers/$id" params={{ id: t.customer_id! }} className="text-primary hover:underline">{customer}</Link> : "—"}</span>
+              <span><span className="text-muted-foreground">משימה: </span>{task ? <Link to="/tasks" className="text-primary hover:underline">{task}</Link> : "—"}</span>
+              <span><span className="text-muted-foreground">ציוד / מלאי: </span>{product ? <Link to="/inventory/$id" params={{ id: t.product_id! }} className="text-primary hover:underline">{product}</Link> : "—"}</span>
+            </div>
+          )}
+        </div>
         {closed && <div className="mt-4 rounded-md bg-muted/60 p-3 text-sm"><div className="text-xs text-muted-foreground">סיכום טיפול · {t.closed_by ? memberName(t.closed_by) : ""} · <span className="num">{fmtDateTime(t.closed_at)}</span></div>{t.close_summary}</div>}
         {t.status === "APPROVED" && <p className="mt-3 text-xs text-muted-foreground">האישור אינו מבצע רכישה, תשלום או תנועת מלאי. יש לעדכן את הסטטוס ולסגור את הקריאה לאחר ביצוע העבודה בפועל.</p>}
       </div>

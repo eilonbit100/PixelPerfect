@@ -22,6 +22,7 @@ import { ENTRY_REASON, FREEZE_REASON } from "@/lib/entry";
 import { fmtDateTime } from "@/lib/format";
 import { EditablePhoto } from "@/components/app/CustomerPhoto";
 import { DeskNote, FreezeDialog } from "@/components/app/CustomerExtras";
+import { LinkedTickets } from "@/components/app/TicketLinks";
 import { CancelMembershipDialog, CancelRequestDialog, CancelRequestsPanel, CardHealthPanel, ClassesPanel, EditDetailsDialog, MembershipsPanel, affiliationLabel, useAffiliations } from "@/components/app/CustomerCard";
 import { cardHealth } from "@/lib/card-health";
 import { Ban, CalendarPlus, CreditCard, FileX, MessageSquarePlus, Pencil, ShoppingCart, Snowflake } from "lucide-react";
@@ -231,6 +232,7 @@ function Customer360() {
           <TabsTrigger value="tasks">משימות והערות</TabsTrigger>
           <TabsTrigger value="visits">כניסות</TabsTrigger>
           <TabsTrigger value="classes">שיעורים ואימונים</TabsTrigger>
+          <TabsTrigger value="tickets">קריאות</TabsTrigger>
           <TabsTrigger value="timeline">היסטוריית פעילות</TabsTrigger>
         </TabsList>
 
@@ -421,6 +423,8 @@ function Customer360() {
             </table>
           )}
         </TabsContent>
+
+        <TabsContent value="tickets" className="mt-4"><LinkedTickets kind="customer" id={id} /></TabsContent>
 
         <TabsContent value="timeline" className="panel mt-4 p-4"><Timeline entityType="customer" entityId={id} /></TabsContent>
       </Tabs>

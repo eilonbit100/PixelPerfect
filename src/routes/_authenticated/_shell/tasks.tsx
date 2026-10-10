@@ -57,7 +57,11 @@ function TasksPage() {
       ]);
       const names = new Map<string, string>();
       [...(l.data ?? []), ...(c.data ?? [])].forEach((x) => names.set(x.id, x.full_name));
-      return { tasks: data, names };
+      const ids = (data ?? []).map((x) => x.id);
+      const tk = ids.length ? (await supabase.from("approval_requests").select("id,ticket_no,task_id").in("task_id", ids.slice(0, 300))).data ?? [] : [];
+      const tickets = new Map<string, { id: string; no: number }[]>();
+      tk.forEach((x) => { if (x.task_id) tickets.set(x.task_id, [...(tickets.get(x.task_id) ?? []), { id: x.id, no: x.ticket_no }]); });
+      return { tasks: data, names, tickets };
     },
   });
 
@@ -120,7 +124,7 @@ function TasksPage() {
                 const name = t.entity_id ? q.data!.names.get(t.entity_id) : undefined;
                 return (
                   <tr key={t.id}>
-                    <td className="font-medium">{t.title}</td>
+                    <td className="font-medium">{t.title}{(q.data!.tickets.get(t.id) ?? []).map((k) => <Link key={k.id} to="/tickets/$id" params={{ id: k.id }} className="num ms-2 text-xs font-normal text-primary hover:underline">קריאה #{k.no}</Link>)}</td>
                     <td>
                       {t.entity_type === "lead" && t.entity_id ? <Link className="text-primary hover:underline" to="/leads/$id" params={{ id: t.entity_id }}>{ENTITY.lead} · {name}</Link>
                         : t.entity_type === "customer" && t.entity_id ? <Link className="text-primary hover:underline" to="/customers/$id" params={{ id: t.entity_id }}>{ENTITY.customer} · {name}</Link>
