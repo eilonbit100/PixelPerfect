@@ -36,7 +36,7 @@ export const KPIS: KpiDef[] = [
   { key: "sold_amount", label: "סכום מכירות", type: "money", detail: "sales", hint: "סך מחירי המנויים שנרכשו בתקופה" },
   { key: "collected", label: "תקבולים", type: "money", detail: "payments", hint: "תשלומים ששולמו בפועל בתקופה, לפי תאריך התשלום", sub: (k) => `${k.collected_count ?? 0} תשלומים` },
   { key: "debt", label: "חובות פתוחים", type: "money", detail: "debts", hint: "תשלומים שנכשלו או ממתינים, שמועד החיוב שלהם עד סוף התקופה", sub: (k) => `${k.debt_count ?? 0} חיובים` },
-  { key: "cancelled", label: "ביטולים בפועל", detail: "cancellations", hint: "מנויים שבוטלו, לפי תאריך הביטול בפועל" },
+  { key: "cancelled", label: "ביטולים בפועל", detail: "cancellations", hint: "מנויים שהביטול שלהם נכנס לתוקף בתקופה", sub: (k) => `ביטולים עתידיים מאושרים: ${k.cancel_scheduled ?? "—"}` },
   { key: "req_total", label: "בקשות ביטול", detail: "requests", hint: "בקשות שהוגשו בתקופה", sub: (k) => `פתוחות ${k.req_open ?? 0} · טופלו ${k.req_handled ?? 0} · הושלמו ${k.req_completed ?? 0}` },
   { key: "joins", label: "מנויים חדשים", detail: "movement", hint: "לקוחות שהתחילו מנוי ראשון ברשת בתקופה, לפי תאריך התחלה. כל לקוח נספר פעם אחת" },
   { key: "active_end", label: "לקוחות פעילים", detail: "movement", hint: "לקוחות ייחודיים עם מנוי בתוקף בסוף התקופה (כולל מוקפאים)", sub: (k) => `בתחילת התקופה ${k.active_start ?? 0}` },
