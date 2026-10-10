@@ -80,6 +80,12 @@ export const SOURCES: { key: string; label: string; financial?: boolean; status?
   { key: "tasks", label: "משימות", status: { OPEN: "פתוחה", IN_PROGRESS: "בטיפול", COMPLETED: "הושלמה", CANCELLED: "בוטלה" }, cols: [{ key: "title", label: "משימה" }, { key: "assignee", label: "עובד" }, { key: "status", label: "סטטוס" }, { key: "priority", label: "עדיפות" }, { key: "due_at", label: "יעד", type: "date" }, { key: "completed_at", label: "הושלמה", type: "date" }] },
   { key: "check_ins", label: "כניסות", cols: [{ key: "customer_name", label: "לקוח" }, { key: "created_at", label: "מועד", type: "datetime" }, { key: "allowed", label: "אושרה" }, { key: "reasons", label: "סיבות" }] },
 ];
+// Status / priority columns show Hebrew labels instead of raw codes
+const PRIORITY: Record<string, string> = { LOW: "נמוכה", MEDIUM: "בינונית", HIGH: "גבוהה", URGENT: "דחופה" };
+for (const s of SOURCES) for (const c of s.cols) {
+  if (c.key === "status" && !c.map && s.status) c.map = s.status;
+  if (c.key === "priority" && !c.map) c.map = PRIORITY;
+}
 
 export type Perm = { view: boolean; export: boolean; own: boolean };
 export function useReportPerms() {
