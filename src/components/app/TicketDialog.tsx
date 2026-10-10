@@ -33,6 +33,15 @@ export async function uploadTicketFiles(orgId: string, ticketId: string, files: 
 const blank = (branch: string) => ({ type: "FAULT", title: "", details: "", branch, priority: "MEDIUM", assigned: "", due: "", amount: "", supplier_id: "", supplier_name: "", product_id: "", location: "", equipment: "", quantity: "", approval_kind: "", approver_level: "MANAGER", customer_id: "", task_id: "" });
 type Form = ReturnType<typeof blank>;
 
+function Field({ err, label, children, wide }: { err?: string; label: string; children: ReactNode; wide?: boolean }) {
+  return (
+    <div className={"space-y-1.5" + (wide ? " sm:col-span-2" : "")}>
+      <Label>{label}</Label>{children}
+      {err && <p className="text-xs text-critical">{err}</p>}
+    </div>
+  );
+}
+
 export function TicketDialog({ trigger, preset }: { trigger: ReactNode; preset?: Partial<Form> }) {
   const { org, branches, branchId, members } = useOrg();
   const navigate = useNavigate();
@@ -82,12 +91,6 @@ export function TicketDialog({ trigger, preset }: { trigger: ReactNode; preset?:
     navigate({ to: "/tickets/$id", params: { id } });
   }
 
-  const Field = ({ k, label, children, wide }: { k?: string; label: string; children: ReactNode; wide?: boolean }) => (
-    <div className={"space-y-1.5" + (wide ? " sm:col-span-2" : "")}>
-      <Label>{label}</Label>{children}
-      {k && errs[k] && <p className="text-xs text-critical">{errs[k]}</p>}
-    </div>
-  );
   const inp = (k: keyof Form, props: Record<string, unknown> = {}) => (
     <Input value={f[k]} aria-invalid={!!errs[k]} onChange={(e) => set(k, e.target.value)} {...props} />
   );
@@ -107,9 +110,9 @@ export function TicketDialog({ trigger, preset }: { trigger: ReactNode; preset?:
         </div>
 
         <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
-          <Field k="title" label="נושא *" wide>{inp("title")}</Field>
-          <Field k="details" label="תיאור *" wide><Textarea rows={2} value={f.details} aria-invalid={!!errs.details} onChange={(e) => set("details", e.target.value)} /></Field>
-          <Field k="branch" label="סניף *">
+          <Field err={errs.title} label="נושא *" wide>{inp("title")}</Field>
+          <Field err={errs.details} label="תיאור *" wide><Textarea rows={2} value={f.details} aria-invalid={!!errs.details} onChange={(e) => set("details", e.target.value)} /></Field>
+          <Field err={errs.branch} label="סניף *">
             <Select value={f.branch} onValueChange={(v) => set("branch", v)}><SelectTrigger><SelectValue placeholder="בחר סניף" /></SelectTrigger>
               <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></Field>
           <Field label="עדיפות *">
@@ -118,19 +121,19 @@ export function TicketDialog({ trigger, preset }: { trigger: ReactNode; preset?:
           <Field label="אחראי לטיפול">
             <Select value={f.assigned || "none"} onValueChange={(v) => set("assigned", v === "none" ? "" : v)}><SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="none">לא שויך</SelectItem>{members.filter((m) => m.status === "ACTIVE").map((m) => <SelectItem key={m.id} value={m.id}>{m.display_name ?? m.username}</SelectItem>)}</SelectContent></Select></Field>
-          <Field k="due" label="מועד יעד">{inp("due", { type: "date", lang: "he-IL", dir: "rtl" })}</Field>
+          <Field err={errs.due} label="מועד יעד">{inp("due", { type: "date", lang: "he-IL", dir: "rtl" })}</Field>
 
           {has("location") && <Field label="מיקום התקלה">{inp("location", { placeholder: "לדוגמה: אולם משקולות" })}</Field>}
           {has("product") && <Field label={f.type === "FAULT" ? "מכשיר / ציוד רשום" : "פריט מהמלאי"}><LinkPicker kind="product" value={f.product_id} onChange={(v) => set("product_id", v)} /></Field>}
           {otherEquip && <Field label="ציוד שאינו רשום" wide>{inp("equipment", { placeholder: "תיאור הציוד, אם אינו ברשימה" })}</Field>}
-          {f.type === "PURCHASE" && <Field k="equipment" label="פריט מבוקש *">{inp("equipment")}</Field>}
-          {has("quantity") && <Field k="quantity" label="כמות">{inp("quantity", { type: "number", min: 1, dir: "ltr" })}</Field>}
+          {f.type === "PURCHASE" && <Field err={errs.equipment} label="פריט מבוקש *">{inp("equipment")}</Field>}
+          {has("quantity") && <Field err={errs.quantity} label="כמות">{inp("quantity", { type: "number", min: 1, dir: "ltr" })}</Field>}
           {has("supplier_id") && <Field label="ספק">
             <Select value={f.supplier_id || "other"} onValueChange={(v) => set("supplier_id", v === "other" ? "" : v)}><SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="other">ספק אחר / לא רשום</SelectItem>{(refs.data?.suppliers ?? []).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></Field>}
-          {has("supplier_id") && !f.supplier_id && <Field k="supplier_name" label="שם ספק">{inp("supplier_name")}</Field>}
-          {has("amount") && <Field k="amount" label={f.type === "QUOTE" ? "סכום ההצעה (₪) *" : f.type === "PURCHASE" ? "עלות משוערת (₪)" : "סכום (אם רלוונטי)"}>{inp("amount", { type: "number", min: 0, dir: "ltr" })}</Field>}
-          {has("approval_kind") && <Field k="approval_kind" label="סוג האישור *">{inp("approval_kind", { placeholder: "לדוגמה: חריגה ממדיניות" })}</Field>}
+          {has("supplier_id") && !f.supplier_id && <Field err={errs.supplier_name} label="שם ספק">{inp("supplier_name")}</Field>}
+          {has("amount") && <Field err={errs.amount} label={f.type === "QUOTE" ? "סכום ההצעה (₪) *" : f.type === "PURCHASE" ? "עלות משוערת (₪)" : "סכום (אם רלוונטי)"}>{inp("amount", { type: "number", min: 0, dir: "ltr" })}</Field>}
+          {has("approval_kind") && <Field err={errs.approval_kind} label="סוג האישור *">{inp("approval_kind", { placeholder: "לדוגמה: חריגה ממדיניות" })}</Field>}
           {has("approver") && <Field label="גורם מאשר">
             <Select value={f.approver_level} onValueChange={(v) => set("approver_level", v)}><SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="MANAGER">מנהל סניף</SelectItem><SelectItem value="HQ">מטה</SelectItem></SelectContent></Select></Field>}

@@ -18,3 +18,16 @@ describe("tickets", () => {
     expect(fileProblem({ type: "application/zip", size: 10 })).not.toBeNull();
   });
 });
+
+import { TYPE_FIELDS, ticketFormErrors } from "./tickets";
+describe("ticket form rules", () => {
+  const base = { type: "FAULT", title: "t", details: "d", branch: "b", amount: "", equipment: "", approval_kind: "", quantity: "" };
+  it("fault shows no supplier/approver fields", () => {
+    expect(TYPE_FIELDS.FAULT).not.toContain("supplier_id");
+    expect(TYPE_FIELDS.FAULT).not.toContain("approver");
+  });
+  it("quote requires amount", () => expect(ticketFormErrors({ ...base, type: "QUOTE" }).amount).toBeTruthy());
+  it("purchase requires item", () => expect(ticketFormErrors({ ...base, type: "PURCHASE" }).equipment).toBeTruthy());
+  it("approval requires kind", () => expect(ticketFormErrors({ ...base, type: "APPROVAL" }).approval_kind).toBeTruthy());
+  it("valid fault passes", () => expect(ticketFormErrors(base)).toEqual({}));
+});
