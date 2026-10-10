@@ -1,3 +1,4 @@
+import { LinkedTickets } from "@/components/app/TicketLinks";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -156,6 +157,7 @@ function ProductPage() {
           </table>
         )}
       </div>
+      <div className="mt-4"><LinkedTickets kind="product" id={id} title="קריאות על פריט/ציוד זה" /></div>
     </div>
   );
 }
