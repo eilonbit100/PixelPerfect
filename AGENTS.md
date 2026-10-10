@@ -23,3 +23,4 @@
 - Freezes are inserted into `customer_freezes`; a trigger extends membership end_date and toggles FROZEN via `apply_freezes`.
 - Class schedule = recurring `class_templates` (weekday+time); bookings keyed by (template, session_date) via `book_class`/`cancel_booking` RPCs for atomic capacity/waitlist.
 - Daily plan: tasks.plan_date/plan_rank + daily_plans approval row; `suggest_daily_plan` (priority/overdue order, assigns by job_title + load) and `approve_daily_plan` RPCs, manager edits via normal task updates — keeps prioritization logic server-side.
+- Reports: every report runs through `run_report` / `run_custom_report` (SECURITY DEFINER, permission via `report_perm`, branches clipped by `report_branches`); exports re-run server-side in `reports.functions.ts` and log to `report_runs` — so preview, file and permissions always match.
