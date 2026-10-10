@@ -1,13 +1,13 @@
--- Run with a privileged read-only connection; checks actual Postgres KPI rules.
-WITH metrics AS (
-  SELECT o.cancellation_requests_entry_enabled enabled,
-    public._bm_kpis(o.id, ARRAY(SELECT b.id FROM public.branches b WHERE b.organization_id=o.id), '2026-01-01'::date, '2026-12-31'::date) k
-  FROM public.organizations o
+-- Read-only definition regression checks; never grant callers access to internal helpers.
+WITH definitions AS (
+  SELECT pg_get_functiondef('public._bm_kpis(uuid,uuid[],date,date)'::regprocedure) k,
+    pg_get_functiondef('public.branch_management_report(uuid,date,date,uuid[])'::regprocedure) report
 ), checks AS (
   SELECT
-    bool_and(enabled OR (k->'req_total'='null'::jsonb AND k->'req_open'='null'::jsonb AND k->'req_handled'='null'::jsonb AND k->'req_completed'='null'::jsonb)) unavailable_requests_are_null,
-    bool_and((k->>'cancelled_no_date')::int=0 OR (k->'cancelled'='null'::jsonb AND k->'leavers'='null'::jsonb AND k->'net'='null'::jsonb)) undated_cancellations_hide_unreliable_counts,
-    bool_and(k->'net'='null'::jsonb OR (k->>'net')::int=(k->>'joins')::int-(k->>'leavers')::int) net_excludes_estimated_transfers
-  FROM metrics
+    position('IF NOT coalesce((SELECT cancellation_requests_entry_enabled' IN k)>0 AND position('''req_total'', NULL, ''req_open'', NULL, ''req_handled'', NULL, ''req_completed'', NULL' IN k)>0 unavailable_requests_are_null,
+    position('''cancelled'', NULL, ''leavers'', NULL, ''transfers_out'', NULL, ''net'', NULL' IN k)>0 undated_cancellations_hide_unreliable_counts,
+    position('''net'', joins - leavers' IN k)>0 net_excludes_estimated_transfers,
+    position('''undated_cancellations''' IN report)>0 AND position('m.organization_id=_org AND m.branch_id=ANY(br) AND m.status=''CANCELLED'' AND m.cancelled_at IS NULL' IN report)>0 undated_list_is_scoped
+  FROM definitions
 )
-SELECT *, 1 / CASE WHEN unavailable_requests_are_null AND undated_cancellations_hide_unreliable_counts AND net_excludes_estimated_transfers THEN 1 ELSE 0 END passed FROM checks;
+SELECT *, 1 / CASE WHEN unavailable_requests_are_null AND undated_cancellations_hide_unreliable_counts AND net_excludes_estimated_transfers AND undated_list_is_scoped THEN 1 ELSE 0 END passed FROM checks;

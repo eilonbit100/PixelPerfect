@@ -20,7 +20,7 @@ export function requestMetric(k: BmKpis, key: string, available: boolean): numbe
 
 export function fmtReportKpi(k: BmKpis, key: string, available: boolean, type?: KpiDef["type"]): string {
   if (key.startsWith("req_") && !available) return REQUESTS_UNAVAILABLE;
-  return fmtKpi(k[key], type);
+  return fmtKpi(key.startsWith("req_") ? requestMetric(k, key, available) : k[key], type);
 }
 
 /** Percent change vs. previous period; null when the base is 0 or missing (no reliable %) */
