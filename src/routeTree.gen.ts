@@ -33,6 +33,7 @@ import { Route as AuthenticatedShellReportsHealthRouteImport } from './routes/_a
 import { Route as AuthenticatedShellSettingsIndexRouteImport } from './routes/_authenticated/_shell/settings.index'
 import { Route as AuthenticatedShellSettingsBranchesRouteImport } from './routes/_authenticated/_shell/settings.branches'
 import { Route as AuthenticatedShellSettingsOrganizationRouteImport } from './routes/_authenticated/_shell/settings.organization'
+import { Route as AuthenticatedShellSettingsReportPermissionsRouteImport } from './routes/_authenticated/_shell/settings.report-permissions'
 import { Route as AuthenticatedShellSettingsRulesRouteImport } from './routes/_authenticated/_shell/settings.rules'
 import { Route as AuthenticatedShellSettingsUsersRouteImport } from './routes/_authenticated/_shell/settings.users'
 
@@ -173,6 +174,12 @@ const AuthenticatedShellSettingsOrganizationRoute =
     path: '/organization',
     getParentRoute: () => AuthenticatedShellSettingsRoute,
   } as any)
+const AuthenticatedShellSettingsReportPermissionsRoute =
+  AuthenticatedShellSettingsReportPermissionsRouteImport.update({
+    id: '/report-permissions',
+    path: '/report-permissions',
+    getParentRoute: () => AuthenticatedShellSettingsRoute,
+  } as any)
 const AuthenticatedShellSettingsRulesRoute =
   AuthenticatedShellSettingsRulesRouteImport.update({
     id: '/rules',
@@ -204,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
+  '/settings/report-permissions': typeof AuthenticatedShellSettingsReportPermissionsRoute
   '/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
   '/settings/users': typeof AuthenticatedShellSettingsUsersRoute
   '/customers/': typeof AuthenticatedShellCustomersIndexRoute
@@ -228,6 +236,7 @@ export interface FileRoutesByTo {
   '/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
+  '/settings/report-permissions': typeof AuthenticatedShellSettingsReportPermissionsRoute
   '/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
   '/settings/users': typeof AuthenticatedShellSettingsUsersRoute
   '/customers': typeof AuthenticatedShellCustomersIndexRoute
@@ -257,6 +266,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/_authenticated/_shell/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/_authenticated/_shell/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
+  '/_authenticated/_shell/settings/report-permissions': typeof AuthenticatedShellSettingsReportPermissionsRoute
   '/_authenticated/_shell/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
   '/_authenticated/_shell/settings/users': typeof AuthenticatedShellSettingsUsersRoute
   '/_authenticated/_shell/customers/': typeof AuthenticatedShellCustomersIndexRoute
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/reports/health'
     | '/settings/branches'
     | '/settings/organization'
+    | '/settings/report-permissions'
     | '/settings/rules'
     | '/settings/users'
     | '/customers/'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/reports/health'
     | '/settings/branches'
     | '/settings/organization'
+    | '/settings/report-permissions'
     | '/settings/rules'
     | '/settings/users'
     | '/customers'
@@ -337,6 +349,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/reports/health'
     | '/_authenticated/_shell/settings/branches'
     | '/_authenticated/_shell/settings/organization'
+    | '/_authenticated/_shell/settings/report-permissions'
     | '/_authenticated/_shell/settings/rules'
     | '/_authenticated/_shell/settings/users'
     | '/_authenticated/_shell/customers/'
@@ -522,6 +535,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellSettingsOrganizationRouteImport
       parentRoute: typeof AuthenticatedShellSettingsRoute
     }
+    '/_authenticated/_shell/settings/report-permissions': {
+      id: '/_authenticated/_shell/settings/report-permissions'
+      path: '/report-permissions'
+      fullPath: '/settings/report-permissions'
+      preLoaderRoute: typeof AuthenticatedShellSettingsReportPermissionsRouteImport
+      parentRoute: typeof AuthenticatedShellSettingsRoute
+    }
     '/_authenticated/_shell/settings/rules': {
       id: '/_authenticated/_shell/settings/rules'
       path: '/rules'
@@ -563,6 +583,7 @@ const AuthenticatedShellReportsRouteWithChildren =
 interface AuthenticatedShellSettingsRouteChildren {
   AuthenticatedShellSettingsBranchesRoute: typeof AuthenticatedShellSettingsBranchesRoute
   AuthenticatedShellSettingsOrganizationRoute: typeof AuthenticatedShellSettingsOrganizationRoute
+  AuthenticatedShellSettingsReportPermissionsRoute: typeof AuthenticatedShellSettingsReportPermissionsRoute
   AuthenticatedShellSettingsRulesRoute: typeof AuthenticatedShellSettingsRulesRoute
   AuthenticatedShellSettingsUsersRoute: typeof AuthenticatedShellSettingsUsersRoute
   AuthenticatedShellSettingsIndexRoute: typeof AuthenticatedShellSettingsIndexRoute
@@ -574,6 +595,8 @@ const AuthenticatedShellSettingsRouteChildren: AuthenticatedShellSettingsRouteCh
       AuthenticatedShellSettingsBranchesRoute,
     AuthenticatedShellSettingsOrganizationRoute:
       AuthenticatedShellSettingsOrganizationRoute,
+    AuthenticatedShellSettingsReportPermissionsRoute:
+      AuthenticatedShellSettingsReportPermissionsRoute,
     AuthenticatedShellSettingsRulesRoute: AuthenticatedShellSettingsRulesRoute,
     AuthenticatedShellSettingsUsersRoute: AuthenticatedShellSettingsUsersRoute,
     AuthenticatedShellSettingsIndexRoute: AuthenticatedShellSettingsIndexRoute,
