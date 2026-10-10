@@ -8,6 +8,20 @@
       "when": 1791622764621,
       "tag": "0000_reports_center",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791625084691,
+      "tag": "0001_branch_management_report",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791625294866,
+      "tag": "0002_branch_report_hide_unreliable",
+      "breakpoints": true
     }
   ]
 }

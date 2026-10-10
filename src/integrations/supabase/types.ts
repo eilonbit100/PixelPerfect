@@ -2142,6 +2142,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _bm_active: {
+        Args: { _org: string; br: string[]; d: string }
+        Returns: {
+          customer_id: string
+        }[]
+      }
+      _bm_kpis: {
+        Args: { _from: string; _org: string; _to: string; br: string[] }
+        Returns: Json
+      }
       _skip_automation: { Args: never; Returns: boolean }
       _sync_rule: {
         Args: {
@@ -2179,6 +2189,10 @@ export type Database = {
         Returns: string
       }
       bootstrap_current_user: { Args: { _full_name?: string }; Returns: Json }
+      branch_management_report: {
+        Args: { _branches?: string[]; _from: string; _org: string; _to: string }
+        Returns: Json
+      }
       cancel_booking: { Args: { _booking: string }; Returns: undefined }
       check_in_customer: {
         Args: { _branch: string; _customer: string }

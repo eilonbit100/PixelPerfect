@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { reportByKey, useReportPerms, type RangeKey } from "@/lib/reports";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/app/states";
+import { BranchReport } from "@/components/app/BranchReport";
 import { DataTable, ExportBar, FilterBar, SaveTemplateButton, defaultFilters, type Filters } from "@/components/app/ReportView";
 
 type Search = { range?: RangeKey; from?: string; to?: string; b?: string };
@@ -39,7 +40,7 @@ function ReportPage() {
 
   const q = useQuery({
     queryKey: ["report", org.id, key, f.from, f.to, f.branches.join(",")],
-    enabled: !!def && !!p?.view && !def.unavailable,
+    enabled: !!def && !!p?.view && !def.unavailable && !def.custom,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("run_report", { _org: org.id, _key: key, _from: f.from, _to: f.to, _branches: f.branches });
       if (error) throw error;
@@ -59,13 +60,13 @@ function ReportPage() {
         <PageHeader
           title={`${def.number ? def.number + " · " : ""}${def.name}`}
           subtitle={<>{def.desc}{q.data?.own && <span className="ms-2 text-xs text-attention">· מוצגים רק הנתונים שלך</span>}</>}
-          actions={!def.unavailable && <div className="flex flex-wrap items-center gap-2">
+          actions={!def.unavailable && !def.custom && <div className="flex flex-wrap items-center gap-2">
             <SaveTemplateButton reportKey={key} config={{ range: f.range, from: f.from, to: f.to, branches: f.branches }} defaultName={def.name} canShare={!!perms.data?._share?.view} />
             {p.export && <ExportBar args={{ key, filters: f }} disabled={!q.data} />}
           </div>}
         />
       </div>
-      {def.unavailable ? (
+      {def.custom ? <BranchReport f={f} setF={setF} canExport={!!p.export} /> : def.unavailable ? (
         <div className="panel"><EmptyState icon={<DatabaseZap className="size-5" />} title="נתונים אינם זמינים" text={def.unavailable} /></div>
       ) : (
         <>
