@@ -25,10 +25,11 @@ const PM: Record<string, string> = { CREDIT_CARD: "כרטיס אשראי", STAND
 
 export type ReportDef = {
   key: string; number?: string; name: string; desc: string; category: Category;
-  dateMeaning: string; cols: Col[]; link?: "customer" | "lead"; financial?: boolean; unavailable?: string; note?: string;
+  dateMeaning: string; cols: Col[]; link?: "customer" | "lead"; financial?: boolean; unavailable?: string; note?: string; custom?: boolean;
 };
 
 export const REPORTS: ReportDef[] = [
+  { key: "branch_mgmt", name: "דוח ניהול סניף", category: "members", custom: true, financial: true, desc: "מכירות, ביטולים, בקשות ביטול, תנועת מנויים, צמיחה וכספים — מול התקופה הקודמת", dateMeaning: "לפי סוג המדד", cols: [] },
   { key: "cancellations", number: "113", name: "ביטולים", category: "members", desc: "מנויים שבוטלו, סיבה ותאריך כניסה לתוקף", dateMeaning: "לפי מועד הביטול", link: "customer",
     cols: [{ key: "full_name", label: "לקוח" }, { key: "phone", label: "טלפון" }, { key: "plan", label: "סוג מנוי" }, { key: "requested", label: "בקשת ביטול", type: "date" }, { key: "effective", label: "בתוקף מ", type: "date" }, { key: "reason", label: "סיבה" }, { key: "branch", label: "סניף" }] },
   { key: "purchases", number: "120", name: "לקוחות לפי מועד רכישה", category: "members", desc: "מי רכש מנוי או מוצר בתקופה, סכום ואיש מכירות", dateMeaning: "לפי מועד התשלום", link: "customer",
