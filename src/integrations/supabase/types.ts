@@ -251,6 +251,74 @@ export type Database = {
           },
         ]
       }
+      cancellation_requests: {
+        Row: {
+          branch_id: string | null
+          created_by: string | null
+          customer_id: string
+          handled_at: string | null
+          id: string
+          membership_id: string | null
+          organization_id: string
+          reason: string | null
+          requested_at: string
+          status: string
+        }
+        Insert: {
+          branch_id?: string | null
+          created_by?: string | null
+          customer_id: string
+          handled_at?: string | null
+          id?: string
+          membership_id?: string | null
+          organization_id: string
+          reason?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Update: {
+          branch_id?: string | null
+          created_by?: string | null
+          customer_id?: string
+          handled_at?: string | null
+          id?: string
+          membership_id?: string | null
+          organization_id?: string
+          reason?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_requests_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cancellation_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cancellation_requests_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cancellation_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       check_ins: {
         Row: {
           allowed: boolean
@@ -258,6 +326,7 @@ export type Database = {
           created_at: string
           customer_id: string
           id: string
+          method: string | null
           organization_id: string
           performed_by: string | null
           reasons: string[]
@@ -268,6 +337,7 @@ export type Database = {
           created_at?: string
           customer_id: string
           id?: string
+          method?: string | null
           organization_id: string
           performed_by?: string | null
           reasons?: string[]
@@ -278,6 +348,7 @@ export type Database = {
           created_at?: string
           customer_id?: string
           id?: string
+          method?: string | null
           organization_id?: string
           performed_by?: string | null
           reasons?: string[]
@@ -1368,6 +1439,8 @@ export type Database = {
       memberships: {
         Row: {
           branch_id: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
           created_at: string
           customer_id: string
           display_name: string
@@ -1382,6 +1455,8 @@ export type Database = {
         }
         Insert: {
           branch_id?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string
           customer_id: string
           display_name: string
@@ -1396,6 +1471,8 @@ export type Database = {
         }
         Update: {
           branch_id?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string
           customer_id?: string
           display_name?: string
@@ -1713,6 +1790,117 @@ export type Database = {
         }
         Relationships: []
       }
+      report_permissions: {
+        Row: {
+          can_export: boolean
+          can_view: boolean
+          id: string
+          member_id: string | null
+          organization_id: string
+          own_only: boolean
+          report_key: string
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          can_export?: boolean
+          can_view?: boolean
+          id?: string
+          member_id?: string | null
+          organization_id: string
+          own_only?: boolean
+          report_key: string
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          can_export?: boolean
+          can_view?: boolean
+          id?: string
+          member_id?: string | null
+          organization_id?: string
+          own_only?: boolean
+          report_key?: string
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_permissions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_permissions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_runs: {
+        Row: {
+          branch_ids: string[]
+          created_at: string
+          file_path: string | null
+          format: string
+          id: string
+          member_id: string | null
+          organization_id: string
+          params: Json
+          report_key: string
+          report_name: string
+          row_count: number
+          user_id: string
+        }
+        Insert: {
+          branch_ids?: string[]
+          created_at?: string
+          file_path?: string | null
+          format: string
+          id?: string
+          member_id?: string | null
+          organization_id: string
+          params?: Json
+          report_key: string
+          report_name: string
+          row_count?: number
+          user_id?: string
+        }
+        Update: {
+          branch_ids?: string[]
+          created_at?: string
+          file_path?: string | null
+          format?: string
+          id?: string
+          member_id?: string | null
+          organization_id?: string
+          params?: Json
+          report_key?: string
+          report_name?: string
+          row_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_runs_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_runs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rule_definitions: {
         Row: {
           configuration: Json
@@ -1756,6 +1944,60 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_reports: {
+        Row: {
+          config: Json
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          organization_id: string
+          owner_member_id: string
+          report_key: string | null
+          shared_roles: string[]
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          owner_member_id: string
+          report_key?: string | null
+          shared_roles?: string[]
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          owner_member_id?: string
+          report_key?: string | null
+          shared_roles?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_reports_owner_member_id_fkey"
+            columns: ["owner_member_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
             referencedColumns: ["id"]
           },
         ]
@@ -1958,11 +2200,39 @@ export type Database = {
       is_org_manager: { Args: { _org: string }; Returns: boolean }
       is_org_member: { Args: { _org: string }; Returns: boolean }
       member_role: { Args: { _org: string }; Returns: string }
+      my_report_permissions: { Args: { _org: string }; Returns: Json }
       normalize_phone: { Args: { _p: string }; Returns: string }
       refresh_insights: { Args: { _org: string }; Returns: string }
+      report_branches: {
+        Args: { _branches: string[]; _org: string }
+        Returns: string[]
+      }
+      report_perm: { Args: { _key: string; _org: string }; Returns: Json }
       rule_setting: {
         Args: { _key: string; _org: string }
         Returns: Record<string, unknown>
+      }
+      run_custom_report: {
+        Args: {
+          _branches?: string[]
+          _columns: string[]
+          _from: string
+          _org: string
+          _source: string
+          _status?: string
+          _to: string
+        }
+        Returns: Json
+      }
+      run_report: {
+        Args: {
+          _branches?: string[]
+          _from: string
+          _key: string
+          _org: string
+          _to: string
+        }
+        Returns: Json
       }
       search_entities: {
         Args: { _limit?: number; _q: string }
