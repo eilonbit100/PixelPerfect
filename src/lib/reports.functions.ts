@@ -70,7 +70,11 @@ export const exportReport = createServerFn({ method: "POST" })
         body = new TextEncoder().encode(csv); type = "text/csv;charset=utf-8";
       } else {
         const XLSX = await import("xlsx");
-        const ws = XLSX.utils.aoa_to_sheet([...header, ...table]);
+        // Keep money/number columns numeric in Excel so they can be summed
+        const numeric = (c: Col) => c.type === "money" || c.type === "number";
+        const xrows = rows.map((r) => cols.map((c) => (numeric(c) && r[c.key] !== null && r[c.key] !== "" && !isNaN(Number(r[c.key])) ? Number(r[c.key]) : fmtCell(r[c.key], c))));
+        const ws = XLSX.utils.aoa_to_sheet([...header, table[0], ...xrows]);
+        cols.forEach((c, ci) => { if (c.type !== "money") return; for (let ri = 0; ri < xrows.length; ri++) { const cell = ws[XLSX.utils.encode_cell({ r: header.length + 1 + ri, c: ci })]; if (cell && cell.t === "n") cell.z = '"₪"#,##0.##'; } });
         ws["!cols"] = cols.map(() => ({ wch: 18 }));
         const wb = XLSX.utils.book_new();
         wb.Workbook = { Views: [{ RTL: true }] };

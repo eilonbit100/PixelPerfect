@@ -113,7 +113,7 @@ function Library() {
 const FMT: Record<string, string> = { xlsx: "Excel", csv: "CSV", pdf: "PDF" };
 
 function Runs() {
-  const { org, memberName, branchName } = useOrg();
+  const { org, me, memberName, branchName } = useOrg();
   const navigate = useNavigate();
   const q = useQuery({
     queryKey: ["report-runs", org.id],
@@ -152,7 +152,7 @@ function Runs() {
               <td>{FMT[r.format]}</td>
               <td className="num">{r.row_count}</td>
               <td className="whitespace-nowrap text-end">
-                {r.file_path && <Button size="sm" variant="ghost" onClick={() => download(r.file_path!)}><Download className="size-4" /> הורדה</Button>}
+                {r.file_path && r.member_id === me.id && <Button size="sm" variant="ghost" onClick={() => download(r.file_path!)}><Download className="size-4" /> הורדה</Button>}
                 <Button size="sm" variant="ghost" onClick={() => rerun(r)}><RotateCcw className="size-4" /> הפק שוב</Button>
               </td>
             </tr>
