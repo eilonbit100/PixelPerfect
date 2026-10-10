@@ -104,29 +104,43 @@ export const aiReportSearch = createServerFn({ method: "POST" })
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { ok: false as const, error: "החיפוש החכם אינו זמין כרגע" };
     const today = new Date().toISOString().slice(0, 10);
-    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: `You map Hebrew questions from gym staff to ONE report from this catalog. Today is ${today}. Catalog:\n${allowed.map((x) => `${x.key}: ${x.name} — ${x.desc}`).join("\n")}\nIf nothing fits, use report_key "none". Card digits search is not supported.` },
-          { role: "user", content: data.q },
-        ],
-        tools: [{ type: "function", function: { name: "pick_report", parameters: { type: "object", properties: {
-          report_key: { type: "string", enum: [...allowed.map((x) => x.key), "none"] },
-          range: { type: "string", enum: ["today", "week", "month", "prev_month", "year", "custom"] },
-          from: { type: "string", description: "YYYY-MM-DD when range=custom" }, to: { type: "string" },
-          explanation: { type: "string", description: "short Hebrew sentence" },
-        }, required: ["report_key", "range", "explanation"] } } }],
-        tool_choice: { type: "function", function: { name: "pick_report" } },
+        model: "openai/gpt-6-astra",
+        stream: true,
+        store: false,
+        reasoning: { effort: "low" },
+        instructions: `You map Hebrew questions from gym staff to ONE report from this catalog. Today is ${today}. Catalog:\n${allowed.map((x) => `${x.key}: ${x.name} — ${x.desc}`).join("\n")}\nIf nothing fits, use report_key "none". Card digits search is not supported. Use empty strings for from/to unless range is custom.`,
+        input: [{ role: "user", content: data.q }],
+        text: { format: { type: "json_schema", name: "pick_report", strict: true, schema: {
+          type: "object", additionalProperties: false, required: ["report_key", "range", "from", "to", "explanation"],
+          properties: {
+            report_key: { type: "string", enum: [...allowed.map((x) => x.key), "none"] },
+            range: { type: "string", enum: ["today", "week", "month", "prev_month", "year", "custom"] },
+            from: { type: "string" }, to: { type: "string" },
+            explanation: { type: "string" },
+          } } } },
       }),
     });
     if (r.status === 429) return { ok: false as const, error: "יותר מדי בקשות, נסה שוב בעוד רגע" };
     if (r.status === 402) return { ok: false as const, error: "החיפוש החכם אינו זמין (נגמרה המכסה)" };
-    if (!r.ok) { console.error("ai search", r.status, await r.text()); return { ok: false as const, error: "החיפוש החכם נכשל" }; }
-    const j = await r.json();
-    const args = JSON.parse(j.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? "{}");
+    if (!r.ok || !r.body) { console.error("ai search", r.status, await r.text()); return { ok: false as const, error: "החיפוש החכם נכשל" }; }
+    let text = ""; let buf = "";
+    const reader = r.body.getReader(); const dec = new TextDecoder();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split("\n"); buf = lines.pop() ?? "";
+      for (const l of lines) {
+        if (!l.startsWith("data:")) continue;
+        try { const ev = JSON.parse(l.slice(5).trim()); if (ev.type === "response.output_text.delta") text += ev.delta ?? ""; } catch { /* keep-alive */ }
+      }
+    }
+    let args: Record<string, string> = {};
+    try { args = JSON.parse(text); } catch { return { ok: false as const, error: "החיפוש החכם נכשל" }; }
     if (!args.report_key || args.report_key === "none" || !allowed.some((x) => x.key === args.report_key))
       return { ok: false as const, error: "לא מצאתי דוח מתאים. נסה לנסח אחרת או לחפש בספרייה." };
     const ok = (s?: string) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : undefined);
