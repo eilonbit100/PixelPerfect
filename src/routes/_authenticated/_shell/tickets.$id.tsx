@@ -181,7 +181,7 @@ function TicketPage() {
           ) : (
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
               <span><span className="text-muted-foreground">לקוח: </span>{customer ? <Link to="/customers/$id" params={{ id: t.customer_id! }} className="text-primary hover:underline">{customer}</Link> : "—"}</span>
-              <span><span className="text-muted-foreground">משימה: </span>{task ? <Link to="/tasks" className="text-primary hover:underline">{task}</Link> : "—"}</span>
+              <span><span className="text-muted-foreground">משימה: </span>{task ? <Link to="/tasks" search={{ task: t.task_id! }} className="text-primary hover:underline">{task}</Link> : "—"}</span>
               <span><span className="text-muted-foreground">ציוד / מלאי: </span>{product ? <Link to="/inventory/$id" params={{ id: t.product_id! }} className="text-primary hover:underline">{product}</Link> : "—"}</span>
             </div>
           )}

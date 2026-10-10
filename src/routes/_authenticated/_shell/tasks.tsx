@@ -14,13 +14,14 @@ import { TaskDialog } from "@/components/app/TaskDialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type Search = { filter?: string; source?: string; owner?: string };
+type Search = { filter?: string; source?: string; owner?: string; task?: string };
 
 export const Route = createFileRoute("/_authenticated/_shell/tasks")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     filter: typeof s.filter === "string" ? s.filter : undefined,
     source: typeof s.source === "string" ? s.source : undefined,
     owner: typeof s.owner === "string" ? s.owner : undefined,
+    task: typeof s.task === "string" ? s.task : undefined,
   }),
   head: () => ({
     meta: [
@@ -67,6 +68,7 @@ function TasksPage() {
 
   const rows = useMemo(() => {
     let list = q.data?.tasks ?? [];
+    if (search.task) return list.filter((t) => t.id === search.task);
     const now = new Date();
     const endToday = new Date(); endToday.setHours(23, 59, 59);
     const open = (s: string) => s === "OPEN" || s === "IN_PROGRESS";
