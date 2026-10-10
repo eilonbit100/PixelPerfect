@@ -60,7 +60,7 @@ export function PendingApprovals() {
     <div className="panel">
       <div className="flex items-center justify-between border-b px-4 py-3">
         <span className="text-sm font-medium">{isAdmin ? "ממתין לאישורך" : "בקשות שממתינות למטה"}</span>
-        <Link to="/approvals" className="text-xs text-primary hover:underline">הכל</Link>
+        <Link to="/tickets" className="text-xs text-primary hover:underline">הכל</Link>
       </div>
       {!q.data ? <div className="p-4"><Skeleton className="h-4 w-full" /></div>
         : !q.data.length ? <p className="px-4 py-6 text-center text-sm text-muted-foreground">אין בקשות ממתינות</p>
@@ -68,7 +68,7 @@ export function PendingApprovals() {
           <ul className="divide-y">
             {q.data.slice(0, 5).map((a) => (
               <li key={a.id}>
-                <Link to="/approvals" className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm hover:bg-muted">
+                <Link to="/tickets" className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm hover:bg-muted">
                   <span className="truncate">{a.title}</span>
                   {a.amount != null && <span className="num shrink-0 text-xs text-muted-foreground">{fmtMoney(a.amount)}</span>}
                 </Link>

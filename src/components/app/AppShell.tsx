@@ -23,7 +23,7 @@ const NAV = [
   { to: "/tasks", label: "משימות", icon: ListTodo },
   { to: "/inventory", label: "מלאי", icon: Package },
   { to: "/reports", label: "דוחות", icon: BarChart3 },
-  { to: "/approvals", label: "אישורים", icon: CheckSquare },
+  { to: "/tickets", label: "קריאות", icon: CheckSquare, group: "ניהול" },
   { to: "/settings", label: "הגדרות", icon: Settings },
 ] as const;
 
@@ -59,12 +59,14 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
         <span className="text-[15px] font-semibold tracking-tight">Pulse</span>
       </div>
       <nav className="flex-1 space-y-0.5 px-2">
-        {NAV.filter((n) => n.to !== "/approvals" || role !== "EMPLOYEE").map((n) => {
+        {NAV.map((n) => {
           const stg = (n as { stage?: string }).stage;
           const active = (path === n.to || path.startsWith(n.to + "/")) && (n.to !== "/leads" || path !== "/leads" || (stg ?? null) === (stageParam ?? null));
+          const group = (n as { group?: string }).group;
           return (
+            <div key={n.label}>
+            {group && <div className="mt-3 mb-1 px-2.5 text-[0.72rem] font-semibold text-sidebar-foreground/60">{group}</div>}
             <Link
-              key={n.label}
               to={n.to}
               search={n.to === "/leads" ? { stage: stg } : undefined}
               onClick={onNavigate}
@@ -76,6 +78,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
               <n.icon className={cn("size-4", active ? "text-sidebar-primary" : "text-sidebar-foreground/60")} />
               {n.label}
             </Link>
+            </div>
           );
         })}
       </nav>

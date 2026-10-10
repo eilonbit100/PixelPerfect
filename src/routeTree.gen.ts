@@ -37,6 +37,8 @@ import { Route as AuthenticatedShellSettingsOrganizationRouteImport } from './ro
 import { Route as AuthenticatedShellSettingsReportPermissionsRouteImport } from './routes/_authenticated/_shell/settings.report-permissions'
 import { Route as AuthenticatedShellSettingsRulesRouteImport } from './routes/_authenticated/_shell/settings.rules'
 import { Route as AuthenticatedShellSettingsUsersRouteImport } from './routes/_authenticated/_shell/settings.users'
+import { Route as AuthenticatedShellTicketsIndexRouteImport } from './routes/_authenticated/_shell/tickets.index'
+import { Route as AuthenticatedShellTicketsIdRouteImport } from './routes/_authenticated/_shell/tickets.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -199,6 +201,18 @@ const AuthenticatedShellSettingsUsersRoute =
     path: '/users',
     getParentRoute: () => AuthenticatedShellSettingsRoute,
   } as any)
+const AuthenticatedShellTicketsIndexRoute =
+  AuthenticatedShellTicketsIndexRouteImport.update({
+    id: '/tickets/',
+    path: '/tickets/',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellTicketsIdRoute =
+  AuthenticatedShellTicketsIdRouteImport.update({
+    id: '/tickets/$id',
+    path: '/tickets/$id',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -222,11 +236,13 @@ export interface FileRoutesByFullPath {
   '/settings/report-permissions': typeof AuthenticatedShellSettingsReportPermissionsRoute
   '/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
   '/settings/users': typeof AuthenticatedShellSettingsUsersRoute
+  '/tickets/$id': typeof AuthenticatedShellTicketsIdRoute
   '/customers/': typeof AuthenticatedShellCustomersIndexRoute
   '/inventory/': typeof AuthenticatedShellInventoryIndexRoute
   '/leads/': typeof AuthenticatedShellLeadsIndexRoute
   '/reports/': typeof AuthenticatedShellReportsIndexRoute
   '/settings/': typeof AuthenticatedShellSettingsIndexRoute
+  '/tickets/': typeof AuthenticatedShellTicketsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -248,11 +264,13 @@ export interface FileRoutesByTo {
   '/settings/report-permissions': typeof AuthenticatedShellSettingsReportPermissionsRoute
   '/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
   '/settings/users': typeof AuthenticatedShellSettingsUsersRoute
+  '/tickets/$id': typeof AuthenticatedShellTicketsIdRoute
   '/customers': typeof AuthenticatedShellCustomersIndexRoute
   '/inventory': typeof AuthenticatedShellInventoryIndexRoute
   '/leads': typeof AuthenticatedShellLeadsIndexRoute
   '/reports': typeof AuthenticatedShellReportsIndexRoute
   '/settings': typeof AuthenticatedShellSettingsIndexRoute
+  '/tickets': typeof AuthenticatedShellTicketsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -279,11 +297,13 @@ export interface FileRoutesById {
   '/_authenticated/_shell/settings/report-permissions': typeof AuthenticatedShellSettingsReportPermissionsRoute
   '/_authenticated/_shell/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
   '/_authenticated/_shell/settings/users': typeof AuthenticatedShellSettingsUsersRoute
+  '/_authenticated/_shell/tickets/$id': typeof AuthenticatedShellTicketsIdRoute
   '/_authenticated/_shell/customers/': typeof AuthenticatedShellCustomersIndexRoute
   '/_authenticated/_shell/inventory/': typeof AuthenticatedShellInventoryIndexRoute
   '/_authenticated/_shell/leads/': typeof AuthenticatedShellLeadsIndexRoute
   '/_authenticated/_shell/reports/': typeof AuthenticatedShellReportsIndexRoute
   '/_authenticated/_shell/settings/': typeof AuthenticatedShellSettingsIndexRoute
+  '/_authenticated/_shell/tickets/': typeof AuthenticatedShellTicketsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -309,11 +329,13 @@ export interface FileRouteTypes {
     | '/settings/report-permissions'
     | '/settings/rules'
     | '/settings/users'
+    | '/tickets/$id'
     | '/customers/'
     | '/inventory/'
     | '/leads/'
     | '/reports/'
     | '/settings/'
+    | '/tickets/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -335,11 +357,13 @@ export interface FileRouteTypes {
     | '/settings/report-permissions'
     | '/settings/rules'
     | '/settings/users'
+    | '/tickets/$id'
     | '/customers'
     | '/inventory'
     | '/leads'
     | '/reports'
     | '/settings'
+    | '/tickets'
   id:
     | '__root__'
     | '/'
@@ -365,11 +389,13 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/settings/report-permissions'
     | '/_authenticated/_shell/settings/rules'
     | '/_authenticated/_shell/settings/users'
+    | '/_authenticated/_shell/tickets/$id'
     | '/_authenticated/_shell/customers/'
     | '/_authenticated/_shell/inventory/'
     | '/_authenticated/_shell/leads/'
     | '/_authenticated/_shell/reports/'
     | '/_authenticated/_shell/settings/'
+    | '/_authenticated/_shell/tickets/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -576,6 +602,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellSettingsUsersRouteImport
       parentRoute: typeof AuthenticatedShellSettingsRoute
     }
+    '/_authenticated/_shell/tickets/': {
+      id: '/_authenticated/_shell/tickets/'
+      path: '/tickets'
+      fullPath: '/tickets/'
+      preLoaderRoute: typeof AuthenticatedShellTicketsIndexRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/tickets/$id': {
+      id: '/_authenticated/_shell/tickets/$id'
+      path: '/tickets/$id'
+      fullPath: '/tickets/$id'
+      preLoaderRoute: typeof AuthenticatedShellTicketsIdRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
   }
 }
 
@@ -641,9 +681,11 @@ interface AuthenticatedShellRouteChildren {
   AuthenticatedShellCustomersIdRoute: typeof AuthenticatedShellCustomersIdRoute
   AuthenticatedShellInventoryIdRoute: typeof AuthenticatedShellInventoryIdRoute
   AuthenticatedShellLeadsIdRoute: typeof AuthenticatedShellLeadsIdRoute
+  AuthenticatedShellTicketsIdRoute: typeof AuthenticatedShellTicketsIdRoute
   AuthenticatedShellCustomersIndexRoute: typeof AuthenticatedShellCustomersIndexRoute
   AuthenticatedShellInventoryIndexRoute: typeof AuthenticatedShellInventoryIndexRoute
   AuthenticatedShellLeadsIndexRoute: typeof AuthenticatedShellLeadsIndexRoute
+  AuthenticatedShellTicketsIndexRoute: typeof AuthenticatedShellTicketsIndexRoute
 }
 
 const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
@@ -657,9 +699,11 @@ const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
   AuthenticatedShellCustomersIdRoute: AuthenticatedShellCustomersIdRoute,
   AuthenticatedShellInventoryIdRoute: AuthenticatedShellInventoryIdRoute,
   AuthenticatedShellLeadsIdRoute: AuthenticatedShellLeadsIdRoute,
+  AuthenticatedShellTicketsIdRoute: AuthenticatedShellTicketsIdRoute,
   AuthenticatedShellCustomersIndexRoute: AuthenticatedShellCustomersIndexRoute,
   AuthenticatedShellInventoryIndexRoute: AuthenticatedShellInventoryIndexRoute,
   AuthenticatedShellLeadsIndexRoute: AuthenticatedShellLeadsIndexRoute,
+  AuthenticatedShellTicketsIndexRoute: AuthenticatedShellTicketsIndexRoute,
 }
 
 const AuthenticatedShellRouteWithChildren =

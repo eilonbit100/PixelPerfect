@@ -109,58 +109,115 @@ export type Database = {
       approval_requests: {
         Row: {
           amount: number | null
+          approval_kind: string | null
           approval_status: string
           approved_at: string | null
           approved_by: string | null
+          approver_level: string
+          assigned_member_id: string | null
           branch_id: string | null
+          close_summary: string | null
+          closed_at: string | null
+          closed_by: string | null
           created_at: string
+          customer_id: string | null
           details: string | null
+          due_at: string | null
           entity_id: string | null
           entity_type: string | null
+          equipment: string | null
           id: string
+          location: string | null
           organization_id: string
+          priority: string
+          product_id: string | null
+          quantity: number | null
           rejection_reason: string | null
           request_type: string
           requested_by: string | null
+          status: string
           submitted_at: string | null
+          supplier_id: string | null
+          supplier_name: string | null
+          task_id: string | null
+          ticket_no: number
+          ticket_type: string
           title: string
           updated_at: string
         }
         Insert: {
           amount?: number | null
+          approval_kind?: string | null
           approval_status?: string
           approved_at?: string | null
           approved_by?: string | null
+          approver_level?: string
+          assigned_member_id?: string | null
           branch_id?: string | null
+          close_summary?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
+          customer_id?: string | null
           details?: string | null
+          due_at?: string | null
           entity_id?: string | null
           entity_type?: string | null
+          equipment?: string | null
           id?: string
+          location?: string | null
           organization_id: string
+          priority?: string
+          product_id?: string | null
+          quantity?: number | null
           rejection_reason?: string | null
           request_type?: string
           requested_by?: string | null
+          status?: string
           submitted_at?: string | null
+          supplier_id?: string | null
+          supplier_name?: string | null
+          task_id?: string | null
+          ticket_no?: number
+          ticket_type?: string
           title: string
           updated_at?: string
         }
         Update: {
           amount?: number | null
+          approval_kind?: string | null
           approval_status?: string
           approved_at?: string | null
           approved_by?: string | null
+          approver_level?: string
+          assigned_member_id?: string | null
           branch_id?: string | null
+          close_summary?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
+          customer_id?: string | null
           details?: string | null
+          due_at?: string | null
           entity_id?: string | null
           entity_type?: string | null
+          equipment?: string | null
           id?: string
+          location?: string | null
           organization_id?: string
+          priority?: string
+          product_id?: string | null
+          quantity?: number | null
           rejection_reason?: string | null
           request_type?: string
           requested_by?: string | null
+          status?: string
           submitted_at?: string | null
+          supplier_id?: string | null
+          supplier_name?: string | null
+          task_id?: string | null
+          ticket_no?: number
+          ticket_type?: string
           title?: string
           updated_at?: string
         }
@@ -173,10 +230,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "approval_requests_assigned_member_id_fkey"
+            columns: ["assigned_member_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "approval_requests_branch_id_fkey"
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {
@@ -187,10 +265,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "approval_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_products"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "approval_requests_requested_by_fkey"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -2308,6 +2407,119 @@ export type Database = {
           },
         ]
       }
+      ticket_events: {
+        Row: {
+          body: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          organization_id: string
+          performed_by: string | null
+          ticket_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          organization_id: string
+          performed_by?: string | null
+          ticket_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          organization_id?: string
+          performed_by?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_events_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_events_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "approval_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          mime_type: string
+          organization_id: string
+          size_bytes: number
+          storage_path: string
+          ticket_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          mime_type: string
+          organization_id: string
+          size_bytes: number
+          storage_path: string
+          ticket_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          mime_type?: string
+          organization_id?: string
+          size_bytes?: number
+          storage_path?: string
+          ticket_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_files_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_files_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "approval_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_files_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2337,6 +2549,10 @@ export type Database = {
           _rule: string
           _sev: string
         }
+        Returns: undefined
+      }
+      _ticket_log: {
+        Args: { _body: string; _meta: Json; _t: string; _type: string }
         Returns: undefined
       }
       apply_freezes: { Args: { _customer?: string }; Returns: undefined }
@@ -2369,6 +2585,8 @@ export type Database = {
         Args: { _branches?: string[]; _from: string; _org: string; _to: string }
         Returns: Json
       }
+      can_manage_ticket: { Args: { _t: string }; Returns: boolean }
+      can_view_ticket: { Args: { _t: string }; Returns: boolean }
       cancel_booking: { Args: { _booking: string }; Returns: undefined }
       cancel_membership: {
         Args: {
@@ -2391,6 +2609,18 @@ export type Database = {
         Returns: Json
       }
       convert_lead_to_customer: { Args: { _lead: string }; Returns: string }
+      create_ticket: {
+        Args: {
+          _branch: string
+          _data: Json
+          _details: string
+          _org: string
+          _priority: string
+          _title: string
+          _type: string
+        }
+        Returns: string
+      }
       current_member_id: { Args: { _org: string }; Returns: string }
       end_freeze: { Args: { _freeze: string }; Returns: undefined }
       entry_block_reasons: { Args: { _customer: string }; Returns: string[] }
@@ -2480,6 +2710,32 @@ export type Database = {
       suggest_daily_plan: {
         Args: { _branch: string; _date: string }
         Returns: number
+      }
+      ticket_add_file: {
+        Args: {
+          _mime: string
+          _name: string
+          _path: string
+          _size: number
+          _t: string
+        }
+        Returns: undefined
+      }
+      ticket_close: {
+        Args: { _summary: string; _t: string }
+        Returns: undefined
+      }
+      ticket_comment: {
+        Args: { _body: string; _t: string }
+        Returns: undefined
+      }
+      ticket_decide: {
+        Args: { _approve: boolean; _reason: string; _t: string }
+        Returns: undefined
+      }
+      ticket_update: {
+        Args: { _field: string; _t: string; _value: string }
+        Returns: undefined
       }
       update_cancellation_request: {
         Args: {

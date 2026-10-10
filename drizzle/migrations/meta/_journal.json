@@ -50,6 +50,13 @@
       "when": 1791629049602,
       "tag": "0006_cancellation_notice_policy",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791629546334,
+      "tag": "0007_tickets_system",
+      "breakpoints": true
     }
   ]
 }
