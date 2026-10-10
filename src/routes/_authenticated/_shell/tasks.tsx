@@ -85,7 +85,7 @@ function TasksPage() {
     return list;
   }, [q.data, filter, search, me.id]);
 
-  const set = (p: Partial<Search>) => navigate({ search: (s: Search) => ({ ...s, ...p }) });
+  const set = (p: Partial<Search>) => navigate({ search: (s: Search) => ({ ...s, task: undefined, ...p }) });
   async function complete(id: string) {
     const { error } = await supabase.from("tasks").update({ status: "COMPLETED" }).eq("id", id);
     if (error) return toast.error(friendlyError(error));
@@ -97,6 +97,7 @@ function TasksPage() {
   return (
     <div>
       <PageHeader title="משימות" actions={<TaskDialog trigger={<Button><Plus className="size-4" /> משימה חדשה</Button>} />} />
+      {search.task && <div className="mb-3 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">מוצגת המשימה המקושרת לקריאה <Button size="sm" variant="ghost" onClick={() => set({})}>הצג את כל המשימות</Button></div>}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <FilterChips value={filter} onChange={(v) => set({ filter: v })} options={[
           { value: "mine", label: "שלי" }, { value: "today", label: "היום" }, { value: "overdue", label: "באיחור", count: overdueCount },
