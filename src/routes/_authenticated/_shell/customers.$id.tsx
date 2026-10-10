@@ -394,7 +394,7 @@ function Customer360() {
                     <td>{(ci.find((i) => (i.requirement as { key: string }).key === x.document_type)?.requirement as { name: string } | undefined)?.name ?? "אחר"}</td>
                     <td className="num text-muted-foreground">{fmtDate(x.uploaded_at)}</td>
                     <td className="num text-muted-foreground">{x.signed_at ? fmtDate(x.signed_at) : "—"}</td>
-                    <td>{x.status}</td>
+                    <td>{({ UPLOADED: "הועלה", SIGNED: "נחתם", PENDING: "ממתין", APPROVED: "אושר", EXPIRED: "פג תוקף", REJECTED: "נדחה" } as Record<string, string>)[x.status] ?? x.status}</td>
                     <td className="text-end"><Button size="sm" variant="ghost" onClick={() => download(x.storage_path)}><Download className="size-4" /> פתח</Button></td>
                   </tr>))}</tbody>
               </table>
