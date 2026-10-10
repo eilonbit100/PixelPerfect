@@ -159,7 +159,7 @@ export const exportBranchReport = createServerFn({ method: "POST" })
     branches: z.array(z.string().uuid()).max(50).optional(), format: z.enum(["xlsx", "pdf"]),
   }).parse(d))
   .handler(async ({ data, context }) => {
-    const { KPIS, MOVEMENT, DETAILS, fmtKpi, pctChange, bmWarnings } = await import("./branch-report");
+    const { KPIS, MOVEMENT, DETAILS, NET_NOTE, REQUESTS_NOTE, REQUESTS_UNAVAILABLE, TRANSFERS_NOTE, fmtKpi, fmtReportKpi, pctChange, bmWarnings } = await import("./branch-report");
     const sb = context.supabase;
     const res = await sb.rpc("branch_management_report", { _org: data.orgId, _from: data.from, _to: data.to, _branches: data.branches ?? [] });
     if (res.error) throw new Error(res.error.message);
@@ -170,15 +170,15 @@ export const exportBranchReport = createServerFn({ method: "POST" })
     const branchNames = (brs ?? []).map((b) => b.name).join(", ") || "—";
     const d = (s: string) => s.split("-").reverse().join("/");
     const now = new Date().toLocaleString("he-IL", { timeZone: "Asia/Jerusalem" });
-    const head = [[name], [`סניפים: ${branchNames}`], [`תקופה: ${d(r.from)} – ${d(r.to)} · תקופת השוואה: ${d(r.prev_from)} – ${d(r.prev_to)}`], [`הופק: ${now}`], ...bmWarnings(r.current).map((w) => [w]), []];
+    const head = [[name], [`סניפים: ${branchNames}`], [`תקופה: ${d(r.from)} – ${d(r.to)} · תקופת השוואה: ${d(r.prev_from)} – ${d(r.prev_to)}`], [`הופק: ${now}`], ...bmWarnings(r.current).map((w) => [w]), ...(!r.requests_available ? [[REQUESTS_NOTE]] : []), [NET_NOTE], [TRANSFERS_NOTE], ["ביטולים חסרי תאריך: כל המנויים המבוטלים ללא תאריך ביטול בסניפים שנבחרו, ללא שיוך לטווח התאריכים."], []];
     const pc = (k: string) => { const p = pctChange(r.current[k], r.previous[k]); return p == null ? "—" : `${p > 0 ? "+" : ""}${p}%`; };
     const summary = [["מדד", "תקופה נוכחית", "תקופה קודמת", "שינוי"],
-      ...KPIS.map((k) => [k.label, fmtKpi(r.current[k.key], k.type), fmtKpi(r.previous[k.key], k.type), k.type === "percent" ? "" : pc(k.key)]),
+      ...KPIS.map((k) => [k.label, fmtReportKpi(r.current, k.key, r.requests_available, k.type), fmtReportKpi(r.previous, k.key, r.requests_available, k.type), k.type === "percent" || (k.key === "req_total" && !r.requests_available) ? "" : pc(k.key)]),
       [], ["תנועת מנויים", "תקופה נוכחית", "תקופה קודמת", "שינוי"],
       ...MOVEMENT.map((m) => [m.label, fmtKpi(r.current[m.key]), fmtKpi(r.previous[m.key]), pc(m.key)]),
-      [], ["בקשות ביטול", "פתוחות", "טופלו", "הושלמו"], ["", fmtKpi(r.current.req_open), fmtKpi(r.current.req_handled), fmtKpi(r.current.req_completed)]];
-    const byBranch = r.by_branch?.length ? [["סניף", ...KPIS.map((k) => k.label)], ...r.by_branch.map((b) => [b.branch, ...KPIS.map((k) => fmtKpi(b[k.key] as number, k.type))])] : null;
-    const sections = DETAILS.map((s) => ({ label: s.label, rows: [s.cols.map((c) => c.label), ...(r.details[s.key] ?? []).map((row) => s.cols.map((c) => fmtCell(row[c.key], c)))] }));
+      [], ["בקשות ביטול", "פתוחות", "טופלו", "הושלמו"], ["", ...["req_open", "req_handled", "req_completed"].map((key) => fmtReportKpi(r.current, key, r.requests_available))]];
+    const byBranch = r.by_branch?.length ? [["סניף", ...KPIS.map((k) => k.label)], ...r.by_branch.map((b) => [b.branch, ...KPIS.map((k) => fmtReportKpi(b, k.key, r.requests_available, k.type))])] : null;
+    const sections = DETAILS.map((s) => ({ label: s.label, unavailable: s.key === "requests" && !r.requests_available, rows: [s.cols.map((c) => c.label), ...(r.details[s.key] ?? []).map((row) => s.cols.map((c) => fmtCell(row[c.key], c)))] }));
     const { data: me } = await sb.rpc("current_member_id", { _org: data.orgId });
     let filePath: string | null = null; let url: string | null = null; let html: string | null = null;
     if (data.format === "pdf") {
@@ -188,7 +188,7 @@ export const exportBranchReport = createServerFn({ method: "POST" })
         table{border-collapse:collapse;width:100%;margin-top:6px;font-size:11px}th,td{border:1px solid #ccc;padding:4px 6px;text-align:right}th{background:#f1f3f6}tr{page-break-inside:avoid}
         </style></head><body><h1>${esc(name)}</h1>${head.slice(1).filter((x) => x.length).map((x) => `<p>${esc(x[0])}</p>`).join("")}
         <h2>סיכום</h2>${tbl(summary.filter((x) => x.length) as string[][])}${byBranch ? `<h2>השוואה בין סניפים</h2>${tbl(byBranch)}` : ""}
-        ${sections.map((s) => `<h2>${esc(s.label)} (${s.rows.length - 1})</h2>${s.rows.length > 1 ? tbl(s.rows) : "<p>אין רשומות</p>"}`).join("")}
+        ${sections.map((s) => `<h2>${esc(s.label)}${s.unavailable ? "" : ` (${s.rows.length - 1})`}</h2>${s.unavailable ? `<p>${esc(REQUESTS_UNAVAILABLE)} · ${esc(REQUESTS_NOTE)}</p>` : s.rows.length > 1 ? tbl(s.rows) : "<p>אין רשומות</p>"}`).join("")}
         <script>window.onload=()=>window.print()</script></body></html>`;
     } else {
       const XLSX = await import("xlsx");
@@ -196,7 +196,7 @@ export const exportBranchReport = createServerFn({ method: "POST" })
       const add = (title: string, rows: unknown[][]) => { const ws = XLSX.utils.aoa_to_sheet(rows); ws["!cols"] = Array.from({ length: 8 }, () => ({ wch: 20 })); XLSX.utils.book_append_sheet(wb, ws, title.slice(0, 31)); };
       add("סיכום", [...head, ...summary]);
       if (byBranch) add("השוואה בין סניפים", byBranch);
-      sections.forEach((s) => add(s.label, s.rows));
+      sections.forEach((s) => add(s.label, s.unavailable ? [[REQUESTS_UNAVAILABLE], [REQUESTS_NOTE]] : s.rows));
       const body = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as Uint8Array;
       filePath = `${data.orgId}/${context.userId}/${Date.now()}-branch_mgmt.xlsx`;
       const up = await sb.storage.from("report-exports").upload(filePath, body, { contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });

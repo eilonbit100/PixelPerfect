@@ -5,9 +5,23 @@ export type BmKpis = Record<string, number | null>;
 export type BmResult = {
   branches: string[]; from: string; to: string; prev_from: string; prev_to: string;
   current: BmKpis; previous: BmKpis; by_branch: (BmKpis & { branch_id: string; branch: string })[] | null;
-  details: Record<DetailKey, Record<string, unknown>[]>; export: boolean;
+  details: Record<DetailKey, Record<string, unknown>[]>; export: boolean; requests_available: boolean;
 };
-export type DetailKey = "sales" | "cancellations" | "requests" | "movement" | "payments" | "debts";
+export type DetailKey = "sales" | "cancellations" | "undated_cancellations" | "requests" | "movement" | "payments" | "debts";
+
+export const REQUESTS_UNAVAILABLE = "אין נתונים זמינים";
+export const REQUESTS_NOTE = "אין כרגע ממשק להזנת בקשות ביטול; עם הפעלתו יוצגו המספרים בפועל.";
+export const TRANSFERS_NOTE = "מעברים משוערים בלבד, ללא פעולת העברה רשמית: כניסה מזוהה כשמנוי מתחיל לאחר מנוי בסניף אחר וללא מנוי קודם בסניף הנבחר; יציאה מזוהה כשלקוח שהיה פעיל בתחילת התקופה אינו פעיל בסניף בסופה אך פעיל בסניף אחר. אינם נכללים בשינוי נטו.";
+export const NET_NOTE = "שינוי נטו = הצטרפויות − עזיבות. חידושים, הקפאות ומעברים משוערים בין סניפים אינם נספרים בשינוי הנטו.";
+
+export function requestMetric(k: BmKpis, key: string, available: boolean): number | null {
+  return available ? k[key] ?? null : null;
+}
+
+export function fmtReportKpi(k: BmKpis, key: string, available: boolean, type?: KpiDef["type"]): string {
+  if (key.startsWith("req_") && !available) return REQUESTS_UNAVAILABLE;
+  return fmtKpi(key.startsWith("req_") ? requestMetric(k, key, available) : k[key], type);
+}
 
 /** Percent change vs. previous period; null when the base is 0 or missing (no reliable %) */
 export function pctChange(cur: number | null | undefined, prev: number | null | undefined): number | null {
@@ -33,11 +47,12 @@ export const KPIS: KpiDef[] = [
 /** Secondary movement metrics, shown separately so they don't distort net change */
 export const MOVEMENT: { key: string; label: string }[] = [
   { key: "joins", label: "הצטרפויות" }, { key: "leavers", label: "עזיבות" }, { key: "renewals", label: "חידושים" },
-  { key: "transfers_in", label: "מעברים מסניף אחר" }, { key: "transfers_out", label: "מעברים לסניף אחר" },
+    { key: "transfers_in", label: "מעברים משוערים מסניף אחר" }, { key: "transfers_out", label: "מעברים משוערים לסניף אחר" },
   { key: "freezes_started", label: "הקפאות שהתחילו" }, { key: "frozen_end", label: "מוקפאים בסוף התקופה" },
 ];
 
 export const DETAILS: { key: DetailKey; label: string; cols: Col[] }[] = [
+  { key: "undated_cancellations", label: "ביטולים חסרי תאריך", cols: [{ key: "full_name", label: "לקוח" }, { key: "plan", label: "מנוי" }, { key: "start_date", label: "תאריך התחלה", type: "date" }, { key: "end_date", label: "סיום", type: "date" }, { key: "reason", label: "סיבה" }, { key: "branch", label: "סניף" }] },
   { key: "sales", label: "מכירות", cols: [{ key: "full_name", label: "לקוח" }, { key: "purchased", label: "תאריך רכישה", type: "date" }, { key: "start_date", label: "תאריך התחלה", type: "date" }, { key: "plan", label: "מנוי" }, { key: "price", label: "מחיר", type: "money" }, { key: "status", label: "סטטוס", map: { ACTIVE: "פעיל", FROZEN: "מוקפא", CANCELLED: "בוטל", EXPIRED: "פג", PENDING: "ממתין" } }, { key: "branch", label: "סניף" }] },
   { key: "cancellations", label: "ביטולים", cols: [{ key: "full_name", label: "לקוח" }, { key: "plan", label: "מנוי" }, { key: "cancelled_on", label: "תאריך ביטול", type: "date" }, { key: "end_date", label: "סיום", type: "date" }, { key: "reason", label: "סיבה" }, { key: "branch", label: "סניף" }] },
   { key: "requests", label: "בקשות ביטול", cols: [{ key: "full_name", label: "לקוח" }, { key: "requested", label: "הוגשה", type: "date" }, { key: "status", label: "סטטוס" }, { key: "handled", label: "טופלה", type: "date" }, { key: "reason", label: "סיבה" }, { key: "branch", label: "סניף" }] },

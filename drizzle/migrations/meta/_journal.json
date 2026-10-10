@@ -22,6 +22,13 @@
       "when": 1791625294866,
       "tag": "0002_branch_report_hide_unreliable",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791627431343,
+      "tag": "0003_branch_report_data_accuracy",
+      "breakpoints": true
     }
   ]
 }

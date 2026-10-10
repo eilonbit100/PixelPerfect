@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, FileSpreadsheet, FileText, Minus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
-import { DETAILS, KPIS, MOVEMENT, bmWarnings, fmtKpi, pctChange, type BmResult, type DetailKey } from "@/lib/branch-report";
+import { DETAILS, KPIS, MOVEMENT, NET_NOTE, REQUESTS_NOTE, REQUESTS_UNAVAILABLE, TRANSFERS_NOTE, bmWarnings, fmtKpi, fmtReportKpi, pctChange, type BmResult, type DetailKey } from "@/lib/branch-report";
 import { exportBranchReport } from "@/lib/reports.functions";
 import { DataTable, FilterBar, type Filters } from "@/components/app/ReportView";
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/app/states";
@@ -48,19 +48,19 @@ export function BranchReport({ f, setF, canExport }: { f: Filters; setF: (f: Fil
         <>
           <p className="text-xs text-muted-foreground">השוואה לתקופה הקודמת: {r.prev_from.split("-").reverse().join("/")} – {r.prev_to.split("-").reverse().join("/")}</p>
           {bmWarnings(r.current).map((w) => (
-            <div key={w} className="flex items-center gap-2 rounded-md border border-attention/40 bg-attention/10 px-3 py-2 text-sm"><AlertTriangle className="size-4 text-attention" /><span className="font-medium">תשומת לב</span> · {w}</div>
+            <Button key={w} variant="outline" onClick={() => open("undated_cancellations")} className="h-auto w-full justify-start whitespace-normal border-attention/40 bg-attention/10 px-3 py-2 text-start text-sm"><AlertTriangle className="size-4 shrink-0 text-attention" /><span><span className="font-medium">תשומת לב</span> · {w} <span className="underline">לרשימת המנויים</span></span></Button>
           ))}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
             {KPIS.map((k) => (
-              <button key={k.key} type="button" onClick={() => open(k.detail)} title={k.hint} className="panel p-3 text-start hover:bg-muted/50">
+              <Button key={k.key} variant="outline" onClick={() => open(k.detail)} title={k.hint} className="panel block h-auto whitespace-normal p-3 text-start hover:bg-muted/50">
                 <div className="text-xs text-muted-foreground">{k.label}</div>
-                <div className="num mt-1 text-xl font-semibold">{fmtKpi(r.current[k.key], k.type)}</div>
-                {k.sub && <div className="mt-0.5 truncate text-xs text-muted-foreground">{k.sub(r.current)}</div>}
-                <div className="mt-1 flex items-center justify-between gap-2">
+                <div className={cn("num mt-1 font-semibold", k.key === "req_total" && !r.requests_available ? "text-sm" : "text-xl")}>{fmtReportKpi(r.current, k.key, r.requests_available, k.type)}</div>
+                {k.key === "req_total" && !r.requests_available ? <div className="mt-0.5 text-xs text-muted-foreground">{REQUESTS_NOTE}</div> : k.sub && <div className="mt-0.5 truncate text-xs text-muted-foreground">{k.sub(r.current)}</div>}
+                {!(k.key === "req_total" && !r.requests_available) && <div className="mt-1 flex items-center justify-between gap-2">
                   {k.type === "percent" ? <span className="text-xs text-muted-foreground">קודם: {fmtKpi(r.previous[k.key], k.type)}</span>
                     : <><span className="num text-xs text-muted-foreground">קודם: {fmtKpi(r.previous[k.key], k.type)}</span><Change cur={r.current[k.key]} prev={r.previous[k.key]} invert={INVERT.has(k.key)} /></>}
-                </div>
-              </button>
+                </div>}
+              </Button>
             ))}
           </div>
           <div className="panel overflow-x-auto">
@@ -71,7 +71,8 @@ export function BranchReport({ f, setF, canExport }: { f: Filters; setF: (f: Fil
                 <tr key={m.key}><td>{m.label}</td><td className="num">{fmtKpi(r.current[m.key])}</td><td className="num">{fmtKpi(r.previous[m.key])}</td><td><Change cur={r.current[m.key]} prev={r.previous[m.key]} invert={INVERT.has(m.key)} /></td></tr>
               ))}</tbody>
             </table>
-            <p className="px-4 py-2 text-xs text-muted-foreground">שינוי נטו = הצטרפויות − עזיבות. חידושים, הקפאות ומעברים בין סניפים אינם נספרים בשינוי הנטו. מעבר בין סניפים מזוהה לפי רצף המנויים של הלקוח.</p>
+            <p className="px-4 pt-2 text-xs text-muted-foreground">{NET_NOTE}</p>
+            <p className="px-4 py-2 text-xs text-muted-foreground">{TRANSFERS_NOTE}</p>
           </div>
           {r.by_branch && r.by_branch.length > 1 && (
             <div className="panel overflow-x-auto">
@@ -79,7 +80,7 @@ export function BranchReport({ f, setF, canExport }: { f: Filters; setF: (f: Fil
               <table className="data-table">
                 <thead><tr><th>סניף</th>{KPIS.map((k) => <th key={k.key}>{k.label}</th>)}</tr></thead>
                 <tbody>{r.by_branch.map((b) => (
-                  <tr key={b.branch_id}><td className="font-medium">{b.branch}</td>{KPIS.map((k) => <td key={k.key} className="num">{fmtKpi(b[k.key] as number, k.type)}</td>)}</tr>
+                  <tr key={b.branch_id}><td className="font-medium">{b.branch}</td>{KPIS.map((k) => <td key={k.key} className="num">{fmtReportKpi(b, k.key, r.requests_available, k.type)}</td>)}</tr>
                 ))}</tbody>
               </table>
             </div>
@@ -87,13 +88,14 @@ export function BranchReport({ f, setF, canExport }: { f: Filters; setF: (f: Fil
           <div id="bm-details" className="space-y-2">
             <div className="flex flex-wrap gap-1.5" role="tablist">
               {DETAILS.map((d) => (
-                <button key={d.key} type="button" role="tab" aria-selected={tab === d.key} onClick={() => setTab(d.key)}
-                  className={cn("rounded-md border px-2.5 py-1 text-xs", tab === d.key ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted")}>
-                  {d.label} <span className="num opacity-70">{r.details[d.key]?.length ?? 0}</span>
-                </button>
+                <Button key={d.key} variant={tab === d.key ? "default" : "outline"} size="sm" role="tab" aria-selected={tab === d.key} onClick={() => setTab(d.key)} className="h-auto px-2.5 py-1 text-xs">
+                  {d.label} {!(d.key === "requests" && !r.requests_available) && <span className="num opacity-70">{r.details[d.key]?.length ?? 0}</span>}
+                </Button>
               ))}
             </div>
-            {(() => { const d = DETAILS.find((x) => x.key === tab)!; const rows = r.details[tab] ?? [];
+            {tab === "undated_cancellations" && <p className="text-xs text-muted-foreground">כל המנויים המבוטלים ללא תאריך ביטול בסניפים שנבחרו; לא ניתן לשייך אותם לטווח התאריכים.</p>}
+            {(() => { const d = DETAILS.find((x) => x.key === tab); if (!d) return null; const rows = r.details[tab] ?? [];
+              if (tab === "requests" && !r.requests_available) return <EmptyState title={REQUESTS_UNAVAILABLE} text={REQUESTS_NOTE} />;
               return rows.length ? <DataTable key={tab} cols={d.cols} rows={rows} link="customer" /> : <div className="panel"><EmptyState title={`אין ${d.label} בתקופה שנבחרה`} /></div>; })()}
           </div>
         </>
