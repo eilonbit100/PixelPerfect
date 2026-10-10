@@ -82,9 +82,11 @@ function TicketPage() {
   }
   const update = (field: string, value: string, ok: string) => rpc("ticket_update", { _t: id, _field: field, _value: value }, ok);
   async function openFile(path: string, download: boolean) {
+    // Open the tab synchronously so browsers don't block it as a popup after the await.
+    const w = window.open("", "_blank");
     const { data, error } = await supabase.storage.from("ticket-files").createSignedUrl(path, 120, download ? { download: true } : undefined);
-    if (error) return toast.error("לא ניתן לפתוח את הקובץ");
-    window.open(data.signedUrl, "_blank");
+    if (error || !data) { w?.close(); return toast.error("לא ניתן לפתוח את הקובץ"); }
+    if (w) w.location.href = data.signedUrl; else window.location.assign(data.signedUrl);
   }
   async function submitAsk() {
     if (!reason.trim()) return toast.error(ask === "reject" ? "חובה לציין סיבת דחייה" : "חובה להזין סיכום טיפול");
@@ -181,7 +183,7 @@ function TicketPage() {
           ) : (
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
               <span><span className="text-muted-foreground">לקוח: </span>{customer ? <Link to="/customers/$id" params={{ id: t.customer_id! }} className="text-primary hover:underline">{customer}</Link> : "—"}</span>
-              <span><span className="text-muted-foreground">משימה: </span>{task ? <Link to="/tasks" className="text-primary hover:underline">{task}</Link> : "—"}</span>
+              <span><span className="text-muted-foreground">משימה: </span>{task ? <Link to="/tasks" search={{ task: t.task_id! }} className="text-primary hover:underline">{task}</Link> : "—"}</span>
               <span><span className="text-muted-foreground">ציוד / מלאי: </span>{product ? <Link to="/inventory/$id" params={{ id: t.product_id! }} className="text-primary hover:underline">{product}</Link> : "—"}</span>
             </div>
           )}
