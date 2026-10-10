@@ -56,6 +56,6 @@ export function fmtKpi(v: number | null | undefined, type?: KpiDef["type"]): str
 /** Data-quality warnings: metrics that can't be computed reliably from the source data */
 export function bmWarnings(k: BmKpis): string[] {
   const w: string[] = [];
-  if (Number(k.cancelled_no_date) > 0) w.push(`${k.cancelled_no_date} מנויים מבוטלים ללא תאריך ביטול בפועל — לא נכללו בספירת הביטולים והעזיבות.`);
+  if (Number(k.cancelled_no_date) > 0) w.push(`${k.cancelled_no_date} מנויים מבוטלים ללא תאריך ביטול בפועל — לכן ביטולים בפועל, עזיבות ושינוי נטו אינם מוצגים עד שיירשם תאריך ביטול.`);
   return w;
 }
