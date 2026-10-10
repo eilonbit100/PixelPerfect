@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "./org";
+import { ENTRY_REASON } from "./entry";
 
 export type ColType = "text" | "date" | "datetime" | "money" | "number" | "percent";
 export type Col = { key: string; label: string; type?: ColType; map?: Record<string, string> };
@@ -111,6 +112,7 @@ export function rangeDates(r: RangeKey): { from: string; to: string } {
 
 export function fmtCell(v: unknown, c: Col): string {
   if (v === null || v === undefined || v === "") return "";
+  if (c.key === "reasons") return String(v).split(",").filter(Boolean).map((x) => ENTRY_REASON[x] ?? x).join(", ");
   if (c.map) return c.map[String(v)] ?? String(v);
   if (typeof v === "boolean") return v ? "כן" : "לא";
   if (c.type === "date") return new Date(String(v).slice(0, 10) + "T00:00:00").toLocaleDateString("he-IL");
