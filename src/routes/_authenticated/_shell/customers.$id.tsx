@@ -22,6 +22,10 @@ import { ENTRY_REASON, FREEZE_REASON } from "@/lib/entry";
 import { fmtDateTime } from "@/lib/format";
 import { EditablePhoto } from "@/components/app/CustomerPhoto";
 import { DeskNote, FreezeDialog } from "@/components/app/CustomerExtras";
+import { CancelMembershipDialog, CancelRequestDialog, CancelRequestsPanel, CardHealthPanel, ClassesPanel, EditDetailsDialog, MembershipsPanel, affiliationLabel, useAffiliations } from "@/components/app/CustomerCard";
+import { cardHealth } from "@/lib/card-health";
+import { Ban, CalendarPlus, CreditCard, FileX, MessageSquarePlus, Pencil, ShoppingCart, Snowflake } from "lucide-react";
+import { useRouter } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/_shell/customers/$id")({
   head: () => ({
@@ -45,29 +49,35 @@ function Customer360() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploadType, setUploadType] = useState("HEALTH_DECLARATION");
   const [plan, setPlan] = useState("");
+  const [tab, setTab] = useState("overview");
+  const aff = useAffiliations();
+  const router = useRouter();
+  const goBack = () => { if (window.history.length > 1) router.history.back(); else router.navigate({ to: "/customers" }); };
 
   const q = useQuery({
     queryKey: ["customer", id],
     queryFn: async () => {
-      const [c, m, p, ci, d, t, plans, v, fz] = await Promise.all([
+      const [c, m, p, ci, d, t, plans, v, fz, cr] = await Promise.all([
         supabase.from("customers").select("*").eq("id", id).maybeSingle(),
         supabase.from("memberships").select("*").eq("customer_id", id).order("created_at", { ascending: false }),
         supabase.from("payments").select("*").eq("customer_id", id).order("created_at", { ascending: false }),
-        supabase.from("customer_compliance_items").select("*, requirement:compliance_requirements(key,name,required)").eq("customer_id", id),
+        supabase.from("customer_compliance_items").select("*, requirement:compliance_requirements(key,name,required,active)").eq("customer_id", id),
         supabase.from("customer_documents").select("*").eq("customer_id", id).order("uploaded_at", { ascending: false }),
         supabase.from("tasks").select("*").eq("entity_type", "customer").eq("entity_id", id).is("deleted_at", null).order("due_at", { ascending: false }),
-        supabase.from("membership_plans").select("*").eq("organization_id", org.id).eq("active", true),
+        supabase.from("membership_plans").select("*").eq("organization_id", org.id),
         supabase.from("check_ins").select("*").eq("customer_id", id).order("created_at", { ascending: false }).limit(100),
         supabase.from("customer_freezes").select("*").eq("customer_id", id).order("start_date", { ascending: false }),
+        supabase.from("cancellation_requests").select("*").eq("customer_id", id).order("requested_at", { ascending: false }),
       ]);
-      for (const r of [c, m, p, ci, d, t, plans, v, fz]) if (r.error) throw r.error;
-      return { c: c.data, m: m.data!, p: p.data!, ci: ci.data!, d: d.data!, t: t.data!, plans: plans.data!, v: v.data!, fz: fz.data! };
+      for (const r of [c, m, p, ci, d, t, plans, v, fz, cr]) if (r.error) throw r.error;
+      const activeReq = (ci.data ?? []).filter((x) => (x.requirement as { active?: boolean } | null)?.active !== false);
+      return { c: c.data, m: m.data!, p: p.data!, ci: activeReq, d: d.data!, t: t.data!, allPlans: plans.data!, plans: plans.data!.filter((x) => x.active), v: v.data!, fz: fz.data!, cr: cr.data! };
     },
   });
 
   if (q.isLoading) return <TableSkeleton rows={6} cols={3} />;
   if (q.error) return <ErrorState onRetry={() => q.refetch()} />;
-  const { c, m, p, ci, d, t, plans, v, fz } = q.data!;
+  const { c, m, p, ci, d, t, plans, allPlans, v, fz, cr } = q.data!;
   if (!c) return <EmptyState title="הלקוח לא נמצא" action={<Link to="/customers" className="text-primary">חזרה ללקוחות</Link>} />;
 
   const issues = (insights.data ?? []).filter((i) => insightTargetId(i) === id);
@@ -78,6 +88,12 @@ function Customer360() {
   const blocked = entryBlocked(hs, activeM?.status === "ACTIVE");
   const todayS = new Date().toISOString().slice(0, 10);
   const frozenNow = fz.find((x) => x.start_date <= todayS && x.end_date >= todayS);
+  const billingOf = (planId: string | null) => allPlans.find((x) => x.id === planId)?.billing_period ?? null;
+  const health = cardHealth(c, ci as never, p, m.map((x) => ({ status: x.status, billing_period: billingOf(x.membership_plan_id) })));
+  const failedByMembership = new Set(p.filter((x) => x.status === "FAILED" && x.membership_id).map((x) => x.membership_id!));
+  const debt = p.filter((x) => x.status === "FAILED" || (x.status === "PENDING" && x.due_at && new Date(x.due_at) < new Date())).reduce((s, x) => s + Number(x.amount), 0);
+  const future = p.filter((x) => x.status === "PENDING" && x.due_at && new Date(x.due_at) >= new Date());
+  const openReqs = cr.filter((x) => ["OPEN", "IN_PROGRESS"].includes(x.status));
   const pmItem = ci.find((x) => (x.requirement as { key: string } | null)?.key === "PAYMENT_METHOD");
 
   async function savePaymentMethod() {
@@ -137,17 +153,12 @@ function Customer360() {
     setPlan("");
     invalidate();
   }
-  async function setMembershipStatus(mid: string, status: string) {
-    const { error } = await supabase.from("memberships").update({ status }).eq("id", mid);
-    if (error) return toast.error(friendlyError(error));
-    invalidate();
-  }
 
   const openUpload = (type: string) => { setUploadType(type); setTimeout(() => fileRef.current?.click(), 0); };
 
   return (
     <div>
-      <Link to="/customers" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowRight className="size-4" /> לקוחות</Link>
+      <button onClick={goBack} className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowRight className="size-4" /> חזרה</button>
       <input ref={fileRef} type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
 
       <div className="panel mb-4 p-5">
@@ -158,14 +169,17 @@ function Customer360() {
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-semibold">{c.full_name}</h1>
               {activeM ? <StatusBadge tone={activeM.status === "ACTIVE" ? "ok" : "neutral"}>{MEMBERSHIP_STATUS[activeM.status]}</StatusBadge> : <StatusBadge tone="attention">ללא מנוי</StatusBadge>}
-              {c.status !== "ACTIVE" && <StatusBadge>{CUSTOMER_STATUS[c.status]}</StatusBadge>}
+              <StatusBadge tone={activeM ? "ok" : "neutral"}>{activeM ? "לקוח פעיל" : "לקוח לא פעיל"}</StatusBadge>
+              {openReqs.length > 0 && <StatusBadge tone="attention">בקשת ביטול פתוחה</StatusBadge>}
+              {failedByMembership.size > 0 && <StatusBadge tone="critical">חיוב נכשל</StatusBadge>}
               {blocked && <StatusBadge tone="critical">כניסה חסומה עד חתימה ואישור הצהרת בריאות</StatusBadge>}
               {frozenNow && <StatusBadge tone="attention">מוקפא עד {fmtDate(frozenNow.end_date)}</StatusBadge>}
             </div>
             <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
               {c.phone && <a href={`tel:${c.phone}`} className="num inline-flex items-center gap-1 hover:text-foreground"><Phone className="size-3.5" />{c.phone}</a>}
               <span>הצטרף: <span className="num">{fmtDate(c.joined_at)}</span></span>
-              {activeM && <span>{activeM.display_name} · {fmtMoney(activeM.price)}</span>}
+              {activeM && <span>{activeM.display_name} · {fmtMoney(activeM.price)} · תוקף {activeM.end_date ? <span className="num">עד {fmtDate(activeM.end_date)}</span> : "ללא תאריך סיום"}</span>}
+              {affiliationLabel(aff.data, c) && <span>הצטרף דרך: {affiliationLabel(aff.data, c)}</span>}
               <span>סניף: {branchName(c.home_branch_id)}</span>
               {c.national_id && <span className="num">ת״ז {c.national_id}</span>}
               <span>אמצעי תשלום: {c.payment_method ? PAYMENT_METHOD[c.payment_method] : "לא הוגדר"}{c.payment_method_details && <span className="num"> ···{c.payment_method_details}</span>}</span>
@@ -173,9 +187,18 @@ function Customer360() {
             </div>
           </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex max-w-xl flex-wrap justify-end gap-2" aria-label="פעולות מהירות">
+            <EditDetailsDialog c={c} onSaved={invalidate} trigger={<Button size="sm" variant="outline"><Pencil className="size-4" /> עדכון פרטים</Button>} />
+            <Button size="sm" variant="outline" onClick={() => setTab("membership")}><ShoppingCart className="size-4" /> רכישת מנוי</Button>
+            <TaskDialog entityType="customer" entityId={id} branchId={c.home_branch_id} trigger={<Button size="sm" variant="outline"><Plus className="size-4" /> משימה</Button>} />
+            <TaskDialog entityType="customer" entityId={id} branchId={c.home_branch_id} defaultTitle="הערה" trigger={<Button size="sm" variant="outline"><MessageSquarePlus className="size-4" /> הערה</Button>} />
             {!c.desk_note && <DeskNote customerId={id} note={null} onSaved={invalidate} />}
-            <TaskDialog entityType="customer" entityId={id} branchId={c.home_branch_id} trigger={<Button variant="outline"><Plus className="size-4" /> משימה</Button>} />
+            {health.some((i) => i.category === "HEALTH" || i.category === "DOCS") && <Button size="sm" variant="outline" onClick={() => setTab("docs")}><FileUp className="size-4" /> מסמך חסר</Button>}
+            {activeM?.status === "ACTIVE" && !frozenNow && <FreezeDialog orgId={org.id} customerId={id} membershipId={activeM.id} onSaved={invalidate} />}
+            {activeM && <CancelRequestDialog memberships={m as never} onSaved={invalidate} trigger={<Button size="sm" variant="outline"><FileX className="size-4" /> בקשת ביטול</Button>} />}
+            {activeM && isManager && <CancelMembershipDialog memberships={m as never} requests={cr} onSaved={invalidate} trigger={<Button size="sm" variant="outline" className="text-critical"><Ban className="size-4" /> ביטול מנוי</Button>} />}
+            {debt > 0 && <Button size="sm" variant="outline" onClick={() => setTab("payments")}><CreditCard className="size-4" /> טיפול בחוב</Button>}
+            <Button size="sm" variant="outline" asChild><Link to="/schedule"><CalendarPlus className="size-4" /> תיאום שיעור</Link></Button>
           </div>
         </div>
         {c.desk_note && <div className="mt-4"><DeskNote customerId={id} note={c.desk_note} onSaved={invalidate} /></div>}
@@ -198,18 +221,35 @@ function Customer360() {
         )}
       </div>
 
-      <Tabs defaultValue="overview" dir="rtl">
+      <Tabs value={tab} onValueChange={setTab} dir="rtl">
         <TabsList className="flex-wrap">
-          <TabsTrigger value="overview">סקירה</TabsTrigger>
-          <TabsTrigger value="membership">מנוי</TabsTrigger>
-          <TabsTrigger value="payments">תשלומים</TabsTrigger>
-          <TabsTrigger value="visits">כניסות</TabsTrigger>
+          <TabsTrigger value="overview">פרטים ותקינות</TabsTrigger>
+          <TabsTrigger value="membership">מנויים</TabsTrigger>
+          <TabsTrigger value="payments">תשלומים וחיובים</TabsTrigger>
           <TabsTrigger value="docs">מסמכים</TabsTrigger>
-          <TabsTrigger value="tasks">משימות</TabsTrigger>
-          <TabsTrigger value="timeline">ציר זמן</TabsTrigger>
+          <TabsTrigger value="tasks">משימות והערות</TabsTrigger>
+          <TabsTrigger value="visits">כניסות</TabsTrigger>
+          <TabsTrigger value="classes">שיעורים ואימונים</TabsTrigger>
+          <TabsTrigger value="timeline">היסטוריית פעילות</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="panel">
+            <div className="flex items-center justify-between border-b px-4 py-3"><span className="text-sm font-medium">פרטים אישיים</span>
+              <EditDetailsDialog c={c} onSaved={invalidate} trigger={<Button size="sm" variant="ghost"><Pencil className="size-4" /> עריכה</Button>} /></div>
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-2 p-4 text-sm">
+              {([["שם מלא", c.full_name], ["תעודת זהות", c.national_id], ["טלפון", c.phone], ["דוא״ל", c.email], ["כתובת", c.address], ["תאריך לידה", c.birth_date ? fmtDate(c.birth_date) : null],
+                ["סניף משויך", branchName(c.home_branch_id)], ["סטטוס אדם", "לקוח"], ["סטטוס מנוי", activeM ? MEMBERSHIP_STATUS[activeM.status] : "ללא מנוי פעיל"], ["גוף מאגד / מקור", affiliationLabel(aff.data, c)]] as [string, string | null][]).map(([k, val]) => (
+                <div key={k}><dt className="text-xs text-muted-foreground">{k}</dt><dd className={val ? "" : "text-muted-foreground"}>{val ?? "לא הוזן"}</dd></div>
+              ))}
+            </dl>
+          </div>
+          <CardHealthPanel issues={health} tasks={t} onFix={(i) => {
+            if (i.category === "HEALTH" || i.category === "DOCS") return <Button size="sm" variant="ghost" onClick={() => setTab("docs")}><FileUp className="size-4" /> לטיפול</Button>;
+            if (i.category === "FAILED_PAYMENT") return <Button size="sm" variant="ghost" onClick={() => setTab("payments")}>לחיוב</Button>;
+            if (i.category === "PAYMENT_METHOD") return <Button size="sm" variant="ghost" onClick={() => setPm({ method: "", details: "" })}>הגדר</Button>;
+            return <EditDetailsDialog c={c} onSaved={invalidate} trigger={<Button size="sm" variant="ghost">השלם</Button>} />;
+          }} />
           <div className="panel">
             <div className="border-b px-4 py-3 text-sm font-medium">פתיחת כרטיס ומסמכים</div>
             <ul className="divide-y">
@@ -282,23 +322,20 @@ function Customer360() {
             </Select>
             <Button onClick={addMembership} disabled={!plan}>הוסף מנוי</Button>
           </div>
-          <div className="panel">
-            {!m.length ? <EmptyState title="אין מנויים" text="בחר מסלול כדי להשלים את פתיחת הכרטיס." /> : (
-              <table className="data-table">
-                <thead><tr><th>מנוי</th><th>מחיר</th><th>התחלה</th><th>סיום</th><th>סטטוס</th><th /></tr></thead>
-                <tbody>{m.map((x) => (
-                  <tr key={x.id}>
-                    <td className="font-medium">{x.display_name}</td><td className="num">{fmtMoney(x.price)}</td>
-                    <td className="num">{fmtDate(x.start_date)}</td><td className="num">{fmtDate(x.end_date)}</td>
-                    <td><StatusBadge tone={x.status === "ACTIVE" ? "ok" : "neutral"}>{MEMBERSHIP_STATUS[x.status]}</StatusBadge></td>
-                    <td className="text-end">{x.status === "ACTIVE" && <div className="flex justify-end gap-1"><FreezeDialog orgId={org.id} customerId={id} membershipId={x.id} onSaved={invalidate} /><Button size="sm" variant="ghost" onClick={() => confirm("לבטל את המנוי?") && setMembershipStatus(x.id, "CANCELLED")}>ביטול מנוי</Button></div>}</td>
-                  </tr>))}</tbody>
-              </table>
-            )}
-          </div>
+          <MembershipsPanel customerId={id} orgId={org.id} memberships={m as never} plans={allPlans} requests={cr} freezes={fz} failedByMembership={failedByMembership} onSaved={invalidate}
+            FreezeButton={({ membershipId }) => <FreezeDialog orgId={org.id} customerId={id} membershipId={membershipId} onSaved={invalidate} />} />
+          <CancelRequestsPanel requests={cr} memberships={m as never} onSaved={invalidate} />
         </TabsContent>
 
-        <TabsContent value="payments" className="panel mt-4">
+        <TabsContent value="payments" className="mt-4 space-y-3">
+          <div className="grid gap-3 sm:grid-cols-4">
+            <div className="panel p-3"><div className="text-xs text-muted-foreground">שולם</div><div className="num text-lg font-semibold">{fmtMoney(p.filter((x) => x.status === "PAID").reduce((s, x) => s + Number(x.amount), 0))}</div></div>
+            <div className="panel p-3"><div className="text-xs text-muted-foreground">יתרת חוב</div><div className={"num text-lg font-semibold " + (debt ? "text-critical" : "")}>{fmtMoney(debt)}</div></div>
+            <div className="panel p-3"><div className="text-xs text-muted-foreground">חיובים עתידיים</div><div className="num text-lg font-semibold">{future.length}</div></div>
+            <div className="panel p-3"><div className="text-xs text-muted-foreground">אמצעי תשלום</div><div className="text-sm font-medium">{c.payment_method ? PAYMENT_METHOD[c.payment_method] : "לא הוגדר"}{c.payment_method_details && <span className="num"> ···{c.payment_method_details}</span>}</div></div>
+          </div>
+          <p className="text-xs text-muted-foreground">כאן מוצגים חיובים ותשלומים בלבד. מסמכים חשבונאיים (קבלות/חשבוניות) ופעולות גבייה והחזר ממתינים לחיבור ספק תשלומים וקופה. לא נשמר מספר כרטיס מלא — רק 4 ספרות אחרונות.</p>
+          <div className="panel">
           {!p.length ? <EmptyState title="אין תשלומים" /> : (
             <table className="data-table">
               <thead><tr><th>סכום</th><th>מועד חיוב</th><th>שולם</th><th>סטטוס</th><th>הערה</th><th /></tr></thead>
@@ -311,7 +348,10 @@ function Customer360() {
                 </tr>))}</tbody>
             </table>
           )}
+          </div>
         </TabsContent>
+
+        <TabsContent value="classes" className="mt-4"><ClassesPanel customerId={id} /></TabsContent>
 
         <TabsContent value="visits" className="panel mt-4">
           {!v.length ? <EmptyState title="אין כניסות עדיין" text="כל בדיקה בעמדת הכניסה תירשם כאן." /> : (
@@ -347,12 +387,14 @@ function Customer360() {
           <div className="panel">
             {!d.length ? <EmptyState title="אין מסמכים" text="מסמכים שיועלו נשמרים באופן מאובטח ופרטי." /> : (
               <table className="data-table">
-                <thead><tr><th>מסמך</th><th>סוג</th><th>הועלה</th><th /></tr></thead>
+                <thead><tr><th>מסמך</th><th>סוג</th><th>הועלה</th><th>חתימה</th><th>סטטוס</th><th /></tr></thead>
                 <tbody>{d.map((x) => (
                   <tr key={x.id}>
                     <td>{x.file_name}</td>
                     <td>{(ci.find((i) => (i.requirement as { key: string }).key === x.document_type)?.requirement as { name: string } | undefined)?.name ?? "אחר"}</td>
                     <td className="num text-muted-foreground">{fmtDate(x.uploaded_at)}</td>
+                    <td className="num text-muted-foreground">{x.signed_at ? fmtDate(x.signed_at) : "—"}</td>
+                    <td>{({ UPLOADED: "הועלה", SIGNED: "נחתם", PENDING: "ממתין", APPROVED: "אושר", EXPIRED: "פג תוקף", REJECTED: "נדחה" } as Record<string, string>)[x.status] ?? x.status}</td>
                     <td className="text-end"><Button size="sm" variant="ghost" onClick={() => download(x.storage_path)}><Download className="size-4" /> פתח</Button></td>
                   </tr>))}</tbody>
               </table>

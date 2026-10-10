@@ -114,12 +114,13 @@ function LeadDetail() {
 
   return (
     <div>
-      <Link to="/leads" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowRight className="size-4" /> לידים</Link>
+      <Link to="/leads" search={{ stage: l.stage === "PROSPECT" ? "PROSPECT" : undefined }} className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowRight className="size-4" /> לידים</Link>
       <div className="panel mb-4 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-semibold">{l.full_name}</h1>
+              <StatusBadge tone="neutral">{l.stage === "PROSPECT" ? "מתעניין" : "ליד"}</StatusBadge>
               <StatusBadge tone={leadStatusTone(l.status)}>{LEAD_STATUS[l.status]}</StatusBadge>
               {w ? <SeverityBadge severity={w} /> : <SeverityBadge severity="OK" />}
             </div>
@@ -142,6 +143,7 @@ function LeadDetail() {
                 <SelectContent>{Object.entries(LEAD_STATUS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
               </Select>
             )}
+            {l.stage === "LEAD" && l.status !== "WON" && l.status !== "LOST" && <Button variant="outline" onClick={() => update({ stage: "PROSPECT" }, "הועבר למתעניינים")}>העבר למתעניינים</Button>}
             {l.status !== "WON" && l.status !== "LOST" && <Button onClick={convert}><UserCheck className="size-4" /> המר ללקוח</Button>}
             {l.converted_customer_id && <Link to="/customers/$id" params={{ id: l.converted_customer_id }}><Button variant="outline">לכרטיס הלקוח</Button></Link>}
           </div>

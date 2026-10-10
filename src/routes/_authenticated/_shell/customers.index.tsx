@@ -1,3 +1,4 @@
+import { LeadDialog } from "@/components/app/LeadDialog";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -93,6 +94,36 @@ function NewCustomer() {
   );
 }
 
+function PhoneLookup({ q, hasResults }: { q: string; hasResults: boolean }) {
+  const { org } = useOrg();
+  const digits = q.replace(/\D/g, "");
+  const isPhone = digits.length >= 9 && digits.length === q.replace(/[\s\-+()]/g, "").length;
+  const r = useQuery({
+    enabled: isPhone,
+    queryKey: ["phone-lookup", org.id, digits],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("find_person_by_phone", { _org: org.id, _phone: q });
+      if (error) throw error;
+      return data;
+    },
+  });
+  if (!isPhone || !r.data) return null;
+  const leads = r.data.filter((x) => x.kind === "lead");
+  if (leads.length) return (
+    <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 p-2 text-sm">
+      <span>המספר שייך ל{leads[0].stage === "PROSPECT" ? "מתעניין" : "ליד"}:</span>
+      {leads.map((l) => <Link key={l.id} to="/leads/$id" params={{ id: l.id }} className="font-medium text-primary hover:underline">{l.full_name}</Link>)}
+    </div>
+  );
+  if (hasResults || r.data.length) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 p-2 text-sm">
+      <span>לא נמצא אדם עם המספר <span className="num" dir="ltr">{q}</span>.</span>
+      <LeadDialog defaultPhone={q} trigger={<Button size="sm"><Plus className="size-4" /> פתיחת כרטיס ליד</Button>} />
+    </div>
+  );
+}
+
 function CustomersPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/customers/" });
@@ -153,7 +184,7 @@ function CustomersPage() {
   const ms = data.data?.ms;
   const buys = data.data?.buys;
   const has = (id: string, rule: string) => byCust.get(id)?.some((i) => i.rule_key === rule);
-  const activeMember = (id: string) => ms?.get(id)?.status === "ACTIVE";
+  const activeMember = (id: string) => ["ACTIVE", "FROZEN"].includes(ms?.get(id)?.status ?? "");
   const noMemberBuyer = (id: string) => !activeMember(id) && (buys?.get(id)?.count ?? 0) > 0;
 
   const searched = useMemo(() => {
@@ -186,8 +217,8 @@ function CustomersPage() {
     if (search.rule) list = list.filter((c) => has(c.id, search.rule!));
     const month = Date.now() - 30 * 864e5;
     switch (filter) {
-      case "active": list = list.filter((c) => c.status === "ACTIVE"); break;
-      case "inactive": list = list.filter((c) => c.status === "INACTIVE"); break;
+      case "active": list = list.filter((c) => activeMember(c.id)); break;
+      case "inactive": list = list.filter((c) => !activeMember(c.id)); break;
       case "new": list = list.filter((c) => new Date(c.joined_at).getTime() > month); break;
       case "buyers": list = list.filter((c) => noMemberBuyer(c.id)); break;
       case "docs": list = list.filter((c) => has(c.id, "MISSING_COMPLIANCE")); break;
@@ -250,8 +281,8 @@ function CustomersPage() {
           onChange={(v) => set({ filter: v === "all" ? undefined : v })}
           options={[
             { value: "all", label: "כולם", count: searched.length },
-            { value: "active", label: "פעילים", count: searched.filter((c) => c.status === "ACTIVE").length },
-            { value: "inactive", label: "לא פעילים", count: searched.filter((c) => c.status === "INACTIVE").length },
+            { value: "active", label: "לקוחות פעילים", count: searched.filter((c) => activeMember(c.id)).length },
+            { value: "inactive", label: "לקוחות לא פעילים", count: searched.filter((c) => !activeMember(c.id)).length },
             { value: "new", label: "לקוחות חדשים", count: searched.filter((c) => new Date(c.joined_at).getTime() > month).length },
             { value: "buyers", label: "ללא מנוי, עם רכישות", count: searched.filter((c) => noMemberBuyer(c.id)).length },
             { value: "docs", label: "מסמכים חסרים", count: searched.filter((c) => has(c.id, "MISSING_COMPLIANCE")).length },
@@ -259,6 +290,7 @@ function CustomersPage() {
             { value: "attention", label: "דורשים טיפול", count: searched.filter((c) => byCust.has(c.id)).length },
           ]}
         />
+        <PhoneLookup q={q} hasResults={rows.length > 0} />
         {!data.isLoading && <p className="text-xs text-muted-foreground">מציג <span className="num">{visible.length}</span> מתוך <span className="num">{rows.length}</span> לקוחות</p>}
       </div>
       <div className="panel overflow-x-auto">
@@ -278,7 +310,7 @@ function CustomersPage() {
                     <td className="truncate font-medium">{c.full_name}
                       {c.status !== "ACTIVE" && <span className="ms-2 text-xs text-muted-foreground">{CUSTOMER_STATUS[c.status]}</span>}</td>
                     <td className="text-muted-foreground"><span className="num" dir="ltr">{c.phone ?? "—"}</span></td>
-                    <td>{m?.status === "ACTIVE" ? <StatusBadge tone="ok">מנוי פעיל</StatusBadge> : <StatusBadge tone="neutral">לא מנוי</StatusBadge>}</td>
+                    <td>{m?.status === "ACTIVE" ? <StatusBadge tone="ok">מנוי פעיל</StatusBadge> : m?.status === "FROZEN" ? <StatusBadge tone="attention">מוקפא</StatusBadge> : <StatusBadge tone="neutral">לא פעיל</StatusBadge>}</td>
                     <td>{w ? <SeverityBadge severity={w} label={iss.length > 1 ? `${healthLabel(iss.find((i) => i.severity === w)!)} +${iss.length - 1}` : healthLabel(iss[0])} /> : <SeverityBadge severity="OK" />}</td>
                   </tr>
                 );
