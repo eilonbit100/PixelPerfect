@@ -68,6 +68,44 @@ export type Database = {
           },
         ]
       }
+      affiliations: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          is_other: boolean
+          name: string
+          organization_id: string
+          sort: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_other?: boolean
+          name: string
+          organization_id: string
+          sort?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_other?: boolean
+          name?: string
+          organization_id?: string
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_requests: {
         Row: {
           amount: number | null
@@ -253,42 +291,58 @@ export type Database = {
       }
       cancellation_requests: {
         Row: {
+          assigned_member_id: string | null
           branch_id: string | null
           created_by: string | null
           customer_id: string
           handled_at: string | null
           id: string
           membership_id: string | null
+          note: string | null
           organization_id: string
           reason: string | null
           requested_at: string
           status: string
+          updated_at: string
         }
         Insert: {
+          assigned_member_id?: string | null
           branch_id?: string | null
           created_by?: string | null
           customer_id: string
           handled_at?: string | null
           id?: string
           membership_id?: string | null
+          note?: string | null
           organization_id: string
           reason?: string | null
           requested_at?: string
           status?: string
+          updated_at?: string
         }
         Update: {
+          assigned_member_id?: string | null
           branch_id?: string | null
           created_by?: string | null
           customer_id?: string
           handled_at?: string | null
           id?: string
           membership_id?: string | null
+          note?: string | null
           organization_id?: string
           reason?: string | null
           requested_at?: string
           status?: string
+          updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cancellation_requests_assigned_member_id_fkey"
+            columns: ["assigned_member_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cancellation_requests_branch_id_fkey"
             columns: ["branch_id"]
@@ -789,6 +843,10 @@ export type Database = {
       }
       customers: {
         Row: {
+          address: string | null
+          affiliation_id: string | null
+          affiliation_other: string | null
+          birth_date: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -809,6 +867,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
+          affiliation_id?: string | null
+          affiliation_other?: string | null
+          birth_date?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -829,6 +891,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
+          affiliation_id?: string | null
+          affiliation_other?: string | null
+          birth_date?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -849,6 +915,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "customers_affiliation_id_fkey"
+            columns: ["affiliation_id"]
+            isOneToOne: false
+            referencedRelation: "affiliations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "customers_home_branch_id_fkey"
             columns: ["home_branch_id"]
@@ -1282,6 +1355,7 @@ export type Database = {
           organization_id: string
           phone: string | null
           source: string
+          stage: string
           status: string
           updated_at: string
         }
@@ -1302,6 +1376,7 @@ export type Database = {
           organization_id: string
           phone?: string | null
           source?: string
+          stage?: string
           status?: string
           updated_at?: string
         }
@@ -1322,6 +1397,7 @@ export type Database = {
           organization_id?: string
           phone?: string | null
           source?: string
+          stage?: string
           status?: string
           updated_at?: string
         }
@@ -1439,8 +1515,12 @@ export type Database = {
       memberships: {
         Row: {
           branch_id: string | null
+          cancel_note: string | null
+          cancel_performed_at: string | null
           cancel_reason: string | null
+          cancellation_request_id: string | null
           cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           customer_id: string
           display_name: string
@@ -1455,8 +1535,12 @@ export type Database = {
         }
         Insert: {
           branch_id?: string | null
+          cancel_note?: string | null
+          cancel_performed_at?: string | null
           cancel_reason?: string | null
+          cancellation_request_id?: string | null
           cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           customer_id: string
           display_name: string
@@ -1471,8 +1555,12 @@ export type Database = {
         }
         Update: {
           branch_id?: string | null
+          cancel_note?: string | null
+          cancel_performed_at?: string | null
           cancel_reason?: string | null
+          cancellation_request_id?: string | null
           cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           customer_id?: string
           display_name?: string
@@ -1491,6 +1579,13 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memberships_cancellation_request_id_fkey"
+            columns: ["cancellation_request_id"]
+            isOneToOne: false
+            referencedRelation: "cancellation_requests"
             referencedColumns: ["id"]
           },
           {
@@ -2155,6 +2250,10 @@ export type Database = {
         Args: { _from: string; _org: string; _to: string; br: string[] }
         Returns: Json
       }
+      _log_customer: {
+        Args: { _cust: string; _desc: string; _meta: Json; _type: string }
+        Returns: undefined
+      }
       _skip_automation: { Args: never; Returns: boolean }
       _sync_rule: {
         Args: {
@@ -2197,14 +2296,39 @@ export type Database = {
         Returns: Json
       }
       cancel_booking: { Args: { _booking: string }; Returns: undefined }
+      cancel_membership: {
+        Args: {
+          _effective: string
+          _membership: string
+          _note: string
+          _reason: string
+          _request: string
+        }
+        Returns: undefined
+      }
+      change_membership_plan: {
+        Args: { _membership: string; _plan: string }
+        Returns: undefined
+      }
       check_in_customer: {
         Args: { _branch: string; _customer: string }
         Returns: Json
       }
       convert_lead_to_customer: { Args: { _lead: string }; Returns: string }
       current_member_id: { Args: { _org: string }; Returns: string }
+      end_freeze: { Args: { _freeze: string }; Returns: undefined }
       entry_block_reasons: { Args: { _customer: string }; Returns: string[] }
       evaluate_rules: { Args: { _org: string }; Returns: undefined }
+      find_person_by_phone: {
+        Args: { _org: string; _phone: string }
+        Returns: {
+          full_name: string
+          id: string
+          kind: string
+          stage: string
+          status: string
+        }[]
+      }
       get_dashboard_kpis: {
         Args: { _branch?: string; _org: string }
         Returns: Json
@@ -2219,6 +2343,16 @@ export type Database = {
       member_role: { Args: { _org: string }; Returns: string }
       my_report_permissions: { Args: { _org: string }; Returns: Json }
       normalize_phone: { Args: { _p: string }; Returns: string }
+      open_cancellation_request: {
+        Args: {
+          _assigned: string
+          _membership: string
+          _note: string
+          _reason: string
+          _requested_at: string
+        }
+        Returns: string
+      }
       refresh_insights: { Args: { _org: string }; Returns: string }
       report_branches: {
         Args: { _branches: string[]; _org: string }
@@ -2265,6 +2399,15 @@ export type Database = {
       suggest_daily_plan: {
         Args: { _branch: string; _date: string }
         Returns: number
+      }
+      update_cancellation_request: {
+        Args: {
+          _assigned: string
+          _note: string
+          _request: string
+          _status: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

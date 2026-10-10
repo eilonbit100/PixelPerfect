@@ -29,6 +29,13 @@
       "when": 1791627431343,
       "tag": "0003_branch_report_data_accuracy",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791628112838,
+      "tag": "0004_customer_card_upgrade",
+      "breakpoints": true
     }
   ]
 }
