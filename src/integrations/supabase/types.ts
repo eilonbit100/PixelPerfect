@@ -289,17 +289,74 @@ export type Database = {
           },
         ]
       }
+      cancellation_policies: {
+        Row: {
+          branch_id: string | null
+          id: string
+          membership_plan_id: string | null
+          notice_unit: string
+          notice_value: number
+          organization_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          id?: string
+          membership_plan_id?: string | null
+          notice_unit?: string
+          notice_value?: number
+          organization_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          id?: string
+          membership_plan_id?: string | null
+          notice_unit?: string
+          notice_value?: number
+          organization_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_policies_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cancellation_policies_membership_plan_id_fkey"
+            columns: ["membership_plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cancellation_policies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cancellation_requests: {
         Row: {
           assigned_member_id: string | null
           branch_id: string | null
           created_by: string | null
           customer_id: string
+          effective_date: string | null
           handled_at: string | null
           id: string
           membership_id: string | null
           note: string | null
           organization_id: string
+          policy_snapshot: Json | null
           reason: string | null
           requested_at: string
           status: string
@@ -310,11 +367,13 @@ export type Database = {
           branch_id?: string | null
           created_by?: string | null
           customer_id: string
+          effective_date?: string | null
           handled_at?: string | null
           id?: string
           membership_id?: string | null
           note?: string | null
           organization_id: string
+          policy_snapshot?: Json | null
           reason?: string | null
           requested_at?: string
           status?: string
@@ -325,11 +384,13 @@ export type Database = {
           branch_id?: string | null
           created_by?: string | null
           customer_id?: string
+          effective_date?: string | null
           handled_at?: string | null
           id?: string
           membership_id?: string | null
           note?: string | null
           organization_id?: string
+          policy_snapshot?: Json | null
           reason?: string | null
           requested_at?: string
           status?: string
@@ -1515,7 +1576,10 @@ export type Database = {
       memberships: {
         Row: {
           branch_id: string | null
+          cancel_approved_at: string | null
+          cancel_approved_by: string | null
           cancel_note: string | null
+          cancel_override_reason: string | null
           cancel_performed_at: string | null
           cancel_reason: string | null
           cancellation_request_id: string | null
@@ -1529,13 +1593,17 @@ export type Database = {
           membership_plan_id: string | null
           organization_id: string
           price: number
+          scheduled_cancel_date: string | null
           start_date: string
           status: string
           updated_at: string
         }
         Insert: {
           branch_id?: string | null
+          cancel_approved_at?: string | null
+          cancel_approved_by?: string | null
           cancel_note?: string | null
+          cancel_override_reason?: string | null
           cancel_performed_at?: string | null
           cancel_reason?: string | null
           cancellation_request_id?: string | null
@@ -1549,13 +1617,17 @@ export type Database = {
           membership_plan_id?: string | null
           organization_id: string
           price?: number
+          scheduled_cancel_date?: string | null
           start_date?: string
           status?: string
           updated_at?: string
         }
         Update: {
           branch_id?: string | null
+          cancel_approved_at?: string | null
+          cancel_approved_by?: string | null
           cancel_note?: string | null
+          cancel_override_reason?: string | null
           cancel_performed_at?: string | null
           cancel_reason?: string | null
           cancellation_request_id?: string | null
@@ -1569,6 +1641,7 @@ export type Database = {
           membership_plan_id?: string | null
           organization_id?: string
           price?: number
+          scheduled_cancel_date?: string | null
           start_date?: string
           status?: string
           updated_at?: string
@@ -2282,6 +2355,7 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_scheduled_cancellations: { Args: never; Returns: number }
       approve_daily_plan: {
         Args: { _branch: string; _date: string }
         Returns: undefined
@@ -2301,11 +2375,13 @@ export type Database = {
           _effective: string
           _membership: string
           _note: string
+          _override_reason?: string
           _reason: string
           _request: string
         }
-        Returns: undefined
+        Returns: Json
       }
+      cancellation_policy_for: { Args: { _membership: string }; Returns: Json }
       change_membership_plan: {
         Args: { _membership: string; _plan: string }
         Returns: undefined
@@ -2343,6 +2419,7 @@ export type Database = {
       member_role: { Args: { _org: string }; Returns: string }
       my_report_permissions: { Args: { _org: string }; Returns: Json }
       normalize_phone: { Args: { _p: string }; Returns: string }
+      notice_date: { Args: { _from: string; _policy: Json }; Returns: string }
       open_cancellation_request: {
         Args: {
           _assigned: string
@@ -2352,6 +2429,10 @@ export type Database = {
           _requested_at: string
         }
         Returns: string
+      }
+      preview_cancellation_date: {
+        Args: { _membership: string; _requested: string }
+        Returns: Json
       }
       refresh_insights: { Args: { _org: string }; Returns: string }
       report_branches: {
