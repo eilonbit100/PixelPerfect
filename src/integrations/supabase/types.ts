@@ -1623,6 +1623,7 @@ export type Database = {
       organizations: {
         Row: {
           active: boolean
+          cancellation_requests_entry_enabled: boolean
           created_at: string
           currency: string
           deleted_at: string | null
@@ -1637,6 +1638,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          cancellation_requests_entry_enabled?: boolean
           created_at?: string
           currency?: string
           deleted_at?: string | null
@@ -1651,6 +1653,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          cancellation_requests_entry_enabled?: boolean
           created_at?: string
           currency?: string
           deleted_at?: string | null
