@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  LayoutDashboard, Users, UserPlus, ListTodo, Package, BarChart3, Settings, Search, Bell, Menu, LogOut, Building2, ChevronDown, Activity, CheckSquare, ScanLine, CalendarDays,
+  LayoutDashboard, Users, UserPlus, ListTodo, Package, BarChart3, Settings, Search, Bell, Menu, LogOut, Building2, ChevronDown, Activity, CheckSquare, ScanLine, CalendarDays, UserCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
@@ -16,9 +16,10 @@ import {
 const NAV = [
   { to: "/dashboard", label: "לוח בקרה", icon: LayoutDashboard },
   { to: "/checkin", label: "כניסה", icon: ScanLine },
-  { to: "/customers", label: "לקוחות", icon: Users },
   { to: "/schedule", label: "מערכת שעות", icon: CalendarDays },
   { to: "/leads", label: "לידים", icon: UserPlus },
+  { to: "/leads", label: "מתעניינים", icon: UserCheck, stage: "PROSPECT" },
+  { to: "/customers", label: "לקוחות", icon: Users },
   { to: "/tasks", label: "משימות", icon: ListTodo },
   { to: "/inventory", label: "מלאי", icon: Package },
   { to: "/reports", label: "דוחות", icon: BarChart3 },
@@ -50,6 +51,7 @@ function BranchSelector() {
 function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
   const { org, profileName, role } = useOrg();
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const stageParam = useRouterState({ select: (s) => (s.location.search as { stage?: string }).stage });
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 px-4 pt-5 pb-6">
@@ -58,11 +60,13 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
       </div>
       <nav className="flex-1 space-y-0.5 px-2">
         {NAV.filter((n) => n.to !== "/approvals" || role !== "EMPLOYEE").map((n) => {
-          const active = path === n.to || path.startsWith(n.to + "/");
+          const stg = (n as { stage?: string }).stage;
+          const active = (path === n.to || path.startsWith(n.to + "/")) && (n.to !== "/leads" || path !== "/leads" || (stg ?? null) === (stageParam ?? null));
           return (
             <Link
-              key={n.to}
+              key={n.label}
               to={n.to}
+              search={n.to === "/leads" ? { stage: stg } : undefined}
               onClick={onNavigate}
               className={cn(
                 "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",

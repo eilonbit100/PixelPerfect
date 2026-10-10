@@ -13,7 +13,7 @@ import { LeadDialog } from "@/components/app/LeadDialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type Search = { filter?: string; rule?: string; source?: string; owner?: string; status?: string };
+type Search = { filter?: string; rule?: string; source?: string; owner?: string; status?: string; stage?: string };
 
 export const Route = createFileRoute("/_authenticated/_shell/leads/")({
   validateSearch: (s: Record<string, unknown>): Search => ({
@@ -22,6 +22,7 @@ export const Route = createFileRoute("/_authenticated/_shell/leads/")({
     source: typeof s.source === "string" ? s.source : undefined,
     owner: typeof s.owner === "string" ? s.owner : undefined,
     status: typeof s.status === "string" ? s.status : undefined,
+    stage: s.stage === "PROSPECT" ? "PROSPECT" : undefined,
   }),
   head: () => ({
     meta: [
@@ -43,11 +44,12 @@ function LeadsPage() {
   const insights = useInsights();
   const [adv, setAdv] = useState(!!(search.source || search.owner || search.status));
   const filter = search.filter ?? "all";
+  const stage = search.stage ?? "LEAD";
 
   const leads = useQuery({
-    queryKey: ["leads", org.id, branchId],
+    queryKey: ["leads", org.id, branchId, stage],
     queryFn: async () => {
-      let q = supabase.from("leads").select("*").eq("organization_id", org.id).is("deleted_at", null).is("converted_customer_id", null).neq("status", "WON").order("created_at", { ascending: false }).limit(1000);
+      let q = supabase.from("leads").select("*").eq("organization_id", org.id).is("deleted_at", null).is("converted_customer_id", null).neq("status", "WON").eq("stage", stage).order("created_at", { ascending: false }).limit(1000);
       if (branchId) q = q.eq("branch_id", branchId);
       const { data, error } = await q;
       if (error) throw error;
@@ -115,7 +117,7 @@ function LeadsPage() {
 
   return (
     <div>
-      <PageHeader title="לידים" subtitle="סטטוס עסקי ותקינות תפעולית לכל ליד" actions={<LeadDialog trigger={<Button><Plus className="size-4" /> ליד חדש</Button>} />} />
+      <PageHeader title={stage === "PROSPECT" ? "מתעניינים" : "לידים"} subtitle={stage === "PROSPECT" ? "אנשים שנמצאים בתהליך מעקב ומכירה — עד רכישת מנוי" : "פניות חדשות שטרם התחלנו איתן מעקב"} actions={<LeadDialog trigger={<Button><Plus className="size-4" /> ליד חדש</Button>} />} />
 
       {search.rule && RULES[search.rule] && (
         <div className="mb-3 flex items-center gap-2 rounded-md border bg-accent px-3 py-2 text-sm text-accent-foreground">
