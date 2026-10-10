@@ -12,18 +12,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export function LeadDialog({ trigger }: { trigger: ReactNode }) {
+export function LeadDialog({ trigger, defaultPhone }: { trigger: ReactNode; defaultPhone?: string }) {
   const { org, branches, branchId, members, me } = useOrg();
   const invalidate = useInvalidateAll();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ full_name: "", phone: "", email: "", source: "WEBSITE", branch: branchId ?? branches[0]?.id ?? "", owner: me.id });
+  const [f, setF] = useState({ full_name: "", phone: defaultPhone ?? "", email: "", source: "WEBSITE", branch: branchId ?? branches[0]?.id ?? "", owner: me.id });
   const [busy, setBusy] = useState(false);
 
   async function save() {
     if (!f.full_name.trim()) return toast.error("יש להזין שם");
     if (f.phone && !isValidIsraeliPhone(f.phone)) return toast.error("מספר הטלפון אינו תקין");
     setBusy(true);
+    if (f.phone) {
+      const dup = await supabase.rpc("find_person_by_phone", { _org: org.id, _phone: f.phone });
+      const hit = dup.data?.[0];
+      if (hit) {
+        setBusy(false);
+        setOpen(false);
+        toast.info(`המספר כבר קיים במערכת (${hit.full_name}) — נפתח הכרטיס הקיים`);
+        return hit.kind === "customer" ? navigate({ to: "/customers/$id", params: { id: hit.id } }) : navigate({ to: "/leads/$id", params: { id: hit.id } });
+      }
+    }
     const { data, error } = await supabase.from("leads").insert({
       organization_id: org.id, branch_id: f.branch, full_name: f.full_name.trim(), phone: f.phone || null,
       email: f.email || null, source: f.source, assigned_member_id: f.owner, status: "NEW",
