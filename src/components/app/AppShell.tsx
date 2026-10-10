@@ -78,6 +78,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
               <n.icon className={cn("size-4", active ? "text-sidebar-primary" : "text-sidebar-foreground/60")} />
               {n.label}
             </Link>
+            </div>
           );
         })}
       </nav>
