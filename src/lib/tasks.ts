@@ -1,6 +1,6 @@
-export const TASK_CATEGORY: Record<string, string> = { SALES: "מכירה", SERVICE: "שירות", OPS: "תפעול", GENERAL: "כללי" };
+export const TASK_CATEGORY: Record<string, string> = { SALES: "מכירה", SERVICE: "שירות", OPS: "תפעול", MANAGE: "ניהול ואישורים", GENERAL: "כללי" };
 export const TASK_OUTCOME: Record<string, string> = {
-  CONTACTED: "נוצר קשר", NO_ANSWER: "לא נענה", FOLLOW_UP: "נקבע מעקב נוסף",
+  CONTACTED: "נוצר קשר", NO_ANSWER: "לא ענה", INTERESTED: "מעוניין", FOLLOW_UP: "נקבע מעקב נוסף",
   MEETING: "נקבעה פגישה", SALE: "בוצעה מכירה", NOT_RELEVANT: "לא רלוונטי",
 };
 export const OPEN_STATUSES = ["OPEN", "IN_PROGRESS"];
@@ -27,4 +27,8 @@ export function leadsWithoutTask<L extends { id: string; status: string }>(leads
 /** Snooze moves only the reminder, never the due date. */
 export function snoozeUntil(minutes: number, now = new Date()): string {
   return new Date(now.getTime() + minutes * 60000).toISOString();
+}
+/** A task type may only be assigned to the roles it lists (mirrors the tasks_validate trigger). */
+export function typesForRole<X extends { allowed_roles: string[] }>(types: X[], role: string | null | undefined): X[] {
+  return role ? types.filter((t) => t.allowed_roles.includes(role)) : types;
 }

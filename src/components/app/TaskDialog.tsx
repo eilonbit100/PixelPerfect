@@ -7,7 +7,7 @@ import { useOrg } from "@/lib/org";
 import { useInvalidateAll } from "@/lib/queries";
 import { friendlyError } from "@/lib/errors";
 import { TASK_PRIORITY } from "@/lib/format";
-import { TASK_CATEGORY } from "@/lib/tasks";
+import { TASK_CATEGORY, typesForRole } from "@/lib/tasks";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ export function useTaskTypes() {
   return useQuery({
     queryKey: ["task-types", org.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("task_types").select("key,label,category,sort").eq("organization_id", org.id).eq("active", true).order("sort");
+      const { data, error } = await supabase.from("task_types").select("key,label,category,sort,allowed_roles,requires_link").eq("organization_id", org.id).eq("active", true).order("sort");
       if (error) throw error;
       return data;
     },
@@ -57,7 +57,19 @@ export function TaskDialog({
   const [lq, setLq] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const cat = types.data?.find((t) => t.key === type)?.category ?? "GENERAL";
+  const assignable = members.filter((m) => m.status === "ACTIVE" || m.status === "INVITED");
+  const assigneeRole = assignable.find((m) => m.id === assignee)?.role;
+  const allowed = typesForRole(types.data ?? [], assigneeRole);
+  useEffect(() => { if (types.data && !allowed.some((t) => t.key === type)) setType(allowed[0]?.key ?? "GENERAL"); }, [assigneeRole, types.data]); // eslint-disable-line react-hooks/exhaustive-deps
+  const tt = types.data?.find((t) => t.key === type);
+  const cat = tt?.category ?? "GENERAL";
+  const needTicket = !!tt?.requires_link && !entityId;
+  const [ticket, setTicket] = useState("");
+  const tickets = useQuery({
+    queryKey: ["task-ticket-options", org.id, branchId ?? branch],
+    enabled: open && needTicket,
+    queryFn: async () => (await supabase.from("approval_requests").select("id,ticket_no,title,status").eq("organization_id", org.id).eq("branch_id", branchId ?? branch).not("status", "in", "(CLOSED,CANCELLED)").order("ticket_no", { ascending: false }).limit(50)).data ?? [],
+  });
   const canLink = !entityId && (cat === "SALES" || cat === "SERVICE" || cat === "GENERAL");
   useEffect(() => { if (!canLink) setLink(null); }, [canLink]);
 
@@ -69,12 +81,13 @@ export function TaskDialog({
 
   async function save() {
     if (!title.trim()) return toast.error("יש להזין כותרת למשימה");
+    if (needTicket && !ticket) return toast.error("משימת אישור חייבת להיות מקושרת לקריאה");
     if (popup && !remind) return toast.error("יש לבחור מועד להצגת ההתראה");
     setSaving(true);
     const { error } = await supabase.from("tasks").insert({
       organization_id: org.id, branch_id: branchId ?? branch, title: title.trim(), description: desc || null,
       due_at: new Date(due).toISOString(), priority, assigned_member_id: assignee || null, task_type: type,
-      entity_type: entityType ?? link?.type ?? null, entity_id: entityId ?? link?.id ?? null, source: "MANUAL",
+      entity_type: entityType ?? (needTicket ? "ticket" : link?.type) ?? null, entity_id: entityId ?? (needTicket ? ticket : link?.id) ?? null, source: "MANUAL",
       popup, reminder_at: popup ? new Date(remind).toISOString() : null,
     });
     setSaving(false);
@@ -85,8 +98,7 @@ export function TaskDialog({
     invalidate();
   }
 
-  const assignable = members.filter((m) => m.status === "ACTIVE" || m.status === "INVITED");
-  const groups = Object.keys(TASK_CATEGORY).map((c) => ({ c, items: (types.data ?? []).filter((t) => t.category === c) })).filter((g) => g.items.length);
+  const groups = Object.keys(TASK_CATEGORY).map((c) => ({ c, items: allowed.filter((t) => t.category === c) })).filter((g) => g.items.length);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -130,6 +142,16 @@ export function TaskDialog({
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
               </Select>
+            </div>
+          )}
+          {needTicket && (
+            <div className="space-y-1.5">
+              <Label>קריאה מקושרת (חובה)</Label>
+              <Select value={ticket} onValueChange={setTicket}>
+                <SelectTrigger aria-label="קריאה מקושרת"><SelectValue placeholder="בחירת קריאה" /></SelectTrigger>
+                <SelectContent>{(tickets.data ?? []).map((k) => <SelectItem key={k.id} value={k.id}>#{k.ticket_no} · {k.title}</SelectItem>)}</SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">המשימה היא תזכורת בלבד — האישור או הדחייה מתבצעים בקריאה עצמה.</p>
             </div>
           )}
           {canLink && (
