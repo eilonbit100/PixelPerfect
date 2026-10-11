@@ -215,7 +215,7 @@ function TasksPage() {
                 const name = t.entity_id ? data!.names.get(t.entity_id) : undefined;
                 return (
                   <tr key={t.id} className="cursor-pointer" onClick={() => navigate({ search: (s: Search) => ({ ...s, task: t.id }), replace: true })}>
-                    <td className="max-w-64">
+                    <td className="col-title max-w-64">
                       <span className="font-medium">{t.title}</span>
                       {(data!.tickets.get(t.id) ?? []).map((k) => <Link key={k.id} onClick={(e) => e.stopPropagation()} to="/tickets/$id" params={{ id: k.id }} className="num ms-2 text-xs text-primary hover:underline">קריאה #{k.no}</Link>)}
                       {t.description && <span className="block truncate text-xs text-muted-foreground">{t.description}</span>}
