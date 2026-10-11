@@ -239,7 +239,6 @@ function CustomersPage() {
   const buys = data.data?.buys;
   const has = (id: string, rule: string) => byCust.get(id)?.some((i) => i.rule_key === rule);
   const activeMember = (id: string) => ["ACTIVE", "FROZEN"].includes(ms?.get(id)?.status ?? "");
-  const noMemberBuyer = (id: string) => !activeMember(id) && (buys?.get(id)?.count ?? 0) > 0;
 
   const searched = useMemo(() => {
     if (!q) return all;
@@ -269,15 +268,9 @@ function CustomersPage() {
   const rows = useMemo(() => {
     let list = searched;
     if (search.rule) list = list.filter((c) => has(c.id, search.rule!));
-    const month = Date.now() - 30 * 864e5;
     switch (filter) {
       case "active": list = list.filter((c) => activeMember(c.id)); break;
       case "inactive": list = list.filter((c) => !activeMember(c.id)); break;
-      case "new": list = list.filter((c) => new Date(c.joined_at).getTime() > month); break;
-      case "buyers": list = list.filter((c) => noMemberBuyer(c.id)); break;
-      case "docs": list = list.filter((c) => has(c.id, "MISSING_COMPLIANCE")); break;
-      case "payment": list = list.filter((c) => has(c.id, "FAILED_PAYMENT")); break;
-      case "attention": list = list.filter((c) => byCust.has(c.id)); break;
     }
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -286,7 +279,6 @@ function CustomersPage() {
   const [limit, setLimit] = useState(100);
   useEffect(() => setLimit(100), [q, filter, search.rule]);
   const visible = rows.slice(0, limit);
-  const month = Date.now() - 30 * 864e5;
 
   const set = (p: Partial<Search>) => navigate({ search: (s: Search) => ({ ...s, ...p }) });
 
@@ -337,11 +329,6 @@ function CustomersPage() {
             { value: "all", label: "כולם", count: searched.length },
             { value: "active", label: "לקוחות פעילים", count: searched.filter((c) => activeMember(c.id)).length },
             { value: "inactive", label: "לקוחות לא פעילים", count: searched.filter((c) => !activeMember(c.id)).length },
-            { value: "new", label: "לקוחות חדשים", count: searched.filter((c) => new Date(c.joined_at).getTime() > month).length },
-            { value: "buyers", label: "ללא מנוי, עם רכישות", count: searched.filter((c) => noMemberBuyer(c.id)).length },
-            { value: "docs", label: "מסמכים חסרים", count: searched.filter((c) => has(c.id, "MISSING_COMPLIANCE")).length },
-            { value: "payment", label: "בעיית תשלום", count: searched.filter((c) => has(c.id, "FAILED_PAYMENT")).length },
-            { value: "attention", label: "דורשים טיפול", count: searched.filter((c) => byCust.has(c.id)).length },
           ]}
         />
         <PhoneLookup q={q} hasResults={rows.length > 0} />
