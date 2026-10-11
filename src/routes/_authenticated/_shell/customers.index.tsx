@@ -239,7 +239,6 @@ function CustomersPage() {
   const buys = data.data?.buys;
   const has = (id: string, rule: string) => byCust.get(id)?.some((i) => i.rule_key === rule);
   const activeMember = (id: string) => ["ACTIVE", "FROZEN"].includes(ms?.get(id)?.status ?? "");
-  const noMemberBuyer = (id: string) => !activeMember(id) && (buys?.get(id)?.count ?? 0) > 0;
 
   const searched = useMemo(() => {
     if (!q) return all;
@@ -280,7 +279,6 @@ function CustomersPage() {
   const [limit, setLimit] = useState(100);
   useEffect(() => setLimit(100), [q, filter, search.rule]);
   const visible = rows.slice(0, limit);
-  const month = Date.now() - 30 * 864e5;
 
   const set = (p: Partial<Search>) => navigate({ search: (s: Search) => ({ ...s, ...p }) });
 
