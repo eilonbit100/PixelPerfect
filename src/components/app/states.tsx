@@ -55,9 +55,9 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   );
 }
 
-export function FilterChips<T extends string>({ options, value, onChange }: { options: { value: T; label: string; count?: number }[]; value: T; onChange: (v: T) => void }) {
+export function FilterChips<T extends string>({ options, value, onChange, dense }: { options: { value: T; label: string; count?: number }[]; value: T; onChange: (v: T) => void; dense?: boolean }) {
   return (
-    <div className="flex flex-wrap gap-1.5" role="tablist">
+    <div className="flex flex-wrap gap-1" role="tablist">
       {options.map((o) => {
         const active = o.value === value;
         return (
@@ -67,10 +67,12 @@ export function FilterChips<T extends string>({ options, value, onChange }: { op
             aria-selected={active}
             onClick={() => onChange(o.value)}
             className={
-              "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm transition-colors " +
+              "inline-flex items-center gap-1.5 rounded-md border transition-colors " +
+              (dense ? "px-2 py-1 text-[11px]" : "px-2.5 py-1 text-sm") +
               (active ? "border-foreground/80 bg-foreground text-background" : "bg-surface text-foreground hover:bg-muted")
             }
           >
+
             {o.label}
             {o.count !== undefined && <span className={"num text-xs " + (active ? "opacity-70" : "text-muted-foreground")}>{o.count}</span>}
           </button>

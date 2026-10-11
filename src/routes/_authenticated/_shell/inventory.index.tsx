@@ -123,18 +123,26 @@ function InventoryPage() {
   return (
     <div>
       <PageHeader title="מלאי" subtitle="כל תנועה נרשמת ביומן — היתרה מתעדכנת רק דרך תנועת מלאי" />
-      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <div className="mb-3 flex flex-wrap items-center gap-1">
         {KPI_RULES.map((k) => {
           const n = kpi(k.rule);
           const active = search.rule === k.rule;
           return (
-            <button key={k.rule} onClick={() => set({ tab: undefined, category: undefined, rule: active ? undefined : k.rule })}
-              className={"panel p-3 text-start transition-colors hover:bg-muted/50 " + (active ? "ring-2 ring-primary" : "")}>
-              <div className="text-xs text-muted-foreground">{k.label}</div>
-              <div className={"num text-2xl font-semibold " + (n ? (k.rule === "OUT_OF_STOCK" ? "text-critical" : "text-warning") : "")}>{insights.isLoading ? "…" : n}</div>
+            <button key={k.rule} onClick={() => set({ tab: undefined, category: undefined, rule: active ? undefined : k.rule })} aria-pressed={active}
+              className={"inline-flex items-center gap-2 rounded-md border bg-surface px-2.5 py-1 text-start transition-colors hover:bg-muted " + (active ? "border-foreground/80 ring-2 ring-primary" : "")}>
+              <span className="text-[11px] text-muted-foreground">{k.label}</span>
+              <span className={"num text-sm font-semibold " + (n ? (k.rule === "OUT_OF_STOCK" ? "text-critical" : "text-warning") : "")}>{insights.isLoading ? "…" : n}</span>
             </button>);
         })}
+        <span className="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden />
+        <FilterChips dense value={filter} onChange={(v) => set({ filter: v === "all" ? undefined : v })} options={[
+          { value: "all", label: "כל המוצרים", count: all.length },
+          { value: "attention", label: "דורשים טיפול", count: all.filter((p) => byProd.has(p.id)).length },
+          { value: "active", label: "פעילים" }, { value: "inactive", label: "לא פעילים" },
+        ]} />
       </div>
+
+
       <div className="mb-3 flex flex-wrap gap-1 border-b">
         {[["shelf", "מוצרי מדף"], ["equipment", "ציוד קבוע"], ["counts", "ספירות"], ["movements", "תנועות"], ["suppliers", "ספקים"]].map(([k, l]) => (
           <button key={k} onClick={() => set({ tab: k === "shelf" ? undefined : k, category: undefined, rule: undefined, filter: undefined, query: undefined })}
@@ -148,110 +156,84 @@ function InventoryPage() {
           <button onClick={() => set({ rule: undefined })} className="ms-auto inline-flex items-center gap-1 text-xs hover:underline"><X className="size-3.5" /> נקה</button>
         </div>
       )}
-      <div className="mb-4 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7" aria-label="קטגוריות מוצרים">
-        <Button
-          variant={search.category ? "outline" : "secondary"}
-          onClick={() => set({ category: undefined })}
-          className="h-auto min-h-20 min-w-0 flex-col gap-1.5 px-2 py-3"
-          aria-pressed={!search.category}
-        >
-          <PackageSearch className="size-6" />
-          <span className="max-w-full truncate">הכול</span>
-          <span className="num text-xs text-muted-foreground">{all.length}</span>
-        </Button>
+      <div className="mb-3 flex flex-wrap items-center gap-1" aria-label="קטגוריות מוצרים">
+        <button type="button" onClick={() => set({ category: undefined })} aria-pressed={!search.category}
+          className={"inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] transition-colors " + (search.category ? "bg-surface hover:bg-muted" : "border-foreground/80 bg-foreground text-background")}>
+          <PackageSearch className="size-3.5" />
+          <span>הכול</span>
+          <span className={"num " + (search.category ? "text-muted-foreground" : "opacity-70")}>{all.length}</span>
+        </button>
         {categories.map(([category, count]) => {
           const Icon = categoryIcon(category);
           const active = search.category === category;
           return (
-            <Button
-              key={category}
-              variant={active ? "secondary" : "outline"}
-              onClick={() => set({ category: active ? undefined : category })}
-              className="h-auto min-h-20 min-w-0 flex-col gap-1.5 px-2 py-3"
-              aria-pressed={active}
-              title={category}
-            >
-              <Icon className="size-6" />
-              <span className="max-w-full truncate">{category}</span>
-              <span className="num text-xs text-muted-foreground">{count}</span>
-            </Button>
+            <button key={category} type="button" onClick={() => set({ category: active ? undefined : category })} aria-pressed={active} title={category}
+              className={"inline-flex min-w-0 items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] transition-colors " + (active ? "border-foreground/80 bg-foreground text-background" : "bg-surface hover:bg-muted")}>
+              <Icon className="size-3.5 shrink-0" />
+              <span className="max-w-28 truncate">{category}</span>
+              <span className={"num " + (active ? "opacity-70" : "text-muted-foreground")}>{count}</span>
+            </button>
           );
         })}
-      </div>
-      <div className="mb-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-        <div className="relative min-w-0 max-w-xl">
-          <Search className="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted-foreground" />
-          <Input
-            value={search.query ?? ""}
-            onChange={(event) => set({ query: event.target.value || undefined })}
-            className="pe-9 ps-9"
-            placeholder="חיפוש לפי שם, מק״ט או ברקוד"
-            aria-label="חיפוש מוצרים"
-          />
+        <div className="relative min-w-36 flex-1 basis-36">
+          <Search className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input value={search.query ?? ""} onChange={(event) => set({ query: event.target.value || undefined })} className="h-7 border-border/70 pe-7 ps-7 text-xs" placeholder="שם, מק״ט או ברקוד" aria-label="חיפוש מוצרים" />
           {search.query && (
-            <Button variant="ghost" size="icon" className="absolute inset-y-0 end-0 my-auto size-9" onClick={() => set({ query: undefined })} aria-label="ניקוי חיפוש">
-              <X className="size-4" />
-            </Button>
+            <button type="button" onClick={() => set({ query: undefined })} aria-label="ניקוי חיפוש" className="absolute end-1 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground">
+              <X className="size-3.5" />
+            </button>
           )}
         </div>
-        <FilterChips value={filter} onChange={(v) => set({ filter: v === "all" ? undefined : v })} options={[
-          { value: "all", label: "כל המוצרים", count: all.length },
-          { value: "attention", label: "דורשים טיפול", count: all.filter((p) => byProd.has(p.id)).length },
-          { value: "active", label: "פעילים" }, { value: "inactive", label: "לא פעילים" },
-        ]} />
       </div>
+
+
       {q.isLoading || insights.isLoading ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, index) => <Skeleton key={index} className="h-56 rounded-md" />)}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, index) => <Skeleton key={index} className="h-40 rounded-md" />)}
         </div>
       ) : q.error ? (
         <div className="panel"><ErrorState onRetry={() => q.refetch()} /></div>
       ) : !rows.length ? (
         <div className="panel"><EmptyState title="אין מוצרים להצגה" text="אפשר לבחור קטגוריה אחרת או לנקות את החיפוש והמסננים." /></div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {rows.map((p) => {
             const iss = byProd.get(p.id) ?? [];
             const w = worst(iss);
             const Icon = categoryIcon(p.category);
             const stock = q.data?.stock.get(p.id) ?? 0;
             return (
-              <article key={p.id} className="group grid min-h-56 min-w-0 grid-rows-[1fr_auto] rounded-md border bg-surface transition-colors hover:border-primary/60 hover:bg-muted/30">
-                <Link to="/inventory/$id" params={{ id: p.id }} className="flex min-w-0 flex-col p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" title={`פתיחת ${p.name}`}>
-                  <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="grid size-11 shrink-0 place-items-center rounded-md bg-muted text-foreground transition-colors group-hover:bg-accent group-hover:text-accent-foreground">
-                        <Icon className="size-6" />
-                      </span>
-                      <div className="min-w-0">
-                        <h2 className="line-clamp-2 font-medium leading-5">{p.name}</h2>
-                        <p className="num mt-1 truncate text-xs text-muted-foreground">{p.sku}</p>
-                      </div>
+              <article key={p.id} className="group grid min-w-0 grid-rows-[1fr_auto] rounded-md border bg-surface transition-colors hover:border-primary/60 hover:bg-muted/30">
+                <Link to="/inventory/$id" params={{ id: p.id }} className="flex min-w-0 flex-col gap-2 p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" title={`פתיחת ${p.name}`}>
+                  <div className="flex min-w-0 items-start gap-2">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-md bg-muted text-foreground transition-colors group-hover:bg-accent group-hover:text-accent-foreground">
+                      <Icon className="size-4.5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="line-clamp-2 text-sm font-medium leading-5">{p.name}</h2>
+                      <p className="num truncate text-[11px] text-muted-foreground">{p.sku}</p>
                     </div>
                     {p.status === "INACTIVE" && <StatusBadge>לא פעיל</StatusBadge>}
                   </div>
-                  <div className="mt-auto grid grid-cols-2 gap-3">
+                  <div className="flex min-w-0 items-end justify-between gap-2">
                     <div>
-                      <div className="text-xs text-muted-foreground">מלאי</div>
-                      <div className="num mt-0.5 text-2xl font-semibold">{fmtNum(stock)}</div>
+                      <div className="text-[11px] text-muted-foreground">מלאי</div>
+                      <div className="num text-lg font-semibold leading-none">{fmtNum(stock)}</div>
                     </div>
-                    <div className="min-w-0 text-end">
-                      <div className="text-xs text-muted-foreground">קטגוריה</div>
-                      <div className="mt-1 truncate text-sm">{p.category?.trim() || "ללא קטגוריה"}</div>
-                    </div>
+                    <div className="min-w-0 truncate text-end text-[11px] text-muted-foreground">{p.category?.trim() || "ללא קטגוריה"}</div>
                   </div>
-                  <div className="mt-3 flex min-w-0 items-center justify-between gap-2 border-t pt-3">
+                  <div className="flex min-w-0 items-center justify-between gap-2 border-t pt-2">
                     {w ? <SeverityBadge severity={w} label={healthLabel(iss.find((i) => i.severity === w)!)} /> : <SeverityBadge severity="OK" />}
-                    <span className="truncate text-xs text-muted-foreground">{q.data?.exp.get(p.id) ? `תוקף ${fmtDate(q.data.exp.get(p.id))}` : q.data?.sname.get(p.default_supplier_id ?? "") ?? ""}</span>
+                    <span className="truncate text-[11px] text-muted-foreground">{q.data?.exp.get(p.id) ? `תוקף ${fmtDate(q.data.exp.get(p.id))}` : q.data?.sname.get(p.default_supplier_id ?? "") ?? ""}</span>
                   </div>
                 </Link>
                 {p.status === "ACTIVE" && p.kind !== "EQUIPMENT" && (
-                  <div className="border-t p-2.5">
+                  <div className="border-t p-2">
                     <StockDialog
                       productId={p.id}
                       productName={p.name}
                       defaultType={iss.some((i) => i.rule_key === "COUNT_DISCREPANCY") ? "PHYSICAL_COUNT" : "RECEIPT"}
-                      trigger={<Button size="sm" variant={w ? "default" : "outline"} className="w-full">{w ? "טפל" : "תנועת מלאי"}</Button>}
+                      trigger={<Button size="sm" variant={w ? "default" : "outline"} className="h-7 w-full text-xs">{w ? "טפל" : "תנועת מלאי"}</Button>}
                     />
                   </div>
                 )}
@@ -261,6 +243,7 @@ function InventoryPage() {
         </div>
       )}
       </>}
+
     </div>
   );
 }
