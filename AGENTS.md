@@ -34,3 +34,4 @@
 - Catalog/price/supplier edits HQ-only via RLS; movement docs in private bucket `inventory-docs` (org/branch/file) — server-side price control and branch isolation.
 - Tasks: per-org `task_types`; popups claimed atomically by `claim_task_reminders`; history = activities(entity 'task'); open rule tasks unique per entity — no duplicates.
 - Task types carry allowed_roles/requires_link; trigger `tasks_validate` blocks role-mismatched assignment and approval tasks without a ticket/cancellation link — tasks only remind, approval stays in tickets. Demo tasks use source DEMO for easy cleanup.
+- Dashboards read only from `dashboard_people`/`dashboard_inventory` RPCs (reorder math in `_inv_stats`, mirrored in `src/lib/dashboard.ts`); revenue in `get_dashboard_kpis` is null for non-HQ — role visibility enforced server-side.
