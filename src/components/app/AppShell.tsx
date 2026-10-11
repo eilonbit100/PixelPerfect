@@ -36,7 +36,7 @@ const GROUPS: { title?: string; funnel?: boolean; items: NavItem[] }[] = [
 const FUNNEL = [
   { key: "lead", to: "/leads", stage: undefined, label: "לידים", hint: "הזדמנות חדשה", dot: "bg-funnel-lead", ring: "ring-funnel-lead" },
   { key: "prospect", to: "/leads", stage: "PROSPECT", label: "מתעניינים", hint: "בתהליך מעקב", dot: "bg-funnel-prospect", ring: "ring-funnel-prospect" },
-  { key: "customer", to: "/customers", stage: undefined, label: "לקוחות", hint: "רכשו מנוי", dot: "bg-funnel-customer", ring: "ring-funnel-customer" },
+  { key: "customer", to: "/customers", stage: undefined, label: "לקוחות", hint: "", dot: "bg-funnel-customer", ring: "ring-funnel-customer" },
 ] as const;
 
 function Funnel({ path, stageParam, onNavigate }: { path: string; stageParam?: string; onNavigate?: () => void }) {
@@ -71,9 +71,9 @@ function Funnel({ path, stageParam, onNavigate }: { path: string; stageParam?: s
               <span className={cn("relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold text-sidebar", f.dot, active && "ring-2 ring-offset-2 ring-offset-sidebar", active && f.ring)}>{i + 1}</span>
               <span className="min-w-0 flex-1 leading-tight">
                 <span className="block">{f.label}</span>
-                <span className="block text-[0.7rem] text-sidebar-foreground/55">{f.hint}</span>
+                {f.hint && <span className="block text-[0.7rem] text-sidebar-foreground/55">{f.hint}</span>}
               </span>
-              {n != null && <span className="num rounded bg-sidebar-accent px-1.5 text-xs text-sidebar-foreground/80">{n}</span>}
+              {f.key !== "customer" && n != null && <span className="num rounded bg-sidebar-accent px-1.5 text-xs text-sidebar-foreground/80">{n}</span>}
             </Link>
           </li>
         );
