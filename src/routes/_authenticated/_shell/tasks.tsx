@@ -175,8 +175,8 @@ function TasksPage() {
         ))}
       </div>
       {search.task && <div className="mb-3 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">מוצגת משימה אחת <Button size="sm" variant="ghost" onClick={() => set({})}>הצג את כל המשימות</Button></div>}
-      <div className="panel mb-3 flex flex-wrap items-center gap-2 p-2">
-        <div className="relative w-64">
+      <div className="panel mb-3 flex flex-wrap items-center gap-1.5 p-2">
+        <div className="relative w-52">
           <SearchIcon className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="ps-8" placeholder={leadView ? "חיפוש לפי שם או טלפון" : "חיפוש לפי משימה, לקוח או ליד"} defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש" />
         </div>
@@ -223,10 +223,10 @@ function TasksPage() {
                     <td className="font-medium"><Link className="text-primary hover:underline" to="/leads/$id" params={{ id: l.id }}>{l.full_name}</Link></td>
                     <td>{l.stage === "PROSPECT" ? "מתעניין" : "ליד"}</td>
                     <td>{LEAD_STATUS[l.status] ?? l.status}</td>
-                    <td className="num">{l.phone ?? "—"}</td>
+                    <td className="num col-phone" dir="ltr">{l.phone ?? "—"}</td>
                     <td>{memberName(l.assigned_member_id)}</td>
-                    <td className="num text-muted-foreground">{fmtRelative(l.created_at)}</td>
-                    <td className="text-muted-foreground">{branchName(l.branch_id)}</td>
+                    <td className="num text-muted-foreground col-md">{fmtRelative(l.created_at)}</td>
+                    <td className="text-muted-foreground col-md">{branchName(l.branch_id)}</td>
                     {view === "lost" ? <td>{LOSS_REASON[l.loss_reason ?? ""] ?? l.loss_reason ?? "—"}{l.loss_note && <span className="block text-xs text-muted-foreground">{l.loss_note}</span>}</td> : (
                       <td className="text-end">
                         <TaskDialog entityType="lead" entityId={l.id} branchId={l.branch_id} defaultTitle={`מעקב — ${l.full_name}`} defaultAssignee={l.assigned_member_id ?? me.id}
