@@ -225,6 +225,14 @@
     width: 1%;
     white-space: nowrap;
   }
+  .leads-table .col-md {
+    display: none;
+  }
+  @media (min-width: 1200px) {
+    .leads-table .col-md {
+      display: table-cell;
+    }
+  }
   .tasks-table td {
     padding-block: 0.35rem;
     padding-inline: 0.6rem;

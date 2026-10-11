@@ -215,8 +215,8 @@ function TasksPage() {
       <div className="panel overflow-x-auto">
         {q.isLoading ? <TableSkeleton cols={8} /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : leadView ? (
           !leadRows.length ? <EmptyState title={view === "nolead" ? "לכל הלידים יש משימת מעקב" : "אין לידים לא רלוונטיים"} text="שנו את הסינון כדי לראות רשומות נוספות." /> : (
-            <table className="data-table">
-              <thead><tr><th>שם</th><th>שלב</th><th>סטטוס</th><th>טלפון</th><th>אחראי</th><th>נכנס</th><th>סניף</th>{view === "lost" ? <th>סיבת סגירה</th> : <th />}</tr></thead>
+            <table className="data-table leads-table">
+              <thead><tr><th>שם</th><th>שלב</th><th>סטטוס</th><th className="col-phone">טלפון</th><th>אחראי</th><th className="col-md">נכנס</th><th className="col-md">סניף</th>{view === "lost" ? <th>סיבת סגירה</th> : <th />}</tr></thead>
               <tbody>
                 {leadRows.map((l) => (
                   <tr key={l.id}>
