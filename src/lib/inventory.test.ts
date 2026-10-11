@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countGap, moveAllowed, moveProblem } from "./inventory";
+import { countGap, moveAllowed, moveProblem, returnWindowDays } from "./inventory";
 
 const base = { qty: "2", reason: "", branch: "a", toBranch: "", lotRequired: false, lotId: "" };
 describe("inventory movement rules", () => {
@@ -15,4 +15,7 @@ describe("inventory movement rules", () => {
   it("return to supplier needs a lot when lots exist", () => expect(moveProblem({ ...base, type: "RETURN_TO_SUPPLIER", lotRequired: true })).toBe("יש לבחור אצווה להחזרה"));
   it("uncounted line has no gap (not zero)", () => expect(countGap({ system_qty: 5, counted_qty: null })).toBeNull());
   it("gap = counted - system", () => expect(countGap({ system_qty: 5, counted_qty: 3 })).toBe(-2));
+  it("product return window overrides the supplier window", () => expect(returnWindowDays(14, 30)).toBe(14));
+  it("empty product return window inherits the supplier window", () => expect(returnWindowDays(null, 30)).toBe(30));
+  it("zero-day product return window remains an explicit override", () => expect(returnWindowDays(0, 30)).toBe(0));
 });

@@ -35,6 +35,11 @@ export function countGap(line: { system_qty: number; counted_qty: number | null 
   return line.counted_qty == null ? null : Number(line.counted_qty) - Number(line.system_qty);
 }
 
+/** A product override wins; an empty override inherits the supplier's return window. */
+export function returnWindowDays(productDays: number | null, supplierDays: number | null) {
+  return productDays ?? supplierDays;
+}
+
 export const KPI_RULES = [
   { rule: "LOW_STOCK", label: "מלאי נמוך" },
   { rule: "OUT_OF_STOCK", label: "אזל" },
