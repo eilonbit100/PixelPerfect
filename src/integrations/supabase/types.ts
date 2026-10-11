@@ -2503,6 +2503,47 @@ export type Database = {
           },
         ]
       }
+      task_types: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          id: string
+          key: string
+          label: string
+          organization_id: string
+          sort: number
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          created_at?: string
+          id?: string
+          key: string
+          label: string
+          organization_id: string
+          sort?: number
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          id?: string
+          key?: string
+          label?: string
+          organization_id?: string
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_types_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_member_id: string | null
@@ -2517,12 +2558,17 @@ export type Database = {
           entity_type: string | null
           id: string
           organization_id: string
+          outcome: string | null
           plan_date: string | null
           plan_rank: number | null
+          popup: boolean
           priority: string
+          reminder_at: string | null
+          reminder_state: string | null
           rule_key: string | null
           source: string
           status: string
+          task_type: string | null
           title: string
           updated_at: string
         }
@@ -2539,12 +2585,17 @@ export type Database = {
           entity_type?: string | null
           id?: string
           organization_id: string
+          outcome?: string | null
           plan_date?: string | null
           plan_rank?: number | null
+          popup?: boolean
           priority?: string
+          reminder_at?: string | null
+          reminder_state?: string | null
           rule_key?: string | null
           source?: string
           status?: string
+          task_type?: string | null
           title: string
           updated_at?: string
         }
@@ -2561,12 +2612,17 @@ export type Database = {
           entity_type?: string | null
           id?: string
           organization_id?: string
+          outcome?: string | null
           plan_date?: string | null
           plan_rank?: number | null
+          popup?: boolean
           priority?: string
+          reminder_at?: string | null
+          reminder_state?: string | null
           rule_key?: string | null
           source?: string
           status?: string
+          task_type?: string | null
           title?: string
           updated_at?: string
         }
@@ -2807,6 +2863,42 @@ export type Database = {
         Args: { _branch: string; _customer: string }
         Returns: Json
       }
+      claim_task_reminders: {
+        Args: { _org: string }
+        Returns: {
+          assigned_member_id: string | null
+          branch_id: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          description: string | null
+          due_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          organization_id: string
+          outcome: string | null
+          plan_date: string | null
+          plan_rank: number | null
+          popup: boolean
+          priority: string
+          reminder_at: string | null
+          reminder_state: string | null
+          rule_key: string | null
+          source: string
+          status: string
+          task_type: string | null
+          title: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "tasks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       convert_lead_to_customer: { Args: { _lead: string }; Returns: string }
       create_ticket: {
         Args: {
@@ -2917,6 +3009,10 @@ export type Database = {
       suggest_daily_plan: {
         Args: { _branch: string; _date: string }
         Returns: number
+      }
+      task_comment: {
+        Args: { _body: string; _task: string }
+        Returns: undefined
       }
       ticket_add_file: {
         Args: {
