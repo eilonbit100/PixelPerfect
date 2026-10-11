@@ -1316,6 +1316,7 @@ export type Database = {
           organization_id: string
           price: number | null
           replacement_product_id: string | null
+          return_window_days: number | null
           returnable: boolean
           sku: string | null
           status: string
@@ -1340,6 +1341,7 @@ export type Database = {
           organization_id: string
           price?: number | null
           replacement_product_id?: string | null
+          return_window_days?: number | null
           returnable?: boolean
           sku?: string | null
           status?: string
@@ -1364,6 +1366,7 @@ export type Database = {
           organization_id?: string
           price?: number | null
           replacement_product_id?: string | null
+          return_window_days?: number | null
           returnable?: boolean
           sku?: string | null
           status?: string

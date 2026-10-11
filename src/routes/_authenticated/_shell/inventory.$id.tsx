@@ -83,7 +83,7 @@ function ProductPage() {
               <span className="num">{p.sku}</span>{p.barcode && <span className="num">ברקוד {p.barcode}</span>}<span>{[p.category, p.subcategory].filter(Boolean).join(" › ")}</span>
               <span>עלות <span className="num">{p.cost != null ? fmtMoney(p.cost) : "—"}</span></span><span>מחיר מכירה <span className="num">{p.price != null ? fmtMoney(p.price) : "—"}</span></span>
               {p.track_expiry && <span>ניהול תוקף</span>}
-              {p.returnable && <span>ניתן להחזרה לספק</span>}
+              {p.returnable && <span>חלון החזרה: {p.return_window_days != null ? `${fmtNum(p.return_window_days)} ימים` : "לפי הספק"}</span>}
             </div>
             {p.status === "INACTIVE" && replacement && (
               <p className="mt-2 text-sm">הפריט אינו פעיל. מוצר חלופי: <Link to="/inventory/$id" params={{ id: replacement.id }} className="text-primary hover:underline">{replacement.name}</Link></p>

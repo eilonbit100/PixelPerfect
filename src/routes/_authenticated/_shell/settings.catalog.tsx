@@ -39,7 +39,7 @@ function CatalogPage() {
       <div className="panel overflow-x-auto">
         {q.isLoading ? <TableSkeleton cols={8} /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : !rows.length ? <EmptyState title="אין מוצרים" /> : (
           <table className="data-table">
-            <thead><tr><th>מוצר</th><th>סוג</th><th>מותג</th><th>קטגוריה</th><th className="text-end">עלות</th><th className="text-end">מחיר מכירה</th><th>תוקף</th><th /></tr></thead>
+            <thead><tr><th>מוצר</th><th>סוג</th><th>מותג</th><th>קטגוריה</th><th className="text-end">עלות</th><th className="text-end">מחיר מכירה</th><th>תוקף</th><th>חלון החזרה</th><th /></tr></thead>
             <tbody>{rows.map((p) => (
               <tr key={p.id}>
                 <td className="font-medium"><Link to="/inventory/$id" params={{ id: p.id }} className="hover:underline">{p.name}</Link>{p.variant && <span className="text-muted-foreground"> · {p.variant}</span>}
@@ -50,6 +50,7 @@ function CatalogPage() {
                 <td className="num text-end">{p.cost != null ? fmtMoney(p.cost) : "—"}</td>
                 <td className="num text-end">{p.price != null ? fmtMoney(p.price) : "—"}</td>
                 <td>{p.track_expiry ? "מנוהל" : "—"}</td>
+                <td className="num">{p.returnable ? (p.return_window_days != null ? `${p.return_window_days} ימים` : "לפי הספק") : "לא ניתן להחזרה"}</td>
                 <td className="text-end">{isAdmin && <ProductEditDialog p={p} trigger={<Button size="sm" variant="ghost">עריכה</Button>} />}</td>
               </tr>))}</tbody>
           </table>
