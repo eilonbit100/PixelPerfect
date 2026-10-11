@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
-import { fmtDate, fmtNum, fmtRelative } from "@/lib/format";
+import { fmtDate, fmtNum, fmtRelative, fmtTime } from "@/lib/format";
 import { ENTRY_REASON } from "@/lib/entry";
 import { TASK_OUTCOME } from "@/lib/tasks";
 import { LEAD_STATE_UI, isActionToday, prioritizeLeads, type PeopleLead } from "@/lib/dashboard";
@@ -129,7 +129,7 @@ function SoftRow({ to, id, name, sub, meta, cta }: { to: "/leads/$id" | "/custom
 }
 
 export function EmployeeToday() {
-  const { me, memberName } = useOrg();
+  const { me, memberName, userId } = useOrg();
   const people = usePeople();
   const stats = useMyStats();
   const tasks = useQuery({
@@ -149,24 +149,44 @@ export function EmployeeToday() {
   const focus = prospects.filter((l) => l.assigned_member_id === me.id && isActionToday(l.state));
   const fixes = people.data?.card_fixes ?? [];
   const s = stats.data;
-  const calls = s?.calls_today ?? 0;
-  const goal = s?.goal ?? 0;
-  const pct = goal ? Math.min(100, Math.round((calls / goal) * 100)) : 100;
-  const basisText = !s ? "" : s.basis === "personal" ? `לפי הממוצע שלך: ~${s.avg} לידים ביום` : s.basis === "team" ? `לפי ממוצע הצוות: ~${s.avg} לידים ביום` : "יעד התחלתי עד שיצטבר מספיק מידע";
+  const handled = useQuery({
+    queryKey: ["dash-handled-today", userId],
+    queryFn: async () => {
+      const start = new Date(); start.setHours(0, 0, 0, 0);
+      const { data: acts, error } = await supabase.from("activities").select("entity_id, activity_type, description, metadata, created_at")
+        .eq("entity_type", "lead").eq("performed_by", userId).gte("created_at", start.toISOString()).order("created_at", { ascending: false }).limit(300);
+      if (error) throw error;
+      const byLead = new Map<string, { at: string; note: string | null; n: number; converted: boolean }>();
+      for (const a of acts ?? []) {
+        const cur = byLead.get(a.entity_id);
+        const note = (a.metadata as Record<string, string> | null)?.outcome ?? a.description;
+        if (!cur) byLead.set(a.entity_id, { at: a.created_at, note, n: 1, converted: a.activity_type === "CONVERTED" });
+        else { cur.n++; if (a.activity_type === "CONVERTED") cur.converted = true; }
+      }
+      if (!byLead.size) return [];
+      const { data: leads } = await supabase.from("leads").select("id, full_name, stage, status").in("id", [...byLead.keys()]);
+      return (leads ?? []).map((l) => ({ ...l, ...byLead.get(l.id)!, won: l.status === "WON" || byLead.get(l.id)!.converted }))
+        .sort((x, y) => +new Date(y.at) - +new Date(x.at));
+    },
+  });
+  const h = handled.data;
+  const hLeads = h?.filter((x) => !x.won && x.stage === "LEAD").length;
+  const hPros = h?.filter((x) => !x.won && x.stage === "PROSPECT").length;
+  const hWon = h?.filter((x) => x.won).length;
   const now = new Date();
 
   return (
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
         <section className="panel p-4">
-          <p className="text-xs text-muted-foreground">היעד של היום</p>
-          {!s ? <Skeleton className="mt-1 h-6 w-64" /> : (
-            <p className="mt-1 text-lg font-semibold">{goal ? goal === 1 ? "ליצור קשר עם ליד אחד" : `ליצור קשר עם ${goal} לידים ומתעניינים` : "אין כרגע לידים חדשים — זמן לחזק את המתעניינים"}</p>
-          )}
-          {s && <p className="text-[11px] text-muted-foreground">{basisText} · {s.pool} במאגר{s.due ? ` · ${s.due} מעקבים להיום` : ""}</p>}
-          <div className="mt-3 flex items-center gap-3">
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} /></div>
-            <span className="num shrink-0 text-sm font-medium">{calls}/{goal} {calls >= goal && goal ? "· כל הכבוד!" : "שיחות"}</span>
+          <p className="text-xs text-muted-foreground">הטיפול שלי היום</p>
+          <div className="mt-2 grid grid-cols-3 divide-x divide-x-reverse text-center">
+            {([["לידים שדיברתי איתם", hLeads], ["מתעניינים שקידמתי", hPros], ["הפכו למנוי", hWon]] as const).map(([l, v]) => (
+              <div key={l} className="px-2">
+                {v == null ? <Skeleton className="mx-auto h-7 w-8" /> : <p className="num text-2xl font-semibold">{fmtNum(v)}</p>}
+                <p className="text-[11px] text-muted-foreground">{l}</p>
+              </div>
+            ))}
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
             <Chip label="משימות להיום" value={tasks.data?.length} to="/tasks" search={{ view: "mine" }} />
@@ -187,6 +207,16 @@ export function EmployeeToday() {
           </div>
         </section>
       </div>
+
+      <Panel title="מה טיפלתי היום" hint="כל שיחה שתיעדת נכנסת לכאן">
+        {handled.isLoading ? <Loading /> : !h?.length ? <Empty text="עוד לא תיעדת שיחות היום — כל שיחה שתתעד בליד או במתעניין תופיע כאן" /> : (
+          <ul className="divide-y">{h.map((x) => (
+            <SoftRow key={x.id} to="/leads/$id" id={x.id} name={x.full_name}
+              sub={`${x.won ? "הפך למנוי" : x.stage === "PROSPECT" ? "מתעניין" : "ליד"} · ${resultLabel(x.note)}`}
+              meta={`${fmtTime(x.at)}${x.n > 1 ? ` · ${x.n} תיעודים` : ""}`} cta="פתח" />
+          ))}</ul>
+        )}
+      </Panel>
 
       <Panel title="חשוב להיום" hint="משימות ומעקבים שנקבעו להיום">
         {tasks.isLoading || people.isLoading ? <Loading /> : !tasks.data?.length && !focus.length ? <Empty text="אין משהו דחוף — זמן מצוין לקחת ליד חדש מהמאגר" /> : (
