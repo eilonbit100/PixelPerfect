@@ -74,19 +74,18 @@ function LeadRows({ list, showOwner }: { list: ReturnType<typeof prioritizeLeads
   const { memberName } = useOrg();
   return (
     <table className="data-table tickets-table">
-      <thead><tr><th className="col-title">שם</th><th>שלב</th><th>מצב</th>{showOwner && <th>אחראי</th>}<th>שיחה אחרונה</th><th>תוצאה</th><th>ניסיונות</th><th>מעקב הבא</th><th></th></tr></thead>
+      <thead><tr><th className="col-title">שם</th><th>מצב</th>{showOwner && <th>אחראי</th>}<th>שיחה אחרונה</th><th>תוצאה</th><th className="col-md">ניסיונות</th><th>מעקב הבא</th><th></th></tr></thead>
       <tbody>
         {list.map((l) => {
           const ui = LEAD_STATE_UI[l.state];
           return (
             <tr key={l.id}>
-              <td className="col-title"><Link to="/leads/$id" params={{ id: l.id }} className="block max-w-56 truncate font-medium hover:underline">{l.full_name}</Link></td>
-              <td>{l.stage === "PROSPECT" ? "מתעניין" : "ליד"}</td>
+              <td className="col-title"><Link to="/leads/$id" params={{ id: l.id }} className="font-medium hover:underline">{l.full_name}</Link><span className="ms-1 text-[11px] text-muted-foreground">{l.stage === "PROSPECT" ? "מתעניין" : "ליד"}</span></td>
               <td><SeverityBadge severity={ui.sev} label={ui.label} /></td>
               {showOwner && <td>{l.assigned_member_id ? memberName(l.assigned_member_id) : <span className="text-critical">לא משויך</span>}</td>}
               <td className="text-muted-foreground">{l.last_call_at ? fmtRelative(l.last_call_at) : "אין"}</td>
-              <td><span className="block max-w-40 truncate" title={resultLabel(l.last_result)}>{resultLabel(l.last_result)}</span></td>
-              <td className="num">{l.attempts}</td>
+              <td><span className="block max-w-28 truncate" title={resultLabel(l.last_result)}>{resultLabel(l.last_result)}</span></td>
+              <td className="num col-md">{l.attempts}</td>
               <td className={l.state === "followup_overdue" ? "text-critical" : "text-muted-foreground"}>{l.next_due ? fmtRelative(l.next_due, true) : "—"}</td>
               <td><Button asChild size="sm" variant="outline" className="h-6 px-2 text-[11px]"><Link to="/leads/$id" params={{ id: l.id }}>תיעוד שיחה</Link></Button></td>
             </tr>
