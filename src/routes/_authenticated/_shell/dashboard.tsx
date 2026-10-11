@@ -240,36 +240,30 @@ function Dashboard() {
       {role !== "EMPLOYEE" && <ManagerStrip />}
 
       {role === "EMPLOYEE" ? (
-        <div className="mb-6 space-y-4"><EmployeeToday /></div>
+        <div className="mb-6"><EmployeeToday /></div>
       ) : (
-        <div className="mb-6 space-y-4">
-          <LeadsFollowUp />
-          <div className="grid gap-4 xl:grid-cols-2"><TeamBoard /><BlockedCustomers /></div>
-          <SmartInventory />
-          <DailyPlanManager />
-        </div>
-      )}
-
-      {role !== "EMPLOYEE" && (
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <section className="min-w-0 space-y-6 overflow-hidden">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="min-w-0 space-y-4 overflow-hidden">
           {insights.isLoading ? (
-            <div className="panel divide-y">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="p-4"><Skeleton className="h-4 w-56" /><Skeleton className="mt-2 h-3 w-80" /></div>)}</div>
+            <div className="panel divide-y">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="p-4"><Skeleton className="h-4 w-56" /><Skeleton className="mt-2 h-3 w-80" /></div>)}</div>
           ) : insights.error ? (
             <div className="panel"><ErrorState onRetry={() => insights.refetch()} /></div>
           ) : !groups.length ? (
             <div className="panel"><EmptyState icon={<CheckCircle2 className="size-5 text-ok" />} title="הכל תקין" text="אין כרגע בעיות שדורשות טיפול. המערכת ממשיכה לבדוק ברקע." /></div>
           ) : (
-            <>
-              <InsightList title="לביצוע היום" hint="קריטי — לטפל עוד היום" groups={groups.filter((g) => sevRank(worst(g.list)!) <= sevRank("HIGH"))} empty="אין היום משהו קריטי" />
-              <InsightList title="דורש טיפול" hint="פחות דחוף — אפשר בימים הקרובים" groups={groups.filter((g) => sevRank(worst(g.list)!) > sevRank("HIGH"))} empty="אין נושאים פתוחים" />
-            </>
+            <InsightList title="לביצוע היום" hint="קריטי — לטפל עוד היום" groups={groups.filter((g) => sevRank(worst(g.list)!) <= sevRank("HIGH"))} empty="אין היום משהו קריטי" />
+          )}
+          <LeadsFollowUp />
+          <div className="grid gap-4 xl:grid-cols-2"><TeamBoard /><BlockedCustomers /></div>
+          <SmartInventory />
+          <DailyPlanManager />
+          {!!groups.length && (
+            <InsightList title="דורש טיפול" hint="פחות דחוף — אפשר בימים הקרובים" groups={groups.filter((g) => sevRank(worst(g.list)!) > sevRank("HIGH"))} empty="אין נושאים פתוחים" />
           )}
         </section>
 
-        <aside className="space-y-6">
-          {role !== "EMPLOYEE" && <PendingApprovals />}
-          <Copilot groups={groups} />
+        <aside className="min-w-0 space-y-4">
+          <PendingApprovals />
           <div className="panel">
             <div className="flex items-center justify-between border-b px-4 py-3">
               <span className="text-sm font-medium">המשימות שלי להיום</span>
@@ -299,6 +293,7 @@ function Dashboard() {
               )}
             <div className="border-t px-4 py-2 text-xs text-muted-foreground">מחובר/ת כ־{memberName(me.id)}</div>
           </div>
+          <Copilot groups={groups} />
         </aside>
       </div>
       )}

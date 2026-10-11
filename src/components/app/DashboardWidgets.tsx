@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
@@ -174,88 +174,110 @@ export function EmployeeToday() {
   const hPros = h?.filter((x) => !x.won && x.stage === "PROSPECT").length;
   const hWon = h?.filter((x) => x.won).length;
   const now = new Date();
+  const [tab, setTab] = useState<"prospects" | "pool">("prospects");
+  const [showAllHandled, setShowAllHandled] = useState(false);
+  const [showFixes, setShowFixes] = useState(false);
+  const nothingToday = !tasks.isLoading && !people.isLoading && !tasks.data?.length && !focus.length;
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
-        <section className="panel p-4">
-          <p className="text-xs text-muted-foreground">הטיפול שלי היום</p>
-          <div className="mt-2 grid grid-cols-3 divide-x divide-x-reverse text-center">
-            {([["לידים שדיברתי איתם", hLeads], ["מתעניינים שקידמתי", hPros], ["הפכו למנוי", hWon]] as const).map(([l, v]) => (
-              <div key={l} className="px-2">
-                {v == null ? <Skeleton className="mx-auto h-7 w-8" /> : <p className="num text-2xl font-semibold">{fmtNum(v)}</p>}
-                <p className="text-[11px] text-muted-foreground">{l}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <Chip label="משימות להיום" value={tasks.data?.length} to="/tasks" search={{ view: "mine" }} />
-            <Chip label="לידים במאגר" value={people.data ? pool.length : undefined} to="/leads" />
-            <Chip label="מתעניינים פתוחים" value={people.data ? prospects.length : undefined} to="/leads" />
-            <Chip label="כרטיסים להשלמה" value={people.data ? fixes.length : undefined} to="/reports/cards" />
-          </div>
-        </section>
-        <section className="panel p-4">
-          <p className="text-xs text-muted-foreground">הסגירות שלי · מנויים חודשיים</p>
-          <div className="mt-2 grid grid-cols-3 divide-x divide-x-reverse text-center">
-            {([["היום", s?.closed_today], ["השבוע", s?.closed_week], ["החודש", s?.closed_month]] as const).map(([l, v]) => (
-              <div key={l} className="px-2">
-                {v == null ? <Skeleton className="mx-auto h-7 w-8" /> : <p className="num text-2xl font-semibold">{fmtNum(v)}</p>}
-                <p className="text-[11px] text-muted-foreground">{l}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+      <div className="flex flex-wrap gap-1.5">
+        <Chip label="משימות להיום" value={tasks.data?.length} to="/tasks" search={{ view: "mine" }} />
+        <Chip label="לידים במאגר" value={people.data ? pool.length : undefined} to="/leads" />
+        <Chip label="מתעניינים פתוחים" value={people.data ? prospects.length : undefined} to="/leads" />
+        <Chip label="כרטיסים להשלמה" value={people.data ? fixes.length : undefined} to="/reports/cards" />
       </div>
 
-      <Panel title="מה טיפלתי היום" hint="כל שיחה שתיעדת נכנסת לכאן">
-        {handled.isLoading ? <Loading /> : !h?.length ? <Empty text="עוד לא תיעדת שיחות היום — כל שיחה שתתעד בליד או במתעניין תופיע כאן" /> : (
-          <ul className="divide-y">{h.map((x) => (
-            <SoftRow key={x.id} to="/leads/$id" id={x.id} name={x.full_name}
-              sub={`${x.won ? "הפך למנוי" : x.stage === "PROSPECT" ? "מתעניין" : "ליד"} · ${resultLabel(x.note)}`}
-              meta={`${fmtTime(x.at)}${x.n > 1 ? ` · ${x.n} תיעודים` : ""}`} cta="פתח" />
-          ))}</ul>
-        )}
-      </Panel>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="min-w-0 space-y-4">
+          <Panel title="חשוב להיום" hint="משימות ומעקבים שנקבעו להיום">
+            {tasks.isLoading || people.isLoading ? <Loading /> : nothingToday ? (
+              <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-4">
+                <p className="text-sm text-muted-foreground">אין משהו דחוף — זמן מצוין לקחת ליד חדש מהמאגר</p>
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setTab("pool")}>לקחת ליד</Button>
+              </div>
+            ) : (
+              <ul className="divide-y">
+                {focus.map((l) => <SoftRow key={l.id} to="/leads/$id" id={l.id} name={l.full_name} sub={`מתעניין · ${resultLabel(l.last_result)}`} meta={l.next_due ? fmtRelative(l.next_due, true) : undefined} cta="להמשיך שיחה" />)}
+                {(tasks.data ?? []).map((t) => (
+                  <li key={t.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                    <Link to="/tasks" search={{ task: t.id } as never} className="truncate text-sm hover:underline">{t.title}</Link>
+                    <span className={"shrink-0 text-[11px] " + (new Date(t.due_at) < now ? "text-attention" : "text-muted-foreground")}>{fmtRelative(t.due_at, true)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
 
-      <Panel title="חשוב להיום" hint="משימות ומעקבים שנקבעו להיום">
-        {tasks.isLoading || people.isLoading ? <Loading /> : !tasks.data?.length && !focus.length ? <Empty text="אין משהו דחוף — זמן מצוין לקחת ליד חדש מהמאגר" /> : (
-          <ul className="divide-y">
-            {focus.map((l) => <SoftRow key={l.id} to="/leads/$id" id={l.id} name={l.full_name} sub={`מתעניין · ${resultLabel(l.last_result)}`} meta={l.next_due ? fmtRelative(l.next_due, true) : undefined} cta="להמשיך שיחה" />)}
-            {(tasks.data ?? []).map((t) => (
-              <li key={t.id} className="flex items-center justify-between gap-3 px-3 py-2">
-                <Link to="/tasks" search={{ task: t.id } as never} className="truncate text-sm hover:underline">{t.title}</Link>
-                <span className={"shrink-0 text-[11px] " + (new Date(t.due_at) < now ? "text-attention" : "text-muted-foreground")}>{fmtRelative(t.due_at, true)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Panel>
+          <section className="panel min-w-0 overflow-hidden">
+            <div className="flex items-center justify-between gap-2 border-b px-2 py-1.5">
+              <div className="flex gap-1" role="tablist">
+                {([["prospects", "להמשיך עם מתעניינים", prospects.length], ["pool", "לקחת ליד חדש", pool.length]] as const).map(([k, l, n]) => (
+                  <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+                    className={"rounded-md px-2.5 py-1 text-sm " + (tab === k ? "bg-accent font-medium text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                    {l}{people.data && <span className="num ms-1.5 text-[11px] text-muted-foreground">{n}</span>}
+                  </button>
+                ))}
+              </div>
+              <Link to="/leads" className="text-xs text-primary hover:underline">הכל</Link>
+            </div>
+            {people.isLoading ? <Loading /> : tab === "prospects" ? (
+              !prospects.length ? <Empty text="אין מתעניינים פתוחים" /> : (
+                <ul className="divide-y">{prospects.slice(0, 6).map((l) => (
+                  <SoftRow key={l.id} to="/leads/$id" id={l.id} name={l.full_name}
+                    sub={`${l.assigned_member_id === me.id ? "שלי" : memberName(l.assigned_member_id)} · ${resultLabel(l.last_result)}`}
+                    meta={l.last_call_at ? `שיחה ${fmtRelative(l.last_call_at)}` : undefined} cta="להמשיך" />
+                ))}</ul>
+              )
+            ) : !pool.length ? <Empty text="המאגר ריק כרגע" /> : (
+              <ul className="divide-y">{pool.slice(0, 6).map((l) => <SoftRow key={l.id} to="/leads/$id" id={l.id} name={l.full_name} sub={l.phone ?? undefined} meta={`נכנס ${fmtRelative(l.created_at)}`} cta="להתקשר" />)}</ul>
+            )}
+          </section>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Panel title="לקחת ליד חדש" hint="מהמאגר — הוותיקים קודם" action={<Link to="/leads" className="text-xs text-primary hover:underline">כל המאגר</Link>}>
-          {people.isLoading ? <Loading /> : !pool.length ? <Empty text="המאגר ריק כרגע" /> : (
-            <ul className="divide-y">{pool.slice(0, 6).map((l) => <SoftRow key={l.id} to="/leads/$id" id={l.id} name={l.full_name} sub={l.phone ?? undefined} meta={`נכנס ${fmtRelative(l.created_at)}`} cta="להתקשר" />)}</ul>
-          )}
-        </Panel>
-        <Panel title="להמשיך שיחה עם מתעניינים" hint="שלך קודם, אחר כך של הצוות" action={<Link to="/leads" className="text-xs text-primary hover:underline">הכל</Link>}>
-          {people.isLoading ? <Loading /> : !prospects.length ? <Empty text="אין מתעניינים פתוחים" /> : (
-            <ul className="divide-y">{prospects.slice(0, 6).map((l) => (
-              <SoftRow key={l.id} to="/leads/$id" id={l.id} name={l.full_name}
-                sub={`${l.assigned_member_id === me.id ? "שלי" : memberName(l.assigned_member_id)} · ${resultLabel(l.last_result)}`}
-                meta={l.last_call_at ? `שיחה ${fmtRelative(l.last_call_at)}` : undefined} cta="להמשיך" />
-            ))}</ul>
-          )}
-        </Panel>
+          <Panel title="לסגור בכרטיסי לקוחות" hint="הצהרת בריאות, תקנון או אמצעי תשלום"
+            action={fixes.length ? <button onClick={() => setShowFixes((v) => !v)} className="text-xs text-primary hover:underline">{showFixes ? "הסתר" : `הצג (${fixes.length})`}</button> : undefined}>
+            {people.isLoading ? <Loading /> : !fixes.length ? <Empty text="כל הכרטיסים מלאים" /> : !showFixes ? (
+              <p className="px-3 py-2.5 text-sm text-muted-foreground">{fixes.length} כרטיסים מחכים להשלמה</p>
+            ) : (
+              <ul className="grid divide-y sm:grid-cols-2 sm:divide-y-0">{fixes.slice(0, 8).map((c) => (
+                <SoftRow key={c.id} to="/customers/$id" id={c.id} name={c.full_name} sub={c.items.map((i) => CARD_ITEM[i] ?? i).join(" · ")} cta="להשלים" />
+              ))}</ul>
+            )}
+          </Panel>
+        </div>
+
+        <aside className="min-w-0 space-y-4">
+          {([["הטיפול שלי היום", [["לידים", hLeads], ["מתעניינים", hPros], ["הפכו למנוי", hWon]]], ["הסגירות שלי · מנויים", [["היום", s?.closed_today], ["השבוע", s?.closed_week], ["החודש", s?.closed_month]]]] as const).map(([title, items]) => (
+            <section key={title} className="panel p-3">
+              <p className="text-xs text-muted-foreground">{title}</p>
+              <div className="mt-2 grid grid-cols-3 divide-x divide-x-reverse text-center">
+                {items.map(([l, v]) => (
+                  <div key={l} className="px-1">
+                    {v == null ? <Skeleton className="mx-auto h-7 w-8" /> : <p className="num text-2xl font-semibold">{fmtNum(v)}</p>}
+                    <p className="text-[11px] text-muted-foreground">{l}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+          <Panel title="מה טיפלתי היום">
+            {handled.isLoading ? <Loading /> : !h?.length ? <Empty text="כל שיחה שתתעד תופיע כאן" /> : (
+              <>
+                <ul className="divide-y">{(showAllHandled ? h : h.slice(0, 5)).map((x) => (
+                  <li key={x.id} className="flex items-center justify-between gap-2 px-3 py-2">
+                    <div className="min-w-0">
+                      <Link to="/leads/$id" params={{ id: x.id }} className="block truncate text-sm font-medium hover:underline">{x.full_name}</Link>
+                      <p className="truncate text-[11px] text-muted-foreground">{x.won ? "הפך למנוי" : x.stage === "PROSPECT" ? "מתעניין" : "ליד"} · {resultLabel(x.note)}</p>
+                    </div>
+                    <span className="shrink-0 text-[11px] text-muted-foreground">{fmtTime(x.at)}{x.n > 1 ? ` · ${x.n}` : ""}</span>
+                  </li>
+                ))}</ul>
+                {h.length > 5 && <button onClick={() => setShowAllHandled((v) => !v)} className="w-full border-t px-3 py-1.5 text-xs text-primary hover:underline">{showAllHandled ? "הצג פחות" : `הצג הכל (${h.length})`}</button>}
+              </>
+            )}
+          </Panel>
+        </aside>
       </div>
-
-      <Panel title="לסגור בכרטיסי לקוחות" hint="הצהרת בריאות, תקנון או אמצעי תשלום">
-        {people.isLoading ? <Loading /> : !fixes.length ? <Empty text="כל הכרטיסים מלאים" /> : (
-          <ul className="grid divide-y sm:grid-cols-2 sm:divide-y-0">{fixes.slice(0, 8).map((c) => (
-            <SoftRow key={c.id} to="/customers/$id" id={c.id} name={c.full_name} sub={c.items.map((i) => CARD_ITEM[i] ?? i).join(" · ")} cta="להשלים" />
-          ))}</ul>
-        )}
-      </Panel>
     </div>
   );
 }
