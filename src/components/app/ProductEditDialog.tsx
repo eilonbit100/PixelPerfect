@@ -26,7 +26,7 @@ export function ProductEditDialog({ p, trigger }: { p?: ProductRow; trigger: Rea
   const init = () => ({
     name: p?.name ?? "", sku: p?.sku ?? "", barcode: p?.barcode ?? "", category: p?.category ?? "", subcategory: p?.subcategory ?? "", brand: p?.brand ?? "",
     variant: p?.variant ?? "", kind: p?.kind ?? "SHELF", status: p?.status ?? "ACTIVE", cost: p?.cost?.toString() ?? "", price: p?.price?.toString() ?? "",
-    track_expiry: p?.track_expiry ?? false, returnable: p?.returnable ?? true, supplier: p?.default_supplier_id ?? "",
+    track_expiry: p?.track_expiry ?? false, returnable: p?.returnable ?? false, supplier: p?.default_supplier_id ?? "",
     return_window_days: p?.return_window_days?.toString() ?? "",
   });
   const [f, setF] = useState(init);
