@@ -12,7 +12,8 @@ import { DailyPlanEmployee, DailyPlanManager } from "@/components/app/DailyPlan"
 import { EmptyState, ErrorState } from "@/components/app/states";
 import { RuleLink } from "@/components/app/InsightLink";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BranchComparison, MyWorkStrip, PendingApprovals, TeamFollowUp } from "@/components/app/RoleWidgets";
+import { BranchComparison, PendingApprovals } from "@/components/app/RoleWidgets";
+import { BlockedCustomers, EmployeeToday, LeadsFollowUp, ManagerStrip, SmartInventory, TeamBoard } from "@/components/app/DashboardWidgets";
 
 export const Route = createFileRoute("/_authenticated/_shell/dashboard")({
   head: () => ({
@@ -178,6 +179,7 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const kpis = useQuery({
+    enabled: role === "HQ",
     queryKey: ["kpis", org.id, branchId],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_dashboard_kpis", { _org: org.id, _branch: branchId ?? undefined });
@@ -220,8 +222,8 @@ function Dashboard() {
         </p>
       </div>
 
-      {role === "EMPLOYEE" ? <MyWorkStrip /> : (
-      <div className="panel mb-8 grid grid-cols-2 divide-x divide-y divide-x-reverse sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5">
+      {role === "HQ" && (
+      <div className="panel mb-4 grid grid-cols-2 divide-x divide-y divide-x-reverse sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5">
         {kpis.isLoading || !k ? (
           Array.from({ length: 5 }).map((_, i) => <div key={i} className="px-4 py-3"><Skeleton className="h-3 w-20" /><Skeleton className="mt-2 h-6 w-16" /></div>)
         ) : (
@@ -235,8 +237,18 @@ function Dashboard() {
         )}
       </div>
       )}
+      {role !== "EMPLOYEE" && <ManagerStrip />}
 
-      {role === "EMPLOYEE" ? <DailyPlanEmployee /> : <DailyPlanManager />}
+      {role === "EMPLOYEE" ? (
+        <div className="mb-6 space-y-4"><EmployeeToday /><DailyPlanEmployee /></div>
+      ) : (
+        <div className="mb-6 space-y-4">
+          <LeadsFollowUp />
+          <div className="grid gap-4 xl:grid-cols-2"><TeamBoard /><BlockedCustomers /></div>
+          <SmartInventory />
+          <DailyPlanManager />
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <section className="min-w-0 space-y-6 overflow-hidden">
@@ -289,7 +301,6 @@ function Dashboard() {
         </aside>
       </div>
       {role === "HQ" && !branchId && <BranchComparison insights={insights.data ?? []} />}
-      {role !== "EMPLOYEE" && <TeamFollowUp />}
     </div>
   );
 }

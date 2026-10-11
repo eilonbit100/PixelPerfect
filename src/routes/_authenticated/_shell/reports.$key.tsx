@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Lock, DatabaseZap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
-import { reportByKey, useReportPerms, type RangeKey } from "@/lib/reports";
+import { reportByKey, reportRpc, useReportPerms, type RangeKey } from "@/lib/reports";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/app/states";
 import { BranchReport } from "@/components/app/BranchReport";
 import { DataTable, ExportBar, FilterBar, SaveTemplateButton, defaultFilters, type Filters } from "@/components/app/ReportView";
@@ -42,7 +42,7 @@ function ReportPage() {
     queryKey: ["report", org.id, key, f.from, f.to, f.branches.join(",")],
     enabled: !!def && !!p?.view && !def.unavailable && !def.custom,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("run_report", { _org: org.id, _key: key, _from: f.from, _to: f.to, _branches: f.branches });
+      const { data, error } = await supabase.rpc(reportRpc(key), { _org: org.id, _key: key, _from: f.from, _to: f.to, _branches: f.branches });
       if (error) throw error;
       return data as { rows: Record<string, unknown>[]; own?: boolean };
     },

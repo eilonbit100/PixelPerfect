@@ -31,3 +31,9 @@
 
 
 
+
+# Dashboard redesign by role
+- [x] Employee: today list of leads/prospects + tasks, prospects in progress
+- [x] Manager: follow-up, team board, blocked customers, smart inventory; no revenue (server-side)
+- [x] Reports: top products, reorder, slow movers
+- [ ] Employee view verified in browser (demo sign-in unavailable in test browser)

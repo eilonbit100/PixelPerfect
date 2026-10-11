@@ -2784,6 +2784,35 @@ export type Database = {
         Args: { _from: string; _org: string; _to: string; br: string[] }
         Returns: Json
       }
+      _inv_report_rows: {
+        Args: {
+          _from: string
+          _key: string
+          _org: string
+          _to: string
+          br: string[]
+        }
+        Returns: Json
+      }
+      _inv_stats: {
+        Args: { _org: string; br: string[] }
+        Returns: {
+          branch: string
+          branch_id: string
+          current_stock: number
+          days_left: number
+          last_sale: string
+          lead_time: number
+          minimum_stock: number
+          need_order: boolean
+          product: string
+          product_id: string
+          sold30: number
+          suggested: number
+          supplier: string
+          target_stock: number
+        }[]
+      }
       _log_customer: {
         Args: { _cust: string; _desc: string; _meta: Json; _type: string }
         Returns: undefined
@@ -2919,6 +2948,14 @@ export type Database = {
         Returns: string
       }
       current_member_id: { Args: { _org: string }; Returns: string }
+      dashboard_inventory: {
+        Args: { _branch?: string; _org: string }
+        Returns: Json
+      }
+      dashboard_people: {
+        Args: { _branch?: string; _org: string }
+        Returns: Json
+      }
       end_freeze: { Args: { _freeze: string }; Returns: undefined }
       entry_block_reasons: { Args: { _customer: string }; Returns: string[] }
       evaluate_rules: { Args: { _org: string }; Returns: undefined }
@@ -2983,6 +3020,16 @@ export type Database = {
           _org: string
           _source: string
           _status?: string
+          _to: string
+        }
+        Returns: Json
+      }
+      run_inventory_report: {
+        Args: {
+          _branches?: string[]
+          _from: string
+          _key: string
+          _org: string
           _to: string
         }
         Returns: Json

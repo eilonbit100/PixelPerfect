@@ -37,6 +37,13 @@ export const REPORTS: ReportDef[] = [
     cols: [{ key: "approved_on", label: "אושרה", type: "date" }, { key: "branch", label: "סניף" }, { key: "product", label: "מוצר" }, { key: "system_qty", label: "במערכת", type: "number" }, { key: "counted_qty", label: "נספר", type: "number" }, { key: "difference", label: "פער", type: "number" }, { key: "reason", label: "סיבה" }, { key: "approver", label: "אישר" }] },
   { key: "inv_writeoffs", name: "גריעות והחזרות לספק", category: "inventory", financial: true, desc: "נזק, פחת, תפוגה והחזרות לספק — כמות ושווי לפי עלות", dateMeaning: "לפי מועד התנועה",
     cols: [{ key: "at_time", label: "מועד", type: "datetime" }, { key: "product", label: "מוצר" }, { key: "tx_type", label: "סוג", map: TX }, { key: "quantity", label: "כמות", type: "number" }, { key: "cost_value", label: "שווי לפי עלות", type: "money" }, { key: "reason", label: "סיבה" }, { key: "reference", label: "אסמכתה" }, { key: "branch", label: "סניף" }] },
+  { key: "top_products", name: "המוצרים הנמכרים ביותר", category: "inventory", financial: true, desc: "מוצרי מדף לפי כמות שנמכרה וסכום לפי מחיר מכירה", dateMeaning: "לפי מועד המכירה",
+    cols: [{ key: "product", label: "מוצר" }, { key: "category", label: "קטגוריה" }, { key: "qty", label: "כמות", type: "number" }, { key: "sales_count", label: "מכירות", type: "number" }, { key: "amount", label: "סכום", type: "money" }] },
+  { key: "reorder", name: "המלצת הזמנה", category: "inventory", desc: "מוצרים מתחת למינימום או שייגמרו לפני שהזמנה תגיע — לפי קצב מכירה 30 יום וזמן אספקה", dateMeaning: "מצב נוכחי (הטווח לא משפיע)",
+    note: "כשאין מכירות ב־30 הימים האחרונים ההמלצה מבוססת על המינימום בלבד.",
+    cols: [{ key: "product", label: "מוצר" }, { key: "branch", label: "סניף" }, { key: "supplier", label: "ספק" }, { key: "current_stock", label: "במלאי", type: "number" }, { key: "minimum_stock", label: "מינימום", type: "number" }, { key: "sold30", label: "נמכרו 30 יום", type: "number" }, { key: "days_left", label: "ימים עד אזילה", type: "number" }, { key: "lead_time", label: "זמן אספקה", type: "number" }, { key: "suggested", label: "להזמין", type: "number" }] },
+  { key: "slow_movers", name: "מוצרים ללא תנועה", category: "inventory", desc: "מוצרים במלאי שלא נמכרו 60 יום או מעולם", dateMeaning: "מצב נוכחי (הטווח לא משפיע)",
+    cols: [{ key: "product", label: "מוצר" }, { key: "branch", label: "סניף" }, { key: "current_stock", label: "במלאי", type: "number" }, { key: "last_sale_on", label: "מכירה אחרונה", type: "date" }, { key: "idle_days", label: "ימים ללא מכירה", type: "number" }] },
   { key: "branch_mgmt", name: "דוח ניהול סניף", category: "members", custom: true, financial: true, desc: "מכירות, ביטולים, בקשות ביטול, תנועת מנויים, צמיחה וכספים — מול התקופה הקודמת", dateMeaning: "לפי סוג המדד", cols: [] },
   { key: "cancellations", number: "113", name: "ביטולים", category: "members", desc: "מנויים שבוטלו, סיבה ותאריך כניסה לתוקף", dateMeaning: "לפי מועד הביטול", link: "customer",
     cols: [{ key: "full_name", label: "לקוח" }, { key: "phone", label: "טלפון" }, { key: "plan", label: "סוג מנוי" }, { key: "requested", label: "בקשת ביטול", type: "date" }, { key: "effective", label: "בתוקף מ", type: "date" }, { key: "reason", label: "סיבה" }, { key: "branch", label: "סניף" }] },
@@ -136,3 +143,6 @@ export function fmtCell(v: unknown, c: Col): string {
   if (c.type === "percent") return `${v}%`;
   return String(v);
 }
+
+export const INVENTORY_REPORT_KEYS = ["top_products", "reorder", "slow_movers"];
+export const reportRpc = (key: string) => (INVENTORY_REPORT_KEYS.includes(key) ? "run_inventory_report" : "run_report") as "run_report";

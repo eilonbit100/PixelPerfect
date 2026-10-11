@@ -92,6 +92,13 @@
       "when": 1791719237782,
       "tag": "0012_tasks_roles_alignment",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791722929853,
+      "tag": "0013_dashboard_redesign",
+      "breakpoints": true
     }
   ]
 }
