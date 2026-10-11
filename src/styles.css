@@ -236,6 +236,6 @@
   }
   .tasks-table .col-title {
     white-space: normal;
-    min-width: 12rem;
+    min-width: 9rem;
   }
 }

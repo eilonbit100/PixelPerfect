@@ -234,7 +234,7 @@ function TasksPage() {
                     <td>{overdue ? <StatusBadge tone="critical">באיחור</StatusBadge> : <StatusBadge tone={t.status === "COMPLETED" ? "ok" : "neutral"}>{TASK_STATUS[t.status]}</StatusBadge>}</td>
                     <td className="num hidden text-muted-foreground xl:table-cell">{fmtRelative(t.created_at)}</td>
                     <td className="hidden xl:table-cell"><SourceBadge source={t.source} /></td>
-                    <td className="text-end" onClick={(e) => e.stopPropagation()}>{OPEN_STATUSES.includes(t.status) && <Button size="sm" variant="ghost" onClick={() => complete(t.id)}><CheckCircle2 className="size-4" /> בוצע</Button>}</td>
+                    <td className="text-end" onClick={(e) => e.stopPropagation()}>{OPEN_STATUSES.includes(t.status) && <Button size="icon" variant="ghost" aria-label="סמן כבוצע" title="סמן כבוצע" onClick={() => complete(t.id)}><CheckCircle2 className="size-4" /></Button>}</td>
                   </tr>
                 );
               })}
