@@ -24,12 +24,12 @@ export function leadState(l: PeopleLead, now = new Date()): LeadState {
 
 const RANK: Record<LeadState, number> = { new_overdue: 0, followup_overdue: 1, new: 2, followup_today: 3, no_followup: 4, scheduled: 5 };
 
-export const LEAD_STATE_UI: Record<LeadState, { label: string; sev: "CRITICAL" | "HIGH" | "MEDIUM" | "OK" }> = {
+export const LEAD_STATE_UI: Record<LeadState, { label: string; sev: "CRITICAL" | "HIGH" | "ATTENTION" | "OK" }> = {
   new_overdue: { label: "ליד חדש — לא חזרו מעל 24 שעות", sev: "CRITICAL" },
   followup_overdue: { label: "מעקב באיחור", sev: "CRITICAL" },
   new: { label: "ליד חדש — לחזור היום", sev: "HIGH" },
   followup_today: { label: "מעקב היום", sev: "HIGH" },
-  no_followup: { label: "אין מעקב מתוכנן", sev: "MEDIUM" },
+  no_followup: { label: "אין מעקב מתוכנן", sev: "ATTENTION" },
   scheduled: { label: "מעקב מתוכנן", sev: "OK" },
 };
 
