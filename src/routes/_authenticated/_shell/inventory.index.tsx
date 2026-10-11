@@ -134,7 +134,14 @@ function InventoryPage() {
               <span className={"num text-sm font-semibold " + (n ? (k.rule === "OUT_OF_STOCK" ? "text-critical" : "text-warning") : "")}>{insights.isLoading ? "…" : n}</span>
             </button>);
         })}
+        <span className="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden />
+        <FilterChips dense value={filter} onChange={(v) => set({ filter: v === "all" ? undefined : v })} options={[
+          { value: "all", label: "כל המוצרים", count: all.length },
+          { value: "attention", label: "דורשים טיפול", count: all.filter((p) => byProd.has(p.id)).length },
+          { value: "active", label: "פעילים" }, { value: "inactive", label: "לא פעילים" },
+        ]} />
       </div>
+
 
       <div className="mb-3 flex flex-wrap gap-1 border-b">
         {[["shelf", "מוצרי מדף"], ["equipment", "ציוד קבוע"], ["counts", "ספירות"], ["movements", "תנועות"], ["suppliers", "ספקים"]].map(([k, l]) => (
@@ -177,12 +184,8 @@ function InventoryPage() {
             </button>
           )}
         </div>
-        <FilterChips dense value={filter} onChange={(v) => set({ filter: v === "all" ? undefined : v })} options={[
-          { value: "all", label: "כל המוצרים", count: all.length },
-          { value: "attention", label: "דורשים טיפול", count: all.filter((p) => byProd.has(p.id)).length },
-          { value: "active", label: "פעילים" }, { value: "inactive", label: "לא פעילים" },
-        ]} />
       </div>
+
 
       {q.isLoading || insights.isLoading ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
