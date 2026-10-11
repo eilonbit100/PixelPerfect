@@ -181,15 +181,19 @@ function TasksPage() {
         ))}
       </div>
       {search.task && <div className="mb-3 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">מוצגת משימה אחת <Button size="sm" variant="ghost" onClick={() => set({})}>הצג את כל המשימות</Button></div>}
-      <div className="panel mb-3 flex flex-wrap items-center gap-1 p-1.5">
+      <div className="panel mb-3 p-1.5">
+        <div className="flex items-center gap-1">
+          <div className="relative min-w-32 flex-1 basis-32">
+            <SearchIcon className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input className="h-7 border-border/70 ps-7 text-xs" placeholder={leadView ? "שם או טלפון" : "משימה, לקוח או ליד"} defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש" />
+          </div>
+        </div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-1 border-t border-border/60 pt-1.5">
         {role !== "EMPLOYEE" && sel(search.owner, (v) => set({ owner: v }), "אחראי", members.map((m) => [m.id, m.display_name ?? "—"]))}
         {!branchId && branches.length > 1 && sel(search.branch, (v) => set({ branch: v }), "סניף", branches.map((b) => [b.id, b.name]))}
         {!leadView && <>{sel(search.type, (v) => set({ type: v }), "סוג", (types.data ?? []).map((t) => [t.key, t.label]))}{sel(search.status, (v) => set({ status: v }), "סטטוס", [...Object.entries(TASK_STATUS), ["OVERDUE", "באיחור"]])}</>}
-        <div className="relative min-w-32 flex-1 basis-32">
-          <SearchIcon className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input className="h-7 border-border/70 ps-7 text-xs" placeholder={leadView ? "שם או טלפון" : "משימה, לקוח או ליד"} defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש" />
-        </div>
         {!leadView && <>{sel(search.priority, (v) => set({ priority: v }), "עדיפות", Object.entries(TASK_PRIORITY))}{sel(search.source, (v) => set({ source: v }), "מקור", [["auto", "אוטומטיות"], ["manual", "ידניות"]])}</>}
+
 
         <Select value={search.range ?? (search.from || search.to ? "custom" : "any")} onValueChange={(v) => set(v === "any" ? { range: undefined, from: undefined, to: undefined } : v === "custom" ? { range: "custom" } : { range: v, ...rangeDates(v) })}>
           <SelectTrigger className="h-7 w-auto max-w-44 min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
@@ -219,7 +223,9 @@ function TasksPage() {
         {(search.q || search.owner || search.branch || search.type || search.status || search.priority || search.source || search.from || search.to || search.range) && (
           <Button size="sm" variant="ghost" className="h-7 shrink-0 px-2 text-[11px]" onClick={() => navigate({ search: { view }, replace: true })}><X className="size-3.5" /> נקה</Button>
         )}
+        </div>
       </div>
+
 
       <div className="panel overflow-x-auto">
         {q.isLoading ? <TableSkeleton cols={8} /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : leadView ? (
