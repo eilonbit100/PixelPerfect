@@ -8,7 +8,7 @@ import { useInsights, useRefreshInsights } from "@/lib/queries";
 import { RULES, sevRank, worst, type Insight } from "@/lib/rules";
 import { fmtMoney, fmtNum, fmtRelative, greeting } from "@/lib/format";
 import { SEVERITY_UI } from "@/components/app/badges";
-import { DailyPlanEmployee, DailyPlanManager } from "@/components/app/DailyPlan";
+import { DailyPlanManager } from "@/components/app/DailyPlan";
 import { EmptyState, ErrorState } from "@/components/app/states";
 import { RuleLink } from "@/components/app/InsightLink";
 import { Skeleton } from "@/components/ui/skeleton";
