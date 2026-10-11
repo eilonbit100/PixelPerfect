@@ -85,7 +85,7 @@ function LeadRows({ list, showOwner }: { list: ReturnType<typeof prioritizeLeads
               <td><SeverityBadge severity={ui.sev} label={ui.label} /></td>
               {showOwner && <td>{l.assigned_member_id ? memberName(l.assigned_member_id) : <span className="text-critical">לא משויך</span>}</td>}
               <td className="text-muted-foreground">{l.last_call_at ? fmtRelative(l.last_call_at) : "אין"}</td>
-              <td>{resultLabel(l.last_result)}</td>
+              <td><span className="block max-w-40 truncate" title={resultLabel(l.last_result)}>{resultLabel(l.last_result)}</span></td>
               <td className="num">{l.attempts}</td>
               <td className={l.state === "followup_overdue" ? "text-critical" : "text-muted-foreground"}>{l.next_due ? fmtRelative(l.next_due, true) : "—"}</td>
               <td><Button asChild size="sm" variant="outline" className="h-6 px-2 text-[11px]"><Link to="/leads/$id" params={{ id: l.id }}>תיעוד שיחה</Link></Button></td>
