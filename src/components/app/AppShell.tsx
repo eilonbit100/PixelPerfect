@@ -124,8 +124,8 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
                   return (
                     <Link key={n.to} to={n.to} onClick={onNavigate}
                       className={cn("flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                        active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-[inset_-2px_0_0_var(--sidebar-primary)]" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
-                      <n.icon className={cn("size-4", active ? "text-sidebar-primary" : "text-sidebar-foreground/60")} />
+                        active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
+                      <n.icon className={cn("size-4", active ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/60")} />
                       {n.label}
                     </Link>
                   );
