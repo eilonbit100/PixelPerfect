@@ -221,11 +221,12 @@ function TasksPage() {
         </div>
         {(search.range ?? (search.from || search.to ? "custom" : "")) === "custom" && (
 
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Input type="date" dir="ltr" className="num h-7 w-28 border-border/70 text-[11px]" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
-            <span>עד</span>
-            <Input type="date" dir="ltr" className="num h-7 w-28 border-border/70 text-[11px]" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
+          <div className="flex min-w-0 flex-1 basis-56 items-center gap-1 text-[11px] text-muted-foreground">
+            <Input type="date" dir="ltr" className="num h-7 w-full min-w-0 flex-1 border-border/70 text-[11px]" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
+            <span className="shrink-0">עד</span>
+            <Input type="date" dir="ltr" className="num h-7 w-full min-w-0 flex-1 border-border/70 text-[11px]" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
           </div>
+
         )}
         {(search.q || search.owner || search.branch || search.type || search.status || search.priority || search.source || search.from || search.to || search.range) && (
           <Button size="sm" variant="ghost" className="h-7 shrink-0 px-2 text-[11px]" onClick={() => navigate({ search: { view }, replace: true })}><X className="size-3.5" /> נקה</Button>
