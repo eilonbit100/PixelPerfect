@@ -121,6 +121,11 @@
   --sidebar-border: oklch(0.3 0.05 255);
   --sidebar-ring: oklch(0.9 0.2 125 / 55%);
   --shadow-panel: 0 1px 2px oklch(0.24 0.045 255 / 5%), 0 8px 24px -16px oklch(0.24 0.045 255 / 18%);
+  --timetable-hour-line: oklch(0.91 0.012 250);
+  --timetable-half-line: oklch(0.93 0.01 250 / 70%);
+  --timetable-today-bg: oklch(0.955 0.035 125 / 40%);
+  --timetable-now: oklch(0.62 0.15 150);
+  --timetable-hour-h: 88px;
 }
 
 @layer base {
@@ -149,6 +154,32 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-panel);
+  }
+  .timetable-col {
+    background-image:
+      linear-gradient(to bottom, var(--timetable-hour-line) 1px, transparent 1px),
+      linear-gradient(to bottom, transparent calc(var(--timetable-hour-h) / 2 - 0.5px), var(--timetable-half-line) calc(var(--timetable-hour-h) / 2), transparent calc(var(--timetable-hour-h) / 2 + 0.5px));
+    background-size: 100% var(--timetable-hour-h), 100% var(--timetable-hour-h);
+  }
+  .timetable-today {
+    background-color: var(--timetable-today-bg);
+  }
+  .timetable-now {
+    position: absolute;
+    inset-inline: 0;
+    border-top: 2px solid var(--timetable-now);
+    z-index: 5;
+    pointer-events: none;
+  }
+  .timetable-now::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: -2px;
+    top: -4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: var(--timetable-now);
   }
   .eyebrow {
     font-size: 0.72rem;

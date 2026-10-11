@@ -93,39 +93,11 @@ function Schedule() {
       {q.isLoading ? <TableSkeleton /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : !q.data?.tpl.length ? (
         <div className="panel"><EmptyState title="אין עדיין שיעורים בסניף" text={isManager ? "הוסף שיעור קבוע כדי להתחיל." : "מנהל הסניף יוסיף שיעורים."} /></div>
       ) : (
-        <div className="overflow-x-auto"><div className="grid min-w-[900px] grid-cols-7 gap-2">
-          {days.map((d, wd) => {
-            const ds = isoDay(d);
-            const isToday = ds === isoDay(new Date());
-            return (
-              <div key={ds} className={`panel min-w-0 ${isToday ? "ring-2 ring-primary" : ""}`}>
-                <div className="border-b px-3 py-2 text-sm font-medium">{WEEKDAYS[wd]} <span className="num text-xs text-muted-foreground">{d.getDate()}/{d.getMonth() + 1}</span></div>
-                <div className="space-y-2 p-2">
-                  {q.data.tpl.filter((t) => t.weekday === wd).map((t) => {
-                    const n = count(t.id, ds, "BOOKED"), w = count(t.id, ds, "WAITLIST");
-                    const pct = Math.min(100, Math.round((n / t.capacity) * 100));
-                    const tone = n >= t.capacity ? "bg-critical" : pct >= 75 ? "bg-warning" : "bg-primary";
-                    return (
-                      <div key={t.id} className="group relative rounded-md border bg-background text-xs hover:border-primary">
-                        <button onClick={() => setOpen({ id: t.id, date: ds })} className="w-full p-2 text-start">
-                          <div className="num font-semibold">{t.start_time.slice(0, 5)} <span className="font-normal text-muted-foreground">· {t.duration_min} ד׳</span></div>
-                          <div className="text-sm font-medium">{t.name}</div>
-                          <div className="truncate text-muted-foreground">{roomName(t.room_id)} · {memberName(t.instructor_member_id)}</div>
-                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted"><div className={`h-full ${tone}`} style={{ width: `${pct}%` }} /></div>
-                          <div className="mt-1 num">{n}/{t.capacity}{n >= t.capacity && <span className="text-critical font-medium"> · מלא</span>}{w > 0 && <span className="text-muted-foreground"> · המתנה {w}</span>}</div>
-                        </button>
-                        {isManager && (
-                          <NewClass orgId={org.id} branch={branch} rooms={q.data.rooms} instructors={instructors} template={t}
-                            trigger={<button className="absolute end-1 top-1 rounded p-1 text-muted-foreground opacity-0 hover:bg-muted group-hover:opacity-100 focus:opacity-100" aria-label="עריכת שיעור"><Pencil className="size-3.5" /></button>} />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div></div>
+        <Timetable tpl={q.data.tpl} days={days} count={count} roomName={roomName} instructorName={memberName} onOpen={setOpen}
+          editBlock={(t) => (
+            <NewClass orgId={org.id} branch={branch} rooms={q.data.rooms} instructors={instructors} template={t}
+              trigger={<button className="absolute end-1 top-1 z-10 rounded p-1 text-muted-foreground opacity-0 hover:bg-muted group-hover:opacity-100 focus:opacity-100" aria-label="עריכת שיעור"><Pencil className="size-3.5" /></button>} />
+          )} />
       )}
       {open && q.data && (() => {
         const t = q.data.tpl.find((x) => x.id === open.id);
@@ -133,6 +105,105 @@ function Schedule() {
         return <SessionDialog t={t} date={open.date} roomName={roomName(t.room_id)} instructor={memberName(t.instructor_member_id)} orgId={org.id} onClose={() => setOpen(null)}
           edit={isManager ? <NewClass orgId={org.id} branch={branch} rooms={q.data.rooms} instructors={instructors} template={t} onDone={() => setOpen(null)} trigger={<Button variant="outline" size="sm"><Pencil className="size-4" /> עריכת שיעור</Button>} /> : null} />;
       })()}
+    </div>
+  );
+}
+
+const HOUR_H = 88;
+const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+// שיעורים חופפים (שני חדרים באותה שעה) מקובצים לאשכולות ומוצגים זה לצד זה
+function layoutDay(tpls: Tpl[]): Tpl[][] {
+  const sorted = [...tpls].sort((a, b) => toMin(a.start_time) - toMin(b.start_time));
+  const clusters: Tpl[][] = [];
+  let cur: Tpl[] = [], curEnd = -1;
+  for (const t of sorted) {
+    const e = toMin(t.start_time) + t.duration_min;
+    if (cur.length && toMin(t.start_time) >= curEnd) { clusters.push(cur); cur = []; curEnd = -1; }
+    cur.push(t); curEnd = Math.max(curEnd, e);
+  }
+  if (cur.length) clusters.push(cur);
+  return clusters;
+}
+
+function Timetable({ tpl, days, count, roomName, instructorName, editBlock, onOpen }: {
+  tpl: Tpl[]; days: Date[]; count: (t: string, d: string, s: string) => number;
+  roomName: (id: string) => string; instructorName: (id: string | null) => string;
+  editBlock: (t: Tpl) => React.ReactNode; onOpen: (o: { id: string; date: string }) => void;
+}) {
+  const starts = tpl.map((t) => toMin(t.start_time));
+  const ends = tpl.map((t) => toMin(t.start_time) + t.duration_min);
+  const dayStart = Math.max(0, Math.floor(Math.min(...starts) / 60) * 60 - 60);
+  const dayEnd = Math.ceil(Math.max(...ends) / 60) * 60 + 60;
+  const gridH = ((dayEnd - dayStart) * HOUR_H) / 60;
+  const hours: number[] = [];
+  for (let m = dayStart; m <= dayEnd; m += 60) hours.push(m);
+  const todayIso = isoDay(new Date());
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  return (
+    <div className="panel overflow-hidden">
+      <div className="overflow-x-auto">
+        <div className="grid min-w-[1000px]" style={{ gridTemplateColumns: "56px repeat(7, minmax(130px, 1fr))" }}>
+          <div className="sticky start-0 z-20 border-b border-e border-border bg-surface" />
+          {days.map((d, wd) => {
+            const isToday = isoDay(d) === todayIso;
+            return (
+              <div key={wd} className={`border-b border-border px-1 py-2 text-center ${isToday ? "timetable-today" : ""}`}>
+                <div className={`text-xs font-semibold ${isToday ? "" : "text-muted-foreground"}`}>{WEEKDAYS[wd]}</div>
+                <div className="num text-[10px] text-muted-foreground">{d.getDate()}/{d.getMonth() + 1}</div>
+              </div>
+            );
+          })}
+          <div className="sticky start-0 z-20 border-e border-border bg-surface" style={{ height: gridH }}>
+            {hours.map((m) => (
+              <span key={m} className="num absolute end-1.5 -translate-y-1/2 text-[10px] text-muted-foreground" style={{ top: ((m - dayStart) * HOUR_H) / 60 }}>{pad2(m / 60)}:00</span>
+            ))}
+          </div>
+          {days.map((d, wd) => {
+            const ds = isoDay(d);
+            const isToday = ds === todayIso;
+            const showNow = isToday && nowMin > dayStart && nowMin < dayEnd;
+            return (
+              <div key={wd} className={`timetable-col relative border-e border-border last:border-e-0 ${isToday ? "timetable-today" : ""}`} style={{ height: gridH }}>
+                {showNow && <div className="timetable-now" style={{ top: ((nowMin - dayStart) * HOUR_H) / 60 }} />}
+                {layoutDay(tpl.filter((t) => t.weekday === wd)).map((cluster) =>
+                  cluster.map((t, i) => {
+                    const s = toMin(t.start_time);
+                    const n = count(t.id, ds, "BOOKED"), w = count(t.id, ds, "WAITLIST");
+                    const pct = Math.min(100, Math.round((n / t.capacity) * 100));
+                    const tone = n >= t.capacity ? "bg-critical" : pct >= 75 ? "bg-warning" : "bg-primary";
+                    const colW = 100 / cluster.length;
+                    return (
+                      <div key={t.id} className="group absolute" style={{ top: ((s - dayStart) * HOUR_H) / 60 + 2, height: (t.duration_min * HOUR_H) / 60 - 4, width: `calc(${colW}% - 6px)`, insetInlineStart: `calc(${i * colW}% + 3px)` }}>
+                        <button onClick={() => onOpen({ id: t.id, date: ds })} className="flex h-full w-full flex-col overflow-hidden rounded-[3px] border border-border bg-background p-1.5 text-start hover:border-primary">
+                          <div className="flex shrink-0 items-baseline gap-1">
+                            <span className="num text-[11px] font-semibold">{t.start_time.slice(0, 5)}</span>
+                            <span className="num text-[9px] text-muted-foreground">{t.duration_min} ד׳</span>
+                          </div>
+                          <div className="shrink-0 truncate text-xs font-medium leading-tight">{t.name}</div>
+                          {t.duration_min >= 60 && <div className="shrink-0 truncate text-[10px] text-muted-foreground">{roomName(t.room_id)} · {instructorName(t.instructor_member_id)}</div>}
+                          <div className="mt-auto shrink-0">
+                            <div className="h-[3px] overflow-hidden rounded-full bg-muted"><div className={`h-full ${tone}`} style={{ width: `${pct}%` }} /></div>
+                            <div className="mt-0.5 flex shrink-0 items-center gap-1.5 text-[10px]">
+                              <span className="num">{n}/{t.capacity}</span>
+                              {n >= t.capacity && <span className="font-medium text-critical">מלא</span>}
+                              {w > 0 && <span className="num text-muted-foreground">המתנה {w}</span>}
+                            </div>
+                          </div>
+                        </button>
+                        {editBlock(t)}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
