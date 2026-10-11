@@ -150,7 +150,7 @@
   .app-content {
     background-color: var(--color-background);
     background-image: url("./assets/gym-pattern.svg");
-    background-size: 280px 280px;
+    background-size: 185px 185px;
   }
 }
 
