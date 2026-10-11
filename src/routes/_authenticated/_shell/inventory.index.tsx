@@ -21,7 +21,7 @@ import { useInsights } from "@/lib/queries";
 import { RULES, healthLabel, insightTargetId, worst, type Insight } from "@/lib/rules";
 import { fmtDate, fmtNum } from "@/lib/format";
 import { SeverityBadge, StatusBadge } from "@/components/app/badges";
-import { EmptyState, ErrorState, FilterChips, PageHeader, TableSkeleton } from "@/components/app/states";
+import { EmptyState, ErrorState, FilterChips, PageHeader } from "@/components/app/states";
 import { StockDialog } from "@/components/app/StockDialog";
 import { CountsTab, MovementsTab, SuppliersTab } from "@/components/app/InventoryTabs";
 import { KPI_RULES } from "@/lib/inventory";
