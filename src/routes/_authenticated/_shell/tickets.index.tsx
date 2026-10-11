@@ -110,45 +110,56 @@ function TicketsPage() {
         <Kpi label="באיחור" value={overdue} onClick={() => set({ status: "OVERDUE" })} tone={overdue ? "text-critical" : ""} />
         <Kpi label="נסגרו בתקופה" value={closed} onClick={() => set({ status: "CLOSED" })} />
       </div>
-      <div className="panel mb-3 flex flex-wrap items-center gap-1 p-1.5">
-        {sel(s.type, (v) => set({ type: v }), "סוג", Object.entries(TICKET_TYPE))}
-        {sel(s.status, (v) => set({ status: v }), "סטטוס", [...Object.entries(TICKET_STATUS).map(([k, v]) => [k, v.label] as [string, string]), ["OVERDUE", "באיחור"]])}
-        {!branchId && sel(s.branch, (v) => set({ branch: v }), "סניף", branches.map((b) => [b.id, b.name]))}
-        {sel(s.owner, (v) => set({ owner: v }), "אחראי", members.map((m) => [m.id, m.display_name ?? m.username ?? ""]))}
-        <div className="relative min-w-32 flex-1 basis-32">
-          <SearchIcon className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input className="h-7 border-border/70 ps-7 text-xs" placeholder="מספר, נושא או תיאור" value={s.q ?? ""} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש קריאות" />
-          {s.q && <button type="button" onClick={() => set({ q: undefined })} aria-label="ניקוי חיפוש" className="absolute end-1 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>}
-        </div>
-        {sel(s.priority, (v) => set({ priority: v }), "עדיפות", Object.entries(TICKET_PRIORITY))}
-        <Select value={range} onValueChange={(v) => set(v === "any" ? { range: undefined, from: undefined, to: undefined } : v === "custom" ? { range: "custom" } : { range: v, ...rangeDates(v) })}>
-          <SelectTrigger className="h-7 w-auto max-w-44 min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label="מועד פתיחה">
-            <span className="flex min-w-0 items-center gap-1 truncate text-muted-foreground" style={{ display: "flex" }}>
-              <CalendarDays className="size-3.5 shrink-0" />
-              <span className="shrink-0">נוצר:</span>
-              <SelectValue className="text-foreground" />
-            </span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="any">כל התאריכים</SelectItem>
-            <SelectItem value="today">היום</SelectItem>
-            <SelectItem value="past7">7 ימים אחורה</SelectItem>
-            <SelectItem value="past30">30 ימים אחורה</SelectItem>
-            <SelectItem value="month">החודש</SelectItem>
-            <SelectItem value="custom">טווח תאריכים…</SelectItem>
-          </SelectContent>
-        </Select>
-        {range === "custom" && (
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Input type="date" dir="ltr" className="num h-7 w-28 border-border/70 text-[11px]" value={s.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
-            <span>עד</span>
-            <Input type="date" dir="ltr" className="num h-7 w-28 border-border/70 text-[11px]" value={s.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
+      <div className="panel mb-3 p-1.5">
+        <div className="flex items-center">
+          <div className="relative min-w-32 flex-1 basis-32">
+            <SearchIcon className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input className="h-7 border-border/70 ps-7 text-xs" placeholder="מספר, נושא או תיאור" value={s.q ?? ""} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש קריאות" />
+            {s.q && <button type="button" onClick={() => set({ q: undefined })} aria-label="ניקוי חיפוש" className="absolute end-1 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>}
           </div>
-        )}
-        {(s.q || s.type || s.status || s.owner || s.priority || s.branch || s.from || s.to || s.range) && (
-          <Button size="sm" variant="ghost" className="h-7 shrink-0 px-2 text-[11px]" onClick={() => navigate({ search: {}, replace: true })}><X className="size-3.5" /> נקה</Button>
-        )}
+        </div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-1 border-t border-border/60 pt-1.5">
+          {sel(s.type, (v) => set({ type: v }), "סוג", Object.entries(TICKET_TYPE))}
+          {sel(s.status, (v) => set({ status: v }), "סטטוס", [...Object.entries(TICKET_STATUS).map(([k, v]) => [k, v.label] as [string, string]), ["OVERDUE", "באיחור"]])}
+          {!branchId && sel(s.branch, (v) => set({ branch: v }), "סניף", branches.map((b) => [b.id, b.name]))}
+          {sel(s.owner, (v) => set({ owner: v }), "אחראי", members.map((m) => [m.id, m.display_name ?? m.username ?? ""]))}
+          {sel(s.priority, (v) => set({ priority: v }), "עדיפות", Object.entries(TICKET_PRIORITY))}
+          <div className="min-w-0 flex-1 basis-32">
+            <Select value={range} onValueChange={(v) => set(v === "any" ? { range: undefined, from: undefined, to: undefined } : v === "custom" ? { range: "custom" } : { range: v, ...rangeDates(v) })}>
+              <SelectTrigger className="h-7 w-full min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label="מועד פתיחה">
+                <span className="flex min-w-0 items-center gap-1 truncate text-muted-foreground" style={{ display: "flex" }}>
+                  <CalendarDays className="size-3.5 shrink-0" />
+                  <span className="shrink-0">נוצר:</span>
+                  <SelectValue className="text-foreground" />
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">כל התאריכים</SelectItem>
+                <SelectItem value="today">היום</SelectItem>
+                <SelectItem value="past7">7 ימים אחורה</SelectItem>
+                <SelectItem value="past30">30 ימים אחורה</SelectItem>
+                <SelectItem value="month">החודש</SelectItem>
+                <SelectItem value="custom">טווח תאריכים…</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {range === "custom" && (
+            <>
+              <div className="flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
+                <span className="shrink-0">מ־</span>
+                <Input type="date" dir="ltr" className="num h-7 w-32 border-border/70 text-[11px]" value={s.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
+                <span className="shrink-0">עד</span>
+                <Input type="date" dir="ltr" className="num h-7 w-32 border-border/70 text-[11px]" value={s.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
+              </div>
+              <span className="min-w-0 flex-1 text-center text-[11px] text-muted-foreground">מציג <span className="num font-medium text-foreground">{rows.length}</span> תוצאות</span>
+            </>
+          )}
+          {(s.q || s.type || s.status || s.owner || s.priority || s.branch || s.from || s.to || s.range) && (
+            <Button size="sm" variant="ghost" className="h-7 shrink-0 px-2 text-[11px]" onClick={() => navigate({ search: {}, replace: true })}><X className="size-3.5" /> נקה</Button>
+          )}
+        </div>
       </div>
+
       <div className="panel overflow-x-auto">
         {q.isLoading ? <TableSkeleton cols={8} /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : !rows.length ? (
           <EmptyState title={all.length ? "אין קריאות שתואמות לסינון" : "אין עדיין קריאות"} text="קריאות שייפתחו יופיעו כאן." />
