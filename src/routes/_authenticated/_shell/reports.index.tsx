@@ -77,6 +77,7 @@ function Library() {
   const [cat, setCat] = useState<"all" | Category>("all");
   const visible = useMemo(() => REPORTS.filter((r) => perms.data?.[r.key]?.view), [perms.data]);
   const items = [...visible.map((r) => ({ to: r.key, number: r.number, name: r.name, desc: r.desc, category: r.category, unavailable: !!r.unavailable })),
+    { to: "cards", number: undefined, name: "כרטיסי לקוח לא תקינים", desc: "הצהרות, תקנונים, תשלומים שנכשלו, אמצעי תשלום ופרטים חסרים — כל לקוח נספר פעם אחת", category: "cards" as Category, unavailable: false },
     { to: "health", number: undefined, name: "הצהרות בריאות", desc: "חסרות, פגות, ממתינות ומנויים חסומים — עם הטופס החתום", category: "cards" as Category, unavailable: false }];
   const s = q.trim();
   const list = items.filter((r) => (cat === "all" || r.category === cat) && (!s || r.name.includes(s) || r.number?.includes(s) || r.desc.includes(s)));
@@ -94,7 +95,7 @@ function Library() {
       </div>
       <div className="panel divide-y">
         {!list.length ? <EmptyState title="לא נמצאו דוחות" text="נסה מילה אחרת או קטגוריה אחרת." /> : list.map((r) => (
-          <Link key={r.to} to={r.to === "health" ? "/reports/health" : "/reports/$key"} params={r.to === "health" ? undefined : { key: r.to } as never}
+          <Link key={r.to} to={r.to === "health" ? "/reports/health" : r.to === "cards" ? "/reports/cards" : "/reports/$key"} params={r.to === "health" || r.to === "cards" ? undefined : { key: r.to } as never}
             className="flex items-center gap-4 px-4 py-3 hover:bg-muted/60">
             <span className="num w-10 shrink-0 text-xs text-muted-foreground">{r.number ?? "—"}</span>
             <div className="min-w-0 flex-1">
