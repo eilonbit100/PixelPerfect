@@ -208,15 +208,15 @@ function TasksPage() {
           <EmptyState title="אין משימות להצגה" text="משימות חדשות — ידניות או כאלה שהמערכת יוצרת — יופיעו כאן." />
         ) : (
           <table className="data-table tasks-table">
-            <thead><tr><th>משימה</th><th>סוג</th><th>קשור ל</th><th>אחראי</th><th>יעד</th><th>עדיפות</th><th>סטטוס</th><th>נוצרה</th><th>מקור</th><th /></tr></thead>
+            <thead><tr><th>משימה</th><th>סוג</th><th>קשור ל</th><th>אחראי</th><th>יעד</th><th>עדיפות</th><th>סטטוס</th><th className="hidden xl:table-cell">נוצרה</th><th className="hidden xl:table-cell">מקור</th><th /></tr></thead>
             <tbody>
               {rows.map((t) => {
                 const overdue = isOverdue(t);
                 const name = t.entity_id ? data!.names.get(t.entity_id) : undefined;
                 return (
                   <tr key={t.id} className="cursor-pointer" onClick={() => navigate({ search: (s: Search) => ({ ...s, task: t.id }), replace: true })}>
-                    <td className="col-title max-w-64">
-                      <span className="font-medium">{t.title}</span>
+                    <td className="col-title max-w-56">
+                      <span className="block truncate font-medium">{t.title}</span>
                       {(data!.tickets.get(t.id) ?? []).map((k) => <Link key={k.id} onClick={(e) => e.stopPropagation()} to="/tickets/$id" params={{ id: k.id }} className="num ms-2 text-xs text-primary hover:underline">קריאה #{k.no}</Link>)}
                       {t.description && <span className="block truncate text-xs text-muted-foreground">{t.description}</span>}
                     </td>
@@ -232,8 +232,8 @@ function TasksPage() {
                     <td className={overdue ? "num font-medium text-critical" : "num text-muted-foreground"}>{fmtRelative(t.due_at, true)}</td>
                     <td><StatusBadge tone={t.priority === "URGENT" || t.priority === "HIGH" ? "warning" : "neutral"}>{TASK_PRIORITY[t.priority]}</StatusBadge></td>
                     <td>{overdue ? <StatusBadge tone="critical">באיחור</StatusBadge> : <StatusBadge tone={t.status === "COMPLETED" ? "ok" : "neutral"}>{TASK_STATUS[t.status]}</StatusBadge>}</td>
-                    <td className="num text-muted-foreground">{fmtRelative(t.created_at)}</td>
-                    <td><SourceBadge source={t.source} /></td>
+                    <td className="num hidden text-muted-foreground xl:table-cell">{fmtRelative(t.created_at)}</td>
+                    <td className="hidden xl:table-cell"><SourceBadge source={t.source} /></td>
                     <td className="text-end" onClick={(e) => e.stopPropagation()}>{OPEN_STATUSES.includes(t.status) && <Button size="sm" variant="ghost" onClick={() => complete(t.id)}><CheckCircle2 className="size-4" /> בוצע</Button>}</td>
                   </tr>
                 );
