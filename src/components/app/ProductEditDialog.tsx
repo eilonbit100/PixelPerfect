@@ -83,7 +83,6 @@ export function ProductEditDialog({ p, trigger }: { p?: ProductRow; trigger: Rea
             <Select value={f.status} onValueChange={(v) => set("status", v)}><SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="ACTIVE">פעיל</SelectItem><SelectItem value="INACTIVE">לא פעיל</SelectItem></SelectContent></Select></div>
           <label className="flex items-center gap-2 text-sm"><Switch checked={f.track_expiry} onCheckedChange={(v) => set("track_expiry", v)} /> ניהול תוקף לפי אצוות</label>
-          <label className="flex items-center gap-2 text-sm"><Switch checked={f.returnable} onCheckedChange={(v) => set("returnable", v)} /> ניתן להחזרה לספק</label>
           {p?.import_code && <p className="text-xs text-muted-foreground sm:col-span-3">קוד פריט מיובא: <span className="num">{p.import_code}</span></p>}
         </div>
         <DialogFooter className="gap-2"><Button onClick={save}>שמירה</Button><Button variant="ghost" onClick={() => setOpen(false)}>ביטול</Button></DialogFooter>
