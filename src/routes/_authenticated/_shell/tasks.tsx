@@ -156,16 +156,19 @@ function TasksPage() {
     ...(role === "EMPLOYEE" ? [] : [{ v: "unassigned", label: "לא משויכות", n: counts.unassigned, icon: UserX, tone: "warning" }]),
   ];
   const sel = (val: string | undefined, onChange: (v: string | undefined) => void, label: string, items: [string, string][]) => (
-    <Select value={val ?? "any"} onValueChange={(v) => onChange(v === "any" ? undefined : v)}>
-      <SelectTrigger className="h-7 w-auto max-w-40 min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label={label}>
-        <span className="flex min-w-0 items-center gap-1 truncate text-muted-foreground" style={{ display: "flex" }}>
-          <span className="shrink-0">{label}:</span>
-          <SelectValue className="text-foreground" />
-        </span>
-      </SelectTrigger>
-      <SelectContent><SelectItem value="any">הכל</SelectItem>{items.map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
-    </Select>
+    <div className="min-w-0 flex-1 basis-28">
+      <Select value={val ?? "any"} onValueChange={(v) => onChange(v === "any" ? undefined : v)}>
+        <SelectTrigger className="h-7 w-full min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label={label}>
+          <span className="flex min-w-0 items-center gap-1 truncate text-muted-foreground" style={{ display: "flex" }}>
+            <span className="shrink-0">{label}:</span>
+            <SelectValue className="text-foreground" />
+          </span>
+        </SelectTrigger>
+        <SelectContent><SelectItem value="any">הכל</SelectItem>{items.map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+      </Select>
+    </div>
   );
+
 
 
   return (
@@ -215,7 +218,9 @@ function TasksPage() {
             <SelectItem value="custom">טווח תאריכים…</SelectItem>
           </SelectContent>
         </Select>
+        </div>
         {(search.range ?? (search.from || search.to ? "custom" : "")) === "custom" && (
+
           <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
             <Input type="date" dir="ltr" className="num h-7 w-28 border-border/70 text-[11px]" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
             <span>עד</span>
