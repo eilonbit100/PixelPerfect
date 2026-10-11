@@ -123,18 +123,19 @@ function InventoryPage() {
   return (
     <div>
       <PageHeader title="מלאי" subtitle="כל תנועה נרשמת ביומן — היתרה מתעדכנת רק דרך תנועת מלאי" />
-      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <div className="mb-3 flex flex-wrap items-center gap-1">
         {KPI_RULES.map((k) => {
           const n = kpi(k.rule);
           const active = search.rule === k.rule;
           return (
-            <button key={k.rule} onClick={() => set({ tab: undefined, category: undefined, rule: active ? undefined : k.rule })}
-              className={"panel p-3 text-start transition-colors hover:bg-muted/50 " + (active ? "ring-2 ring-primary" : "")}>
-              <div className="text-xs text-muted-foreground">{k.label}</div>
-              <div className={"num text-2xl font-semibold " + (n ? (k.rule === "OUT_OF_STOCK" ? "text-critical" : "text-warning") : "")}>{insights.isLoading ? "…" : n}</div>
+            <button key={k.rule} onClick={() => set({ tab: undefined, category: undefined, rule: active ? undefined : k.rule })} aria-pressed={active}
+              className={"inline-flex items-center gap-2 rounded-md border bg-surface px-2.5 py-1 text-start transition-colors hover:bg-muted " + (active ? "border-foreground/80 ring-2 ring-primary" : "")}>
+              <span className="text-[11px] text-muted-foreground">{k.label}</span>
+              <span className={"num text-sm font-semibold " + (n ? (k.rule === "OUT_OF_STOCK" ? "text-critical" : "text-warning") : "")}>{insights.isLoading ? "…" : n}</span>
             </button>);
         })}
       </div>
+
       <div className="mb-3 flex flex-wrap gap-1 border-b">
         {[["shelf", "מוצרי מדף"], ["equipment", "ציוד קבוע"], ["counts", "ספירות"], ["movements", "תנועות"], ["suppliers", "ספקים"]].map(([k, l]) => (
           <button key={k} onClick={() => set({ tab: k === "shelf" ? undefined : k, category: undefined, rule: undefined, filter: undefined, query: undefined })}
