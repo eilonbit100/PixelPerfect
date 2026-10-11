@@ -12,7 +12,6 @@
 ## Architecture rules
 - Business rules live in Postgres (`evaluate_rules`, triggers); React only displays insights — keeps detection server-side and consistent.
 - Insights are deduped by a partial unique index and auto-resolved by `_sync_rule`; never create insights from the client.
-- Stock changes only via `apply_inventory_transaction` RPC — balance and ledger stay consistent; stock tables are read-only to clients.
 - Tenancy = organization_members (role) + member_branch_access; RLS uses `has_branch_access`/`is_org_manager` helpers, never profile fields.
 - Signed-in app lives under `src/routes/_authenticated/_shell/*`; `_shell.tsx` provides OrgProvider + AppShell (RTL sidebar).
 - List filters are URL search params (`?rule=KEY`) so every Action Center CTA opens the exact records.
@@ -23,13 +22,13 @@
 - Freezes are inserted into `customer_freezes`; a trigger extends membership end_date and toggles FROZEN via `apply_freezes`.
 - Class schedule = recurring `class_templates` (weekday+time); bookings keyed by (template, session_date) via `book_class`/`cancel_booking` RPCs for atomic capacity/waitlist.
 - Daily plan: tasks.plan_date/plan_rank + daily_plans approval row; `suggest_daily_plan` (priority/overdue order, assigns by job_title + load) and `approve_daily_plan` RPCs, manager edits via normal task updates — keeps prioritization logic server-side.
-- Reports: every report runs through `run_report` / `run_custom_report` (SECURITY DEFINER, permission via `report_perm`, branches clipped by `report_branches`); exports re-run server-side in `reports.functions.ts` and log to `report_runs` — so preview, file and permissions always match.
-- Branch management report: all metrics come from `branch_management_report` (SECURITY DEFINER, perm key `branch_mgmt`); internal helpers `_bm_kpis`/`_bm_active` are not executable by clients, and metrics with unreliable source data are returned as null — so preview, export and permissions always agree.
-- Branch report request availability uses the organization workflow-enabled flag, with null counts while disabled; scoped undated cancellations come from the same RPC and shared presentation definitions serve preview and exports — so absent collection is not confused with a real zero.
+- Reports: every report runs through `run_report` / `run_custom_report` (`report_perm` + `report_branches`); exports re-run server-side and log to `report_runs` — preview, file and permissions match.
+- Branch management report metrics come only from `branch_management_report` (perm `branch_mgmt`; helpers not client-executable; unreliable metrics null) — preview, export and permissions agree.
+- Branch report: request counts are null while the org workflow flag is off; preview and exports share definitions — absent data never reads as zero.
 - People pipeline: leads table holds לידים and מתעניינים via `leads.stage` (LEAD→PROSPECT, auto on follow-up status); conversion via `convert_lead_to_customer` reuses an existing customer by normalized phone and moves tasks/activities — so one person never gets two cards.
 - Membership cancellation only via `open_cancellation_request` (stores computed effective_date + policy snapshot) / `update_cancellation_request` / `cancel_membership` (manager approval sets scheduled_cancel_date; earlier than notice needs override reason) RPCs; `apply_scheduled_cancellations` (pg_cron nightly) flips to CANCELLED with cancelled_at — so memberships stay active until effective and reports share one source.
 - Notice policy lives in `cancellation_policies` (plan > branch > org, HQ-editable) resolved by `cancellation_policy_for`/`notice_date` — policy changes never alter existing requests.
 - Card health (`src/lib/card-health.ts`) is a read-only view over compliance items, payments, memberships and customer fields — no separate issue store, so fixing the source closes it everywhere.
 - Tickets (קריאות) extend `approval_requests` (ticket_no, ticket_type, status, priority…) with `ticket_events` history and `ticket_files` in private bucket `ticket-files` (path org/ticket/file); all writes only via `create_ticket`/`ticket_update`/`ticket_decide`/`ticket_close`/`ticket_comment`/`ticket_add_file` RPCs, visibility via `can_view_ticket` — so old approvals keep their history and permissions are enforced server-side.
-- Inventory: kind SHELF/EQUIPMENT; stock changes only via `apply_inventory_transaction` (idempotency key), `transfer_stock`, and count RPCs (balance changes on approval) — single ledger, no duplicate moves.
+- Inventory: kind SHELF/EQUIPMENT; stock tables client read-only; changes only via `apply_inventory_transaction` (idempotency key), `transfer_stock`, and count RPCs (balance changes on approval) — single ledger, no duplicate moves.
 - Catalog/price/supplier edits HQ-only via RLS; movement docs in private bucket `inventory-docs` (org/branch/file) — server-side price control and branch isolation.
