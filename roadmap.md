@@ -22,5 +22,10 @@
 - [x] Search on its own full-width row, filters on the row below
 - [x] Filter cells stretch to fill the row; date range inputs stretch too, with centered text
 - [x] Verified at 1181px: two rows, no horizontal scroll, range filter still applies
+# Tickets filter bar rows
+- [x] Search on its own full-width row, filters on the row below, cells stretch to fill
+- [x] Custom range shows compact "מ־"/"עד" boxes with the result count centered
+- [x] Verified at 1181px: no horizontal scroll, nothing clipped, count matches the table
+
 
 
