@@ -222,6 +222,7 @@
   }
   .leads-table td {
     padding-block: 0.35rem;
+    padding-inline: 0.5rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
