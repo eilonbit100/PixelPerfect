@@ -152,8 +152,8 @@ function LeadsPage() {
           all.length ? <EmptyState title="אין לידים שתואמים לסינון" text="נסה לבחור סינון אחר." />
             : <EmptyState title="אין עדיין לידים" text="ברגע שייכנס ליד חדש הוא יופיע כאן." action={<LeadDialog trigger={<Button>הוסף ליד</Button>} />} />
         ) : (
-          <table className="data-table">
-            <thead><tr><th>ליד</th><th>טלפון</th><th>מקור</th><th>סטטוס</th><th>עובד אחראי</th><th>טיפול אחרון</th><th>פעולה הבאה</th><th>תקינות</th><th>נוצר</th></tr></thead>
+          <table className="data-table leads-table">
+            <thead><tr><th>ליד</th><th className="col-phone">טלפון</th><th>מקור</th><th>סטטוס</th><th>עובד אחראי</th><th>טיפול אחרון</th><th>פעולה הבאה</th><th>תקינות</th><th className="col-date">נוצר</th></tr></thead>
             <tbody>
               {rows.map((l) => {
                 const iss = byLead.get(l.id) ?? [];
@@ -161,15 +161,15 @@ function LeadsPage() {
                 const nt = nextTask.get(l.id);
                 return (
                   <tr key={l.id} className="cursor-pointer" onClick={() => navigate({ to: "/leads/$id", params: { id: l.id } })}>
-                    <td className="font-medium"><Link to="/leads/$id" params={{ id: l.id }} onClick={(e) => e.stopPropagation()}>{l.full_name}</Link></td>
-                    <td className="num text-muted-foreground">{l.phone ?? "—"}</td>
+                    <td className="font-medium"><Link to="/leads/$id" params={{ id: l.id }} onClick={(e) => e.stopPropagation()} className="block max-w-44 truncate">{l.full_name}</Link></td>
+                    <td className="num text-muted-foreground col-phone" dir="ltr">{l.phone ?? "—"}</td>
                     <td className="text-muted-foreground">{LEAD_SOURCE[l.source] ?? l.source}</td>
                     <td><StatusBadge tone={leadStatusTone(l.status)}>{LEAD_STATUS[l.status]}</StatusBadge></td>
                     <td>{memberName(l.assigned_member_id)}</td>
                     <td className="text-muted-foreground">{fmtRelative(l.last_activity_at)}</td>
                     <td className={nt?.overdue ? "text-critical" : ""}>{nt ? fmtRelative(nt.due_at, true) : "—"}</td>
                     <td>{w ? <SeverityBadge severity={w} label={healthLabel(iss.find((i) => i.severity === w)!)} /> : <SeverityBadge severity="OK" />}</td>
-                    <td className="num text-muted-foreground">{fmtDate(l.created_at)}</td>
+                    <td className="num text-muted-foreground col-date">{fmtDate(l.created_at)}</td>
                   </tr>
                 );
               })}
