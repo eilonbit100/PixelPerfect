@@ -63,9 +63,12 @@ function TasksPage() {
       const stage = new Map(leads.data.map((x) => [x.id, x.stage]));
       const ids = data.map((x) => x.id);
       const tk = ids.length ? (await supabase.from("approval_requests").select("id,ticket_no,task_id").in("task_id", ids.slice(0, 300))).data ?? [] : [];
+      const linkedIds = data.filter((x) => x.entity_type === "ticket" && x.entity_id).map((x) => x.entity_id!);
+      const lt = linkedIds.length ? (await supabase.from("approval_requests").select("id,ticket_no").in("id", linkedIds.slice(0, 300))).data ?? [] : [];
+      const ticketNo = new Map(lt.map((x) => [x.id, x.ticket_no]));
       const tickets = new Map<string, { id: string; no: number }[]>();
       tk.forEach((x) => { if (x.task_id) tickets.set(x.task_id, [...(tickets.get(x.task_id) ?? []), { id: x.id, no: x.ticket_no }]); });
-      return { tasks: data, leads: leads.data, names, stage, tickets };
+      return { tasks: role === "EMPLOYEE" ? data.filter((x) => x.assigned_member_id === me.id) : data, leads: leads.data, names, stage, tickets, ticketNo };
     },
   });
 
@@ -84,6 +87,7 @@ function TasksPage() {
       overdue: tasks.filter((t) => isOverdue(t)).length,
       nolead: leadsWithoutTask(data?.leads ?? [], openLead).length,
       done: tasks.filter((t) => t.status === "COMPLETED").length,
+      unassigned: tasks.filter((t) => isOpen(t) && !t.assigned_member_id).length,
       lost: (data?.leads ?? []).filter((l) => l.status === "LOST").length,
     };
   }, [data, me.id]);
@@ -106,6 +110,7 @@ function TasksPage() {
       case "mine": list = sortQueue(list.filter((t) => isOpen(t) && t.assigned_member_id === me.id)); break;
       case "attention": list = sortQueue(list.filter(counts.attention)); break;
       case "overdue": list = list.filter((t) => isOverdue(t)); break;
+      case "unassigned": list = list.filter((t) => isOpen(t) && !t.assigned_member_id); break;
       case "done": list = list.filter((t) => t.status === "COMPLETED").reverse(); break;
     }
     if (search.source === "auto") list = list.filter((t) => t.source !== "MANUAL");
@@ -137,6 +142,7 @@ function TasksPage() {
     { v: "nolead", label: "ללא משימה", n: counts.nolead, icon: UserX, tone: "warning" },
     { v: "done", label: "הושלמו", n: counts.done, icon: CheckCircle2 },
     { v: "lost", label: "לא רלוונטיים", n: counts.lost, icon: CircleSlash },
+    ...(role === "EMPLOYEE" ? [] : [{ v: "unassigned", label: "לא משויכות", n: counts.unassigned, icon: UserX, tone: "warning" }]),
   ];
   const sel = (val: string | undefined, onChange: (v: string | undefined) => void, label: string, items: [string, string][], w = "w-36") => (
     <Select value={val ?? "any"} onValueChange={(v) => onChange(v === "any" ? undefined : v)}>
@@ -148,7 +154,7 @@ function TasksPage() {
   return (
     <div>
       <PageHeader title="משימות" subtitle="מרכז העבודה היומי" actions={<TaskDialog trigger={<Button><Plus className="size-4" /> משימה חדשה</Button>} />} />
-      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7">
         {cards.map((c) => (
           <button key={c.v} type="button" onClick={() => set({ view: c.v, status: undefined })} aria-pressed={view === c.v && !search.task}
             className={`panel flex flex-col items-start gap-1 p-3 text-start transition-colors hover:bg-muted/50 ${view === c.v && !search.task ? "ring-2 ring-primary" : ""}`}>
@@ -160,7 +166,7 @@ function TasksPage() {
       {search.task && <div className="mb-3 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">מוצגת משימה אחת <Button size="sm" variant="ghost" onClick={() => set({})}>הצג את כל המשימות</Button></div>}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Input className="w-56" placeholder="חיפוש חופשי" defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש חופשי" />
-        {sel(search.owner, (v) => set({ owner: v }), "כל העובדים", members.map((m) => [m.id, m.display_name ?? "—"]))}
+        {role !== "EMPLOYEE" && sel(search.owner, (v) => set({ owner: v }), "כל העובדים", members.map((m) => [m.id, m.display_name ?? "—"]))}
         {!branchId && branches.length > 1 && sel(search.branch, (v) => set({ branch: v }), "כל הסניפים", branches.map((b) => [b.id, b.name]))}
         {!leadView && <>
           {sel(search.type, (v) => set({ type: v }), "כל הסוגים", (types.data ?? []).map((t) => [t.key, t.label]), "w-44")}
@@ -218,6 +224,8 @@ function TasksPage() {
                     <td onClick={(e) => e.stopPropagation()}>
                       {t.entity_type === "lead" && t.entity_id ? <Link className="text-primary hover:underline" to="/leads/$id" params={{ id: t.entity_id }}>{data!.stage.get(t.entity_id) === "PROSPECT" ? "מתעניין" : "ליד"} · {name}</Link>
                         : t.entity_type === "customer" && t.entity_id ? <Link className="text-primary hover:underline" to="/customers/$id" params={{ id: t.entity_id }}>לקוח · {name}</Link>
+                        : t.entity_type === "ticket" && t.entity_id ? <Link className="text-primary hover:underline" to="/tickets/$id" params={{ id: t.entity_id }}>קריאה #{data!.ticketNo.get(t.entity_id) ?? "—"}</Link>
+                        : t.entity_type === "cancellation_request" ? <span>בקשת ביטול</span>
                         : <span className="text-muted-foreground">כללי</span>}
                     </td>
                     <td>{memberName(t.assigned_member_id)}</td>

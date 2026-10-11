@@ -33,3 +33,4 @@
 - Inventory: kind SHELF/EQUIPMENT; stock tables client read-only; changes only via `apply_inventory_transaction` (idempotency key), `transfer_stock`, and count RPCs (balance changes on approval) — single ledger, no duplicate moves.
 - Catalog/price/supplier edits HQ-only via RLS; movement docs in private bucket `inventory-docs` (org/branch/file) — server-side price control and branch isolation.
 - Tasks: per-org `task_types`; popups claimed atomically by `claim_task_reminders`; history = activities(entity 'task'); open rule tasks unique per entity — no duplicates.
+- Task types carry allowed_roles/requires_link; trigger `tasks_validate` blocks role-mismatched assignment and approval tasks without a ticket/cancellation link — tasks only remind, approval stays in tickets. Demo tasks use source DEMO for easy cleanup.

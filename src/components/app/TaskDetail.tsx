@@ -43,7 +43,9 @@ export function TaskDetail({ taskId, onClose }: { taskId: string | null; onClose
       if (!t) return null;
       const [h, tk, person] = await Promise.all([
         supabase.from("activities").select("*").eq("organization_id", org.id).eq("entity_type", "task").eq("entity_id", t.id).order("created_at", { ascending: false }),
-        supabase.from("approval_requests").select("id,ticket_no,title").eq("task_id", t.id),
+        t.entity_type === "ticket" && t.entity_id
+          ? supabase.from("approval_requests").select("id,ticket_no,title").or(`task_id.eq.${t.id},id.eq.${t.entity_id}`)
+          : supabase.from("approval_requests").select("id,ticket_no,title").eq("task_id", t.id),
         t.entity_type === "lead" && t.entity_id ? supabase.from("leads").select("full_name,stage").eq("id", t.entity_id).maybeSingle()
           : t.entity_type === "customer" && t.entity_id ? supabase.from("customers").select("full_name").eq("id", t.entity_id).maybeSingle()
           : Promise.resolve({ data: null }),
@@ -97,9 +99,11 @@ export function TaskDetail({ taskId, onClose }: { taskId: string | null; onClose
             <div className="flex flex-wrap gap-2">
               {t.entity_type === "lead" && t.entity_id && <Button asChild size="sm" variant="outline"><Link to="/leads/$id" params={{ id: t.entity_id }}>{d.person?.stage === "PROSPECT" ? "מתעניין" : "ליד"} · {d.person?.full_name}</Link></Button>}
               {t.entity_type === "customer" && t.entity_id && <Button asChild size="sm" variant="outline"><Link to="/customers/$id" params={{ id: t.entity_id }}>כרטיס לקוח · {d.person?.full_name}</Link></Button>}
+              {t.entity_type === "cancellation_request" && <span className="text-xs text-muted-foreground">מקושר לבקשת ביטול</span>}
               {d.tickets.map((k) => <Button key={k.id} asChild size="sm" variant="outline"><Link to="/tickets/$id" params={{ id: k.id }}>קריאה #{k.ticket_no}</Link></Button>)}
             </div>
 
+            {type?.requires_link && <p className="rounded-md bg-muted/40 px-3 py-2 text-xs">משימה זו היא תזכורת בלבד. האישור או הדחייה מתבצעים בקריאה המקושרת — סימון המשימה כבוצעה אינו מאשר את הבקשה.</p>}
             <section className="space-y-3 rounded-md border p-3">
               <h3 className="font-medium">טיפול</h3>
               {isOpen(t) ? (
