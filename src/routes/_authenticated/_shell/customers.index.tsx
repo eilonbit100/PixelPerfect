@@ -138,7 +138,7 @@ function NewCustomer() {
             <div className="grid grid-cols-2 gap-3">{fileField("HEALTH_DECLARATION", "הצהרת בריאות")}{fileField("SIGNED_TERMS", "תקנון חתום")}</div>
             <p className="text-xs text-muted-foreground">הצהרת בריאות שהועלתה ממתינה לאישור מנהל.</p>
           </section>
-          <div className={`rounded-md border p-2.5 text-sm ${missing.length ? "border-warning/40 bg-warning/10" : "border-success/40 bg-success/10"}`}>
+          <div className={`rounded-md border p-2.5 text-sm ${missing.length ? "border-warning/40 bg-warning-soft" : "border-ok/40 bg-ok-soft"}`}>
             {missing.length ? <>הכרטיס ייפתח עם חוסרים: {missing.join(", ")}</> : <>כל הפרטים הדרושים הוזנו — הכרטיס ייפתח תקין</>}
           </div>
         </div>
