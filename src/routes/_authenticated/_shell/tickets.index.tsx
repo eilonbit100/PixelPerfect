@@ -161,7 +161,7 @@ function TicketsPage() {
                 <tr key={t.id} className="cursor-pointer" onClick={() => navigate({ to: "/tickets/$id", params: { id: t.id } })}>
                   <td className="num">#{t.ticket_no}</td>
                   <td>{TICKET_TYPE[t.ticket_type]}</td>
-                  <td className="col-title font-medium">{t.title}</td>
+                  <td className="col-title font-medium"><span className="block max-w-72 truncate">{t.title}</span></td>
                   {!branchId && <td>{branchName(t.branch_id)}</td>}
                   <td>{t.assigned_member_id ? memberName(t.assigned_member_id) : <span className="text-muted-foreground">לא שויך</span>}</td>
                   <td className="num col-md text-muted-foreground">{fmtDate(t.created_at)}</td>
