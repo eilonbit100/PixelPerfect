@@ -39,6 +39,7 @@ import { Route as AuthenticatedShellSettingsRulesRouteImport } from './routes/_a
 import { Route as AuthenticatedShellSettingsUsersRouteImport } from './routes/_authenticated/_shell/settings.users'
 import { Route as AuthenticatedShellTicketsIndexRouteImport } from './routes/_authenticated/_shell/tickets.index'
 import { Route as AuthenticatedShellTicketsIdRouteImport } from './routes/_authenticated/_shell/tickets.$id'
+import { Route as AuthenticatedShellInventoryCountsIdRouteImport } from './routes/_authenticated/_shell/inventory.counts.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -213,6 +214,12 @@ const AuthenticatedShellTicketsIdRoute =
     path: '/tickets/$id',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
+const AuthenticatedShellInventoryCountsIdRoute =
+  AuthenticatedShellInventoryCountsIdRouteImport.update({
+    id: '/inventory/counts/$id',
+    path: '/inventory/counts/$id',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -243,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/reports/': typeof AuthenticatedShellReportsIndexRoute
   '/settings/': typeof AuthenticatedShellSettingsIndexRoute
   '/tickets/': typeof AuthenticatedShellTicketsIndexRoute
+  '/inventory/counts/$id': typeof AuthenticatedShellInventoryCountsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -271,6 +279,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedShellReportsIndexRoute
   '/settings': typeof AuthenticatedShellSettingsIndexRoute
   '/tickets': typeof AuthenticatedShellTicketsIndexRoute
+  '/inventory/counts/$id': typeof AuthenticatedShellInventoryCountsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -304,6 +313,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/reports/': typeof AuthenticatedShellReportsIndexRoute
   '/_authenticated/_shell/settings/': typeof AuthenticatedShellSettingsIndexRoute
   '/_authenticated/_shell/tickets/': typeof AuthenticatedShellTicketsIndexRoute
+  '/_authenticated/_shell/inventory/counts/$id': typeof AuthenticatedShellInventoryCountsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -336,6 +346,7 @@ export interface FileRouteTypes {
     | '/reports/'
     | '/settings/'
     | '/tickets/'
+    | '/inventory/counts/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -364,6 +375,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/tickets'
+    | '/inventory/counts/$id'
   id:
     | '__root__'
     | '/'
@@ -396,6 +408,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/reports/'
     | '/_authenticated/_shell/settings/'
     | '/_authenticated/_shell/tickets/'
+    | '/_authenticated/_shell/inventory/counts/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -616,6 +629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellTicketsIdRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
+    '/_authenticated/_shell/inventory/counts/$id': {
+      id: '/_authenticated/_shell/inventory/counts/$id'
+      path: '/inventory/counts/$id'
+      fullPath: '/inventory/counts/$id'
+      preLoaderRoute: typeof AuthenticatedShellInventoryCountsIdRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
   }
 }
 
@@ -686,6 +706,7 @@ interface AuthenticatedShellRouteChildren {
   AuthenticatedShellInventoryIndexRoute: typeof AuthenticatedShellInventoryIndexRoute
   AuthenticatedShellLeadsIndexRoute: typeof AuthenticatedShellLeadsIndexRoute
   AuthenticatedShellTicketsIndexRoute: typeof AuthenticatedShellTicketsIndexRoute
+  AuthenticatedShellInventoryCountsIdRoute: typeof AuthenticatedShellInventoryCountsIdRoute
 }
 
 const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
@@ -704,6 +725,8 @@ const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
   AuthenticatedShellInventoryIndexRoute: AuthenticatedShellInventoryIndexRoute,
   AuthenticatedShellLeadsIndexRoute: AuthenticatedShellLeadsIndexRoute,
   AuthenticatedShellTicketsIndexRoute: AuthenticatedShellTicketsIndexRoute,
+  AuthenticatedShellInventoryCountsIdRoute:
+    AuthenticatedShellInventoryCountsIdRoute,
 }
 
 const AuthenticatedShellRouteWithChildren =

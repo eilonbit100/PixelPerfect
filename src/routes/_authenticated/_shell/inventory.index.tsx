@@ -10,14 +10,17 @@ import { fmtDate, fmtNum } from "@/lib/format";
 import { SeverityBadge, StatusBadge } from "@/components/app/badges";
 import { EmptyState, ErrorState, FilterChips, PageHeader, TableSkeleton } from "@/components/app/states";
 import { StockDialog } from "@/components/app/StockDialog";
+import { CountsTab, MovementsTab, SuppliersTab } from "@/components/app/InventoryTabs";
+import { KPI_RULES } from "@/lib/inventory";
 import { Button } from "@/components/ui/button";
 
-type Search = { filter?: string; rule?: string };
+type Search = { filter?: string; rule?: string; tab?: string };
 
 export const Route = createFileRoute("/_authenticated/_shell/inventory/")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     filter: typeof s.filter === "string" ? s.filter : undefined,
     rule: typeof s.rule === "string" ? s.rule : undefined,
+    tab: typeof s.tab === "string" ? s.tab : undefined,
   }),
   head: () => ({
     meta: [
@@ -61,7 +64,9 @@ function InventoryPage() {
     return m;
   }, [insights.data]);
 
-  const all = q.data?.products ?? [];
+  const tab = search.tab ?? "shelf";
+  const all = (q.data?.products ?? []).filter((p) => (tab === "equipment" ? p.kind === "EQUIPMENT" : p.kind !== "EQUIPMENT"));
+  const kpi = (rule: string) => new Set((insights.data ?? []).filter((i) => i.rule_key === rule).map((i) => insightTargetId(i))).size;
   const rows = useMemo(() => {
     let list = all;
     if (search.rule) list = list.filter((p) => byProd.get(p.id)?.some((i) => i.rule_key === search.rule));
@@ -75,6 +80,25 @@ function InventoryPage() {
   return (
     <div>
       <PageHeader title="מלאי" subtitle="כל תנועה נרשמת ביומן — היתרה מתעדכנת רק דרך תנועת מלאי" />
+      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {KPI_RULES.map((k) => {
+          const n = kpi(k.rule);
+          const active = search.rule === k.rule;
+          return (
+            <button key={k.rule} onClick={() => set({ tab: undefined, rule: active ? undefined : k.rule })}
+              className={"panel p-3 text-start transition-colors hover:bg-muted/50 " + (active ? "ring-2 ring-primary" : "")}>
+              <div className="text-xs text-muted-foreground">{k.label}</div>
+              <div className={"num text-2xl font-semibold " + (n ? (k.rule === "OUT_OF_STOCK" ? "text-critical" : "text-warning") : "")}>{insights.isLoading ? "…" : n}</div>
+            </button>);
+        })}
+      </div>
+      <div className="mb-3 flex flex-wrap gap-1 border-b">
+        {[["shelf", "מוצרי מדף"], ["equipment", "ציוד קבוע"], ["counts", "ספירות"], ["movements", "תנועות"], ["suppliers", "ספקים"]].map(([k, l]) => (
+          <button key={k} onClick={() => set({ tab: k === "shelf" ? undefined : k, rule: undefined, filter: undefined })}
+            className={"-mb-px border-b-2 px-3 py-2 text-sm " + (tab === k ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>{l}</button>
+        ))}
+      </div>
+      {tab === "counts" ? <CountsTab /> : tab === "movements" ? <MovementsTab /> : tab === "suppliers" ? <SuppliersTab /> : <>
       {search.rule && RULES[search.rule] && (
         <div className="mb-3 flex items-center gap-2 rounded-md border bg-accent px-3 py-2 text-sm text-accent-foreground">
           מציג רק רשומות עבור: <strong>{RULES[search.rule].description}</strong>
@@ -108,7 +132,7 @@ function InventoryPage() {
                     <td className="num text-muted-foreground">{fmtDate(q.data!.exp.get(p.id))}</td>
                     <td className="text-muted-foreground">{q.data!.sname.get(p.default_supplier_id ?? "") ?? "—"}</td>
                     <td className="text-end" onClick={(e) => e.stopPropagation()}>
-                      {p.status === "ACTIVE" && (
+                      {p.status === "ACTIVE" && p.kind !== "EQUIPMENT" && (
                         <StockDialog productId={p.id} productName={p.name} defaultType={iss.some((i) => i.rule_key === "COUNT_DISCREPANCY") ? "PHYSICAL_COUNT" : "RECEIPT"}
                           trigger={<Button size="sm" variant={w ? "default" : "ghost"}>{w ? "טפל" : "תנועה"}</Button>} />
                       )}
@@ -120,6 +144,7 @@ function InventoryPage() {
           </table>
         )}
       </div>
+      </>}
     </div>
   );
 }
