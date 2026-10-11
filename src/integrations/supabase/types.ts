@@ -2506,32 +2506,38 @@ export type Database = {
       task_types: {
         Row: {
           active: boolean
+          allowed_roles: string[]
           category: string
           created_at: string
           id: string
           key: string
           label: string
           organization_id: string
+          requires_link: boolean
           sort: number
         }
         Insert: {
           active?: boolean
+          allowed_roles?: string[]
           category: string
           created_at?: string
           id?: string
           key: string
           label: string
           organization_id: string
+          requires_link?: boolean
           sort?: number
         }
         Update: {
           active?: boolean
+          allowed_roles?: string[]
           category?: string
           created_at?: string
           id?: string
           key?: string
           label?: string
           organization_id?: string
+          requires_link?: boolean
           sort?: number
         }
         Relationships: [
