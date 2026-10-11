@@ -26,7 +26,7 @@ export function ProductEditDialog({ p, trigger }: { p?: ProductRow; trigger: Rea
   const init = () => ({
     name: p?.name ?? "", sku: p?.sku ?? "", barcode: p?.barcode ?? "", category: p?.category ?? "", subcategory: p?.subcategory ?? "", brand: p?.brand ?? "",
     variant: p?.variant ?? "", kind: p?.kind ?? "SHELF", status: p?.status ?? "ACTIVE", cost: p?.cost?.toString() ?? "", price: p?.price?.toString() ?? "",
-    track_expiry: p?.track_expiry ?? false, returnable: p?.returnable ?? true, supplier: p?.default_supplier_id ?? "",
+    track_expiry: p?.track_expiry ?? false, returnable: p?.returnable ?? false, supplier: p?.default_supplier_id ?? "",
     return_window_days: p?.return_window_days?.toString() ?? "",
   });
   const [f, setF] = useState(init);
@@ -67,14 +67,22 @@ export function ProductEditDialog({ p, trigger }: { p?: ProductRow; trigger: Rea
             <Select value={f.supplier || "none"} onValueChange={(v) => set("supplier", v === "none" ? "" : v)}><SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="none">ללא</SelectItem>{(sup.data ?? []).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5">
-            {T("return_window_days", "חלון החזרה (ימים)", { type: "number", min: 0, step: 1, dir: "ltr", placeholder: "לפי ברירת המחדל של הספק", disabled: !f.returnable })}
-            <p className="text-xs text-muted-foreground">ערך ריק משתמש בחלון ההחזרה של הספק. חל על קליטות חדשות.</p>
+            <Label>החזרה לספק</Label>
+            <Select value={f.returnable ? "yes" : "no"} onValueChange={(v) => { const rel = v === "yes"; setF((x) => ({ ...x, returnable: rel, return_window_days: rel ? x.return_window_days : "" })); }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="no">לא רלוונטי</SelectItem><SelectItem value="yes">רלוונטי — יש חלון זמן</SelectItem></SelectContent>
+            </Select>
           </div>
+          {f.returnable && (
+            <div className="space-y-1.5">
+              {T("return_window_days", "חלון החזרה (ימים)", { type: "number", min: 0, step: 1, dir: "ltr", placeholder: "לפי ברירת המחדל של הספק" })}
+              <p className="text-xs text-muted-foreground">ערך ריק משתמש בחלון ההחזרה של הספק. חל על קליטות חדשות.</p>
+            </div>
+          )}
           <div className="space-y-1.5"><Label>סטטוס</Label>
             <Select value={f.status} onValueChange={(v) => set("status", v)}><SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="ACTIVE">פעיל</SelectItem><SelectItem value="INACTIVE">לא פעיל</SelectItem></SelectContent></Select></div>
           <label className="flex items-center gap-2 text-sm"><Switch checked={f.track_expiry} onCheckedChange={(v) => set("track_expiry", v)} /> ניהול תוקף לפי אצוות</label>
-          <label className="flex items-center gap-2 text-sm"><Switch checked={f.returnable} onCheckedChange={(v) => set("returnable", v)} /> ניתן להחזרה לספק</label>
           {p?.import_code && <p className="text-xs text-muted-foreground sm:col-span-3">קוד פריט מיובא: <span className="num">{p.import_code}</span></p>}
         </div>
         <DialogFooter className="gap-2"><Button onClick={save}>שמירה</Button><Button variant="ghost" onClick={() => setOpen(false)}>ביטול</Button></DialogFooter>
