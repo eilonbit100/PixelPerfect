@@ -339,7 +339,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <SidebarBody onNavigate={() => setDrawer(false)} />
         </SheetContent>
       </Sheet>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="app-content flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur lg:px-6">
           <button className="flex size-9 items-center justify-center rounded-md hover:bg-muted lg:hidden" onClick={() => setDrawer(true)} aria-label="פתח תפריט">
             <Menu className="size-5" />
