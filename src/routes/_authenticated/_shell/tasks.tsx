@@ -182,7 +182,7 @@ function TasksPage() {
             <Input className="ps-8" placeholder={leadView ? "חיפוש לפי שם או טלפון" : "חיפוש לפי משימה, לקוח או ליד"} defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש" />
           </div>
           <Select value={search.range ?? (search.from || search.to ? "custom" : "any")} onValueChange={(v) => set(v === "any" ? { range: undefined, from: undefined, to: undefined } : v === "custom" ? { range: "custom" } : { range: v, ...rangeDates(v) })}>
-            <SelectTrigger className="w-40 shrink-0" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
+            <SelectTrigger className="w-48 shrink-0" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
               <span className="flex flex-1 items-center gap-1.5 truncate text-start" style={{ display: "flex" }}><CalendarDays className="size-4 shrink-0 text-muted-foreground" /><SelectValue /></span>
             </SelectTrigger>
             <SelectContent>
