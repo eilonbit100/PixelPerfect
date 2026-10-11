@@ -34,9 +34,9 @@ const GROUPS: { title?: string; funnel?: boolean; items: NavItem[] }[] = [
 ];
 
 const FUNNEL = [
-  { key: "lead", to: "/leads", stage: undefined, label: "לידים", hint: "הזדמנות חדשה", dot: "bg-funnel-lead", ring: "ring-funnel-lead" },
-  { key: "prospect", to: "/leads", stage: "PROSPECT", label: "מתעניינים", hint: "בתהליך מעקב", dot: "bg-funnel-prospect", ring: "ring-funnel-prospect" },
-  { key: "customer", to: "/customers", stage: undefined, label: "לקוחות", hint: "", dot: "bg-funnel-customer", ring: "ring-funnel-customer" },
+  { key: "lead", to: "/leads", stage: undefined, label: "לידים", hint: "הזדמנות חדשה", dot: "bg-funnel-lead" },
+  { key: "prospect", to: "/leads", stage: "PROSPECT", label: "מתעניינים", hint: "בתהליך מעקב", dot: "bg-funnel-prospect" },
+  { key: "customer", to: "/customers", stage: undefined, label: "לקוחות", hint: "", dot: "bg-funnel-customer" },
 ] as const;
 
 function Funnel({ path, stageParam, onNavigate }: { path: string; stageParam?: string; onNavigate?: () => void }) {
