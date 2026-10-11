@@ -17,6 +17,7 @@ const TABS = [
   { to: "/settings/organization", label: "ארגון" },
   { to: "/settings/branches", label: "סניפים" },
   { to: "/settings/users", label: "משתמשים" },
+  { to: "/settings/catalog", label: "קטלוג מוצרים" },
   { to: "/settings/rules", label: "כללים עסקיים" },
   { to: "/settings/cancellation", label: "מדיניות מנויים וביטולים" },
   { to: "/settings/report-permissions", label: "הרשאות דוחות" },
