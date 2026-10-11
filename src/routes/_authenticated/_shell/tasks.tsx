@@ -207,7 +207,7 @@ function TasksPage() {
         ) : !rows.length ? (
           <EmptyState title="אין משימות להצגה" text="משימות חדשות — ידניות או כאלה שהמערכת יוצרת — יופיעו כאן." />
         ) : (
-          <table className="data-table">
+          <table className="data-table tasks-table">
             <thead><tr><th>משימה</th><th>סוג</th><th>קשור ל</th><th>אחראי</th><th>יעד</th><th>עדיפות</th><th>סטטוס</th><th>נוצרה</th><th>מקור</th><th /></tr></thead>
             <tbody>
               {rows.map((t) => {
