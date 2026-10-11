@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Lock, DatabaseZap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
-import { reportByKey, useReportPerms, type RangeKey } from "@/lib/reports";
+import { reportByKey, reportRpc, useReportPerms, type RangeKey } from "@/lib/reports";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/app/states";
 import { BranchReport } from "@/components/app/BranchReport";
 import { DataTable, ExportBar, FilterBar, SaveTemplateButton, defaultFilters, type Filters } from "@/components/app/ReportView";
