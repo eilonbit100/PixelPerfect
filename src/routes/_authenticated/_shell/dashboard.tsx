@@ -215,11 +215,10 @@ function Dashboard() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">{greeting()}{firstName ? `, ${firstName}` : ""}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {role === "EMPLOYEE" ? "הנה מה שדורש ממך טיפול היום." : `הנה מה שדורש את תשומת הלב שלך היום · ${scope}`}
-        </p>
+      <div className="mb-4">
+        <p className="text-xs text-muted-foreground">{greeting()}{firstName ? `, ${firstName}` : ""}</p>
+        <h1>לוח בקרה</h1>
+        <p className="text-xs text-muted-foreground">{new Date().toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "numeric", timeZone: "Asia/Jerusalem" })} · {scope}</p>
       </div>
 
       {role === "HQ" && (
