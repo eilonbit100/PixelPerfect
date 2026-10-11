@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, CircleSlash, ListTodo, Plus, UserRound, UserX } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, CircleSlash, ListTodo, Plus, Search as SearchIcon, UserRound, UserX, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { useInvalidateAll } from "@/lib/queries";
@@ -17,8 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type Search = { view?: string; q?: string; owner?: string; branch?: string; type?: string; status?: string; priority?: string; from?: string; to?: string; source?: string; task?: string; filter?: string };
-const KEYS = ["view", "q", "owner", "branch", "type", "status", "priority", "from", "to", "source", "task", "filter"] as const;
+type Search = { view?: string; q?: string; owner?: string; branch?: string; type?: string; status?: string; priority?: string; from?: string; to?: string; source?: string; task?: string; filter?: string; range?: string };
+const KEYS = ["view", "q", "owner", "branch", "type", "status", "priority", "from", "to", "source", "task", "filter", "range"] as const;
 
 export const Route = createFileRoute("/_authenticated/_shell/tasks")({
   validateSearch: (s: Record<string, unknown>): Search => Object.fromEntries(KEYS.map((k) => [k, typeof s[k] === "string" ? s[k] : undefined])) as Search,
@@ -34,6 +34,17 @@ export const Route = createFileRoute("/_authenticated/_shell/tasks")({
   }),
   component: TasksPage,
 });
+
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function rangeDates(r: string): { from?: string; to?: string } {
+  const t = new Date(); const add = (n: number) => { const d = new Date(t); d.setDate(d.getDate() + n); return iso(d); };
+  if (r === "today") return { from: iso(t), to: iso(t) };
+  if (r === "tomorrow") return { from: add(1), to: add(1) };
+  if (r === "week") return { from: iso(t), to: add(6) };
+  if (r === "past7") return { from: add(-6), to: iso(t) };
+  if (r === "month") return { from: iso(new Date(t.getFullYear(), t.getMonth(), 1)), to: iso(new Date(t.getFullYear(), t.getMonth() + 1, 0)) };
+  return {};
+}
 
 const LEGACY: Record<string, string> = { mine: "mine", today: "attention", overdue: "overdue", open: "all", done: "done" };
 
@@ -164,19 +175,42 @@ function TasksPage() {
         ))}
       </div>
       {search.task && <div className="mb-3 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">מוצגת משימה אחת <Button size="sm" variant="ghost" onClick={() => set({})}>הצג את כל המשימות</Button></div>}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Input className="w-56" placeholder="חיפוש חופשי" defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש חופשי" />
-        {role !== "EMPLOYEE" && sel(search.owner, (v) => set({ owner: v }), "כל העובדים", members.map((m) => [m.id, m.display_name ?? "—"]))}
-        {!branchId && branches.length > 1 && sel(search.branch, (v) => set({ branch: v }), "כל הסניפים", branches.map((b) => [b.id, b.name]))}
+      <div className="panel mb-3 flex flex-wrap items-center gap-2 p-2">
+        <div className="relative w-64">
+          <SearchIcon className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input className="ps-8" placeholder={leadView ? "חיפוש לפי שם או טלפון" : "חיפוש לפי משימה, לקוח או ליד"} defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש" />
+        </div>
+        {role !== "EMPLOYEE" && sel(search.owner, (v) => set({ owner: v }), "אחראי: כולם", members.map((m) => [m.id, m.display_name ?? "—"]))}
+        {!branchId && branches.length > 1 && sel(search.branch, (v) => set({ branch: v }), "סניף: כולם", branches.map((b) => [b.id, b.name]))}
         {!leadView && <>
-          {sel(search.type, (v) => set({ type: v }), "כל הסוגים", (types.data ?? []).map((t) => [t.key, t.label]), "w-44")}
-          {sel(search.status, (v) => set({ status: v }), "כל הסטטוסים", [...Object.entries(TASK_STATUS), ["OVERDUE", "באיחור"]])}
-          {sel(search.priority, (v) => set({ priority: v }), "כל העדיפויות", Object.entries(TASK_PRIORITY))}
-          {sel(search.source, (v) => set({ source: v }), "ידניות ואוטומטיות", [["auto", "אוטומטיות"], ["manual", "ידניות"]])}
+          {sel(search.type, (v) => set({ type: v }), "סוג: הכל", (types.data ?? []).map((t) => [t.key, t.label]), "w-44")}
+          {sel(search.status, (v) => set({ status: v }), "סטטוס: הכל", [...Object.entries(TASK_STATUS), ["OVERDUE", "באיחור"]])}
+          {sel(search.priority, (v) => set({ priority: v }), "עדיפות: הכל", Object.entries(TASK_PRIORITY))}
+          {sel(search.source, (v) => set({ source: v }), "מקור: הכל", [["auto", "אוטומטיות"], ["manual", "ידניות"]])}
         </>}
-        <span className="text-xs text-muted-foreground">{leadView ? "כניסת ליד" : "מועד יעד"}</span>
-        <Input type="date" className="num w-36" value={search.from ?? ""} onChange={(e) => set({ from: e.target.value || undefined })} aria-label="מתאריך" />
-        <Input type="date" className="num w-36" value={search.to ?? ""} onChange={(e) => set({ to: e.target.value || undefined })} aria-label="עד תאריך" />
+        <Select value={search.range ?? (search.from || search.to ? "custom" : "any")} onValueChange={(v) => set(v === "any" ? { range: undefined, from: undefined, to: undefined } : v === "custom" ? { range: "custom" } : { range: v, ...rangeDates(v) })}>
+          <SelectTrigger className="w-44" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
+            <span className="flex items-center gap-1.5"><CalendarDays className="size-4 text-muted-foreground" /><SelectValue /></span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="any">{leadView ? "כניסה: כל התאריכים" : "יעד: כל התאריכים"}</SelectItem>
+            <SelectItem value="today">היום</SelectItem>
+            <SelectItem value="tomorrow">מחר</SelectItem>
+            <SelectItem value="week">7 הימים הקרובים</SelectItem>
+            <SelectItem value="past7">7 הימים האחרונים</SelectItem>
+            <SelectItem value="month">החודש</SelectItem>
+            <SelectItem value="custom">טווח תאריכים…</SelectItem>
+          </SelectContent>
+        </Select>
+        {(search.range ?? (search.from || search.to ? "custom" : "")) === "custom" && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span>מ־</span><Input type="date" dir="ltr" className="num w-36 text-end" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
+            <span>עד</span><Input type="date" dir="ltr" className="num w-36 text-end" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
+          </div>
+        )}
+        {(search.q || search.owner || search.branch || search.type || search.status || search.priority || search.source || search.from || search.to || search.range) && (
+          <Button size="sm" variant="ghost" className="ms-auto" onClick={() => navigate({ search: { view }, replace: true })}><X className="size-4" /> נקה סינון</Button>
+        )}
       </div>
       <div className="panel overflow-x-auto">
         {q.isLoading ? <TableSkeleton cols={8} /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : leadView ? (
