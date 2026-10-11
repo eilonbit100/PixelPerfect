@@ -103,7 +103,9 @@ export const aiReportSearch = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ orgId: z.string().uuid(), q: z.string().trim().min(2).max(300) }).parse(d))
   .handler(async ({ data, context }) => {
     const perm = await context.supabase.rpc("my_report_permissions", { _org: data.orgId });
-    const allowed = REPORTS.filter((r) => (perm.data as Record<string, { view: boolean }> | null)?.[r.key]?.view && !r.unavailable);
+    const permsMap = perm.data as Record<string, { view: boolean }> | null;
+    if (!permsMap?.["_builder"]?.view) return { ok: false as const, error: "החיפוש החכם זמין למנהלים בלבד" };
+    const allowed = REPORTS.filter((r) => permsMap?.[r.key]?.view && !r.unavailable);
     if (!allowed.length) return { ok: false as const, error: "אין דוחות זמינים עבורך" };
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { ok: false as const, error: "החיפוש החכם אינו זמין כרגע" };
