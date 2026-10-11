@@ -29,6 +29,7 @@ import { Route as AuthenticatedShellLeadsIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedShellReportsIndexRouteImport } from './routes/_authenticated/_shell/reports.index'
 import { Route as AuthenticatedShellReportsKeyRouteImport } from './routes/_authenticated/_shell/reports.$key'
 import { Route as AuthenticatedShellReportsBuilderRouteImport } from './routes/_authenticated/_shell/reports.builder'
+import { Route as AuthenticatedShellReportsCardsRouteImport } from './routes/_authenticated/_shell/reports.cards'
 import { Route as AuthenticatedShellReportsHealthRouteImport } from './routes/_authenticated/_shell/reports.health'
 import { Route as AuthenticatedShellSettingsIndexRouteImport } from './routes/_authenticated/_shell/settings.index'
 import { Route as AuthenticatedShellSettingsBranchesRouteImport } from './routes/_authenticated/_shell/settings.branches'
@@ -155,6 +156,12 @@ const AuthenticatedShellReportsBuilderRoute =
     path: '/builder',
     getParentRoute: () => AuthenticatedShellReportsRoute,
   } as any)
+const AuthenticatedShellReportsCardsRoute =
+  AuthenticatedShellReportsCardsRouteImport.update({
+    id: '/cards',
+    path: '/cards',
+    getParentRoute: () => AuthenticatedShellReportsRoute,
+  } as any)
 const AuthenticatedShellReportsHealthRoute =
   AuthenticatedShellReportsHealthRouteImport.update({
     id: '/health',
@@ -243,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/reports/$key': typeof AuthenticatedShellReportsKeyRoute
   '/reports/builder': typeof AuthenticatedShellReportsBuilderRoute
+  '/reports/cards': typeof AuthenticatedShellReportsCardsRoute
   '/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/settings/cancellation': typeof AuthenticatedShellSettingsCancellationRoute
@@ -273,6 +281,7 @@ export interface FileRoutesByTo {
   '/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/reports/$key': typeof AuthenticatedShellReportsKeyRoute
   '/reports/builder': typeof AuthenticatedShellReportsBuilderRoute
+  '/reports/cards': typeof AuthenticatedShellReportsCardsRoute
   '/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/settings/cancellation': typeof AuthenticatedShellSettingsCancellationRoute
@@ -308,6 +317,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/leads/$id': typeof AuthenticatedShellLeadsIdRoute
   '/_authenticated/_shell/reports/$key': typeof AuthenticatedShellReportsKeyRoute
   '/_authenticated/_shell/reports/builder': typeof AuthenticatedShellReportsBuilderRoute
+  '/_authenticated/_shell/reports/cards': typeof AuthenticatedShellReportsCardsRoute
   '/_authenticated/_shell/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/_authenticated/_shell/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/_authenticated/_shell/settings/cancellation': typeof AuthenticatedShellSettingsCancellationRoute
@@ -342,6 +352,7 @@ export interface FileRouteTypes {
     | '/leads/$id'
     | '/reports/$key'
     | '/reports/builder'
+    | '/reports/cards'
     | '/reports/health'
     | '/settings/branches'
     | '/settings/cancellation'
@@ -372,6 +383,7 @@ export interface FileRouteTypes {
     | '/leads/$id'
     | '/reports/$key'
     | '/reports/builder'
+    | '/reports/cards'
     | '/reports/health'
     | '/settings/branches'
     | '/settings/cancellation'
@@ -406,6 +418,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/leads/$id'
     | '/_authenticated/_shell/reports/$key'
     | '/_authenticated/_shell/reports/builder'
+    | '/_authenticated/_shell/reports/cards'
     | '/_authenticated/_shell/reports/health'
     | '/_authenticated/_shell/settings/branches'
     | '/_authenticated/_shell/settings/cancellation'
@@ -572,6 +585,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellReportsBuilderRouteImport
       parentRoute: typeof AuthenticatedShellReportsRoute
     }
+    '/_authenticated/_shell/reports/cards': {
+      id: '/_authenticated/_shell/reports/cards'
+      path: '/cards'
+      fullPath: '/reports/cards'
+      preLoaderRoute: typeof AuthenticatedShellReportsCardsRouteImport
+      parentRoute: typeof AuthenticatedShellReportsRoute
+    }
     '/_authenticated/_shell/reports/health': {
       id: '/_authenticated/_shell/reports/health'
       path: '/health'
@@ -662,6 +682,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedShellReportsRouteChildren {
   AuthenticatedShellReportsKeyRoute: typeof AuthenticatedShellReportsKeyRoute
   AuthenticatedShellReportsBuilderRoute: typeof AuthenticatedShellReportsBuilderRoute
+  AuthenticatedShellReportsCardsRoute: typeof AuthenticatedShellReportsCardsRoute
   AuthenticatedShellReportsHealthRoute: typeof AuthenticatedShellReportsHealthRoute
   AuthenticatedShellReportsIndexRoute: typeof AuthenticatedShellReportsIndexRoute
 }
@@ -671,6 +692,7 @@ const AuthenticatedShellReportsRouteChildren: AuthenticatedShellReportsRouteChil
     AuthenticatedShellReportsKeyRoute: AuthenticatedShellReportsKeyRoute,
     AuthenticatedShellReportsBuilderRoute:
       AuthenticatedShellReportsBuilderRoute,
+    AuthenticatedShellReportsCardsRoute: AuthenticatedShellReportsCardsRoute,
     AuthenticatedShellReportsHealthRoute: AuthenticatedShellReportsHealthRoute,
     AuthenticatedShellReportsIndexRoute: AuthenticatedShellReportsIndexRoute,
   }
