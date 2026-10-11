@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { OrgProvider } from "@/lib/org";
 import { AppShell } from "@/components/app/AppShell";
+import { TaskReminders } from "@/components/app/TaskReminders";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/_shell")({
@@ -31,6 +32,7 @@ function ShellLayout() {
     >
       <AppShell>
         <Outlet />
+        <TaskReminders />
       </AppShell>
     </OrgProvider>
   );

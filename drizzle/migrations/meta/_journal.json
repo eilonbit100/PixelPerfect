@@ -78,6 +78,13 @@
       "when": 1791713792803,
       "tag": "0010_inventory_product_return_window",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791714506470,
+      "tag": "0011_tasks_upgrade",
+      "breakpoints": true
     }
   ]
 }

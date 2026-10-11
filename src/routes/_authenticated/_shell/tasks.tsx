@@ -2,144 +2,231 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, Plus } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleSlash, ListTodo, Plus, UserRound, UserX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { useInvalidateAll } from "@/lib/queries";
 import { friendlyError } from "@/lib/errors";
-import { TASK_PRIORITY, TASK_STATUS, fmtRelative } from "@/lib/format";
+import { LEAD_STATUS, LOSS_REASON, TASK_PRIORITY, TASK_STATUS, fmtRelative } from "@/lib/format";
+import { OPEN_STATUSES, isOpen, isOverdue, leadsWithoutTask, sortQueue } from "@/lib/tasks";
 import { SourceBadge, StatusBadge } from "@/components/app/badges";
-import { EmptyState, ErrorState, FilterChips, PageHeader, TableSkeleton } from "@/components/app/states";
-import { TaskDialog } from "@/components/app/TaskDialog";
+import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/app/states";
+import { TaskDialog, useTaskTypes } from "@/components/app/TaskDialog";
+import { TaskDetail } from "@/components/app/TaskDetail";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type Search = { filter?: string; source?: string; owner?: string; task?: string };
+type Search = { view?: string; q?: string; owner?: string; branch?: string; type?: string; status?: string; priority?: string; from?: string; to?: string; source?: string; task?: string; filter?: string };
+const KEYS = ["view", "q", "owner", "branch", "type", "status", "priority", "from", "to", "source", "task", "filter"] as const;
 
 export const Route = createFileRoute("/_authenticated/_shell/tasks")({
-  validateSearch: (s: Record<string, unknown>): Search => ({
-    filter: typeof s.filter === "string" ? s.filter : undefined,
-    source: typeof s.source === "string" ? s.source : undefined,
-    owner: typeof s.owner === "string" ? s.owner : undefined,
-    task: typeof s.task === "string" ? s.task : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): Search => Object.fromEntries(KEYS.map((k) => [k, typeof s[k] === "string" ? s[k] : undefined])) as Search,
   head: () => ({
     meta: [
       { title: "משימות — Pulse" },
-      { name: "description", content: "כל המשימות הידניות והאוטומטיות במקום אחד." },
+      { name: "description", content: "מרכז העבודה היומי: משימות, לידים ללא טיפול ומשימות באיחור." },
       { property: "og:title", content: "משימות — Pulse" },
-      { property: "og:description", content: "כל המשימות הידניות והאוטומטיות במקום אחד." },
+      { property: "og:description", content: "מרכז העבודה היומי: משימות, לידים ללא טיפול ומשימות באיחור." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: TasksPage,
 });
 
-const ENTITY: Record<string, string> = { lead: "ליד", customer: "לקוח", payment: "תשלום", inventory: "מלאי" };
+const LEGACY: Record<string, string> = { mine: "mine", today: "attention", overdue: "overdue", open: "all", done: "done" };
 
 function TasksPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/tasks" });
-  const { org, branchId, me, memberName, branchName, members } = useOrg();
+  const { org, branchId, me, role, memberName, branchName, members, branches } = useOrg();
   const invalidate = useInvalidateAll();
-  const filter = search.filter ?? "open";
+  const types = useTaskTypes();
+  const view = search.view ?? (search.filter ? LEGACY[search.filter] : undefined) ?? (role === "EMPLOYEE" ? "mine" : "attention");
+  const typeLabel = (k: string | null) => types.data?.find((t) => t.key === k)?.label ?? "—";
 
   const q = useQuery({
     queryKey: ["tasks-all", org.id, branchId],
     queryFn: async () => {
-      let t = supabase.from("tasks").select("*").eq("organization_id", org.id).is("deleted_at", null).order("due_at").limit(1000);
+      let t = supabase.from("tasks").select("*").eq("organization_id", org.id).is("deleted_at", null).order("due_at").limit(2000);
       if (branchId) t = t.eq("branch_id", branchId);
-      const { data, error } = await t;
+      let l = supabase.from("leads").select("id,full_name,phone,status,stage,branch_id,created_at,loss_reason,loss_note,assigned_member_id").eq("organization_id", org.id).is("deleted_at", null).order("created_at", { ascending: false }).limit(2000);
+      if (branchId) l = l.eq("branch_id", branchId);
+      const [{ data, error }, leads] = await Promise.all([t, l]);
       if (error) throw error;
-      const leadIds = data.filter((x) => x.entity_type === "lead").map((x) => x.entity_id!);
+      if (leads.error) throw leads.error;
       const custIds = data.filter((x) => x.entity_type === "customer").map((x) => x.entity_id!);
-      const [l, c] = await Promise.all([
-        leadIds.length ? supabase.from("leads").select("id,full_name").in("id", leadIds) : Promise.resolve({ data: [] as { id: string; full_name: string }[] }),
-        custIds.length ? supabase.from("customers").select("id,full_name").in("id", custIds) : Promise.resolve({ data: [] as { id: string; full_name: string }[] }),
-      ]);
+      const c = custIds.length ? (await supabase.from("customers").select("id,full_name").in("id", custIds.slice(0, 500))).data ?? [] : [];
       const names = new Map<string, string>();
-      [...(l.data ?? []), ...(c.data ?? [])].forEach((x) => names.set(x.id, x.full_name));
-      const ids = (data ?? []).map((x) => x.id);
+      [...leads.data, ...c].forEach((x) => names.set(x.id, x.full_name));
+      const stage = new Map(leads.data.map((x) => [x.id, x.stage]));
+      const ids = data.map((x) => x.id);
       const tk = ids.length ? (await supabase.from("approval_requests").select("id,ticket_no,task_id").in("task_id", ids.slice(0, 300))).data ?? [] : [];
       const tickets = new Map<string, { id: string; no: number }[]>();
       tk.forEach((x) => { if (x.task_id) tickets.set(x.task_id, [...(tickets.get(x.task_id) ?? []), { id: x.id, no: x.ticket_no }]); });
-      return { tasks: data, names, tickets };
+      return { tasks: data, leads: leads.data, names, stage, tickets };
     },
   });
 
+  const inRange = (iso: string) => (!search.from || iso.slice(0, 10) >= search.from) && (!search.to || iso.slice(0, 10) <= search.to);
+  const data = q.data;
+  const counts = useMemo(() => {
+    const tasks = data?.tasks ?? [];
+    const openLead = new Set(tasks.filter((t) => isOpen(t) && t.entity_type === "lead").map((t) => t.entity_id!));
+    const endToday = new Date(); endToday.setHours(23, 59, 59, 999);
+    const attention = (t: (typeof tasks)[number]) => isOpen(t) && (new Date(t.due_at) <= endToday || t.priority === "URGENT");
+    return {
+      openLead,
+      attention,
+      mine: tasks.filter((t) => isOpen(t) && t.assigned_member_id === me.id).length,
+      attentionN: tasks.filter(attention).length,
+      overdue: tasks.filter((t) => isOverdue(t)).length,
+      nolead: leadsWithoutTask(data?.leads ?? [], openLead).length,
+      done: tasks.filter((t) => t.status === "COMPLETED").length,
+      lost: (data?.leads ?? []).filter((l) => l.status === "LOST").length,
+    };
+  }, [data, me.id]);
+
+  const leadView = view === "nolead" || view === "lost";
+  const leadRows = useMemo(() => {
+    if (!data || !leadView) return [];
+    let list = view === "nolead" ? leadsWithoutTask(data.leads, counts.openLead) : data.leads.filter((l) => l.status === "LOST");
+    if (search.branch) list = list.filter((l) => l.branch_id === search.branch);
+    if (search.owner) list = list.filter((l) => l.assigned_member_id === search.owner);
+    if (search.q) { const s = search.q.trim(); list = list.filter((l) => l.full_name.includes(s) || (l.phone ?? "").includes(s)); }
+    return list.filter((l) => inRange(l.created_at));
+  }, [data, view, search, counts.openLead]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const rows = useMemo(() => {
-    let list = q.data?.tasks ?? [];
+    let list = data?.tasks ?? [];
     if (search.task) return list.filter((t) => t.id === search.task);
-    const now = new Date();
-    const endToday = new Date(); endToday.setHours(23, 59, 59);
-    const open = (s: string) => s === "OPEN" || s === "IN_PROGRESS";
-    switch (filter) {
-      case "mine": list = list.filter((t) => t.assigned_member_id === me.id && open(t.status)); break;
-      case "today": list = list.filter((t) => open(t.status) && new Date(t.due_at) <= endToday && new Date(t.due_at) >= new Date(now.toDateString())); break;
-      case "overdue": list = list.filter((t) => open(t.status) && new Date(t.due_at) < now); break;
-      case "open": list = list.filter((t) => open(t.status)); break;
+    if (leadView) return [];
+    switch (view) {
+      case "mine": list = sortQueue(list.filter((t) => isOpen(t) && t.assigned_member_id === me.id)); break;
+      case "attention": list = sortQueue(list.filter(counts.attention)); break;
+      case "overdue": list = list.filter((t) => isOverdue(t)); break;
       case "done": list = list.filter((t) => t.status === "COMPLETED").reverse(); break;
     }
     if (search.source === "auto") list = list.filter((t) => t.source !== "MANUAL");
     if (search.source === "manual") list = list.filter((t) => t.source === "MANUAL");
     if (search.owner) list = list.filter((t) => t.assigned_member_id === search.owner);
-    return list;
-  }, [q.data, filter, search, me.id]);
+    if (search.branch) list = list.filter((t) => t.branch_id === search.branch);
+    if (search.type) list = list.filter((t) => t.task_type === search.type);
+    if (search.status) list = list.filter((t) => (search.status === "OVERDUE" ? isOverdue(t) : t.status === search.status));
+    if (search.priority) list = list.filter((t) => t.priority === search.priority);
+    if (search.q) {
+      const s = search.q.trim();
+      list = list.filter((t) => t.title.includes(s) || (t.description ?? "").includes(s) || (t.entity_id && (data?.names.get(t.entity_id) ?? "").includes(s)));
+    }
+    return list.filter((t) => inRange(t.due_at));
+  }, [data, view, search, me.id, counts, leadView]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const set = (p: Partial<Search>) => navigate({ search: (s: Search) => ({ ...s, task: undefined, ...p }) });
+  const set = (p: Partial<Search>) => navigate({ search: (s: Search) => ({ ...s, task: undefined, filter: undefined, ...p }), replace: true });
   async function complete(id: string) {
     const { error } = await supabase.from("tasks").update({ status: "COMPLETED" }).eq("id", id);
     if (error) return toast.error(friendlyError(error));
     toast.success("המשימה הושלמה");
     invalidate();
   }
-  const overdueCount = (q.data?.tasks ?? []).filter((t) => (t.status === "OPEN" || t.status === "IN_PROGRESS") && new Date(t.due_at) < new Date()).length;
+
+  const cards = [
+    { v: "mine", label: "המשימות שלי", n: counts.mine, icon: UserRound },
+    { v: "attention", label: "דורשים טיפול", n: counts.attentionN, icon: ListTodo },
+    { v: "overdue", label: "משימות באיחור", n: counts.overdue, icon: AlertTriangle, tone: "critical" },
+    { v: "nolead", label: "ללא משימה", n: counts.nolead, icon: UserX, tone: "warning" },
+    { v: "done", label: "הושלמו", n: counts.done, icon: CheckCircle2 },
+    { v: "lost", label: "לא רלוונטיים", n: counts.lost, icon: CircleSlash },
+  ];
+  const sel = (val: string | undefined, onChange: (v: string | undefined) => void, label: string, items: [string, string][], w = "w-36") => (
+    <Select value={val ?? "any"} onValueChange={(v) => onChange(v === "any" ? undefined : v)}>
+      <SelectTrigger className={w} aria-label={label}><SelectValue /></SelectTrigger>
+      <SelectContent><SelectItem value="any">{label}</SelectItem>{items.map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+    </Select>
+  );
 
   return (
     <div>
-      <PageHeader title="משימות" actions={<TaskDialog trigger={<Button><Plus className="size-4" /> משימה חדשה</Button>} />} />
-      {search.task && <div className="mb-3 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">מוצגת המשימה המקושרת לקריאה <Button size="sm" variant="ghost" onClick={() => set({})}>הצג את כל המשימות</Button></div>}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <FilterChips value={filter} onChange={(v) => set({ filter: v })} options={[
-          { value: "mine", label: "שלי" }, { value: "today", label: "היום" }, { value: "overdue", label: "באיחור", count: overdueCount },
-          { value: "open", label: "פתוחות" }, { value: "done", label: "הושלמו" },
-        ]} />
-        <div className="flex gap-2">
-          <Select value={search.source ?? "any"} onValueChange={(v) => set({ source: v === "any" ? undefined : v })}>
-            <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="any">ידניות ואוטומטיות</SelectItem><SelectItem value="auto">אוטומטיות</SelectItem><SelectItem value="manual">ידניות</SelectItem></SelectContent>
-          </Select>
-          <Select value={search.owner ?? "any"} onValueChange={(v) => set({ owner: v === "any" ? undefined : v })}>
-            <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="any">כל העובדים</SelectItem>{members.map((m) => <SelectItem key={m.id} value={m.id}>{m.display_name}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
+      <PageHeader title="משימות" subtitle="מרכז העבודה היומי" actions={<TaskDialog trigger={<Button><Plus className="size-4" /> משימה חדשה</Button>} />} />
+      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        {cards.map((c) => (
+          <button key={c.v} type="button" onClick={() => set({ view: c.v, status: undefined })} aria-pressed={view === c.v && !search.task}
+            className={`panel flex flex-col items-start gap-1 p-3 text-start transition-colors hover:bg-muted/50 ${view === c.v && !search.task ? "ring-2 ring-primary" : ""}`}>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><c.icon className={`size-4 ${c.tone === "critical" ? "text-critical" : c.tone === "warning" ? "text-warning" : ""}`} />{c.label}</span>
+            <span className="num text-2xl font-semibold">{q.isLoading ? "…" : c.n}</span>
+          </button>
+        ))}
+      </div>
+      {search.task && <div className="mb-3 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">מוצגת משימה אחת <Button size="sm" variant="ghost" onClick={() => set({})}>הצג את כל המשימות</Button></div>}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <Input className="w-56" placeholder="חיפוש חופשי" defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש חופשי" />
+        {sel(search.owner, (v) => set({ owner: v }), "כל העובדים", members.map((m) => [m.id, m.display_name ?? "—"]))}
+        {!branchId && branches.length > 1 && sel(search.branch, (v) => set({ branch: v }), "כל הסניפים", branches.map((b) => [b.id, b.name]))}
+        {!leadView && <>
+          {sel(search.type, (v) => set({ type: v }), "כל הסוגים", (types.data ?? []).map((t) => [t.key, t.label]), "w-44")}
+          {sel(search.status, (v) => set({ status: v }), "כל הסטטוסים", [...Object.entries(TASK_STATUS), ["OVERDUE", "באיחור"]])}
+          {sel(search.priority, (v) => set({ priority: v }), "כל העדיפויות", Object.entries(TASK_PRIORITY))}
+          {sel(search.source, (v) => set({ source: v }), "ידניות ואוטומטיות", [["auto", "אוטומטיות"], ["manual", "ידניות"]])}
+        </>}
+        <span className="text-xs text-muted-foreground">{leadView ? "כניסת ליד" : "מועד יעד"}</span>
+        <Input type="date" className="num w-36" value={search.from ?? ""} onChange={(e) => set({ from: e.target.value || undefined })} aria-label="מתאריך" />
+        <Input type="date" className="num w-36" value={search.to ?? ""} onChange={(e) => set({ to: e.target.value || undefined })} aria-label="עד תאריך" />
       </div>
       <div className="panel overflow-x-auto">
-        {q.isLoading ? <TableSkeleton cols={7} /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : !rows.length ? (
+        {q.isLoading ? <TableSkeleton cols={8} /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : leadView ? (
+          !leadRows.length ? <EmptyState title={view === "nolead" ? "לכל הלידים יש משימת מעקב" : "אין לידים לא רלוונטיים"} text="שנו את הסינון כדי לראות רשומות נוספות." /> : (
+            <table className="data-table">
+              <thead><tr><th>שם</th><th>שלב</th><th>סטטוס</th><th>טלפון</th><th>אחראי</th><th>נכנס</th><th>סניף</th>{view === "lost" ? <th>סיבת סגירה</th> : <th />}</tr></thead>
+              <tbody>
+                {leadRows.map((l) => (
+                  <tr key={l.id}>
+                    <td className="font-medium"><Link className="text-primary hover:underline" to="/leads/$id" params={{ id: l.id }}>{l.full_name}</Link></td>
+                    <td>{l.stage === "PROSPECT" ? "מתעניין" : "ליד"}</td>
+                    <td>{LEAD_STATUS[l.status] ?? l.status}</td>
+                    <td className="num">{l.phone ?? "—"}</td>
+                    <td>{memberName(l.assigned_member_id)}</td>
+                    <td className="num text-muted-foreground">{fmtRelative(l.created_at)}</td>
+                    <td className="text-muted-foreground">{branchName(l.branch_id)}</td>
+                    {view === "lost" ? <td>{LOSS_REASON[l.loss_reason ?? ""] ?? l.loss_reason ?? "—"}{l.loss_note && <span className="block text-xs text-muted-foreground">{l.loss_note}</span>}</td> : (
+                      <td className="text-end">
+                        <TaskDialog entityType="lead" entityId={l.id} branchId={l.branch_id} defaultTitle={`מעקב — ${l.full_name}`} defaultAssignee={l.assigned_member_id ?? me.id}
+                          trigger={<Button size="sm" variant="outline"><Plus className="size-4" /> משימת מעקב</Button>} />
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        ) : !rows.length ? (
           <EmptyState title="אין משימות להצגה" text="משימות חדשות — ידניות או כאלה שהמערכת יוצרת — יופיעו כאן." />
         ) : (
           <table className="data-table">
-            <thead><tr><th>משימה</th><th>קשור ל</th><th>אחראי</th><th>מועד</th><th>עדיפות</th><th>סטטוס</th><th>מקור</th><th>סניף</th><th /></tr></thead>
+            <thead><tr><th>משימה</th><th>סוג</th><th>קשור ל</th><th>אחראי</th><th>יעד</th><th>עדיפות</th><th>סטטוס</th><th>נוצרה</th><th>מקור</th><th /></tr></thead>
             <tbody>
               {rows.map((t) => {
-                const open = t.status === "OPEN" || t.status === "IN_PROGRESS";
-                const overdue = open && new Date(t.due_at) < new Date();
-                const name = t.entity_id ? q.data!.names.get(t.entity_id) : undefined;
+                const overdue = isOverdue(t);
+                const name = t.entity_id ? data!.names.get(t.entity_id) : undefined;
                 return (
-                  <tr key={t.id}>
-                    <td className="font-medium">{t.title}{(q.data!.tickets.get(t.id) ?? []).map((k) => <Link key={k.id} to="/tickets/$id" params={{ id: k.id }} className="num ms-2 text-xs font-normal text-primary hover:underline">קריאה #{k.no}</Link>)}</td>
-                    <td>
-                      {t.entity_type === "lead" && t.entity_id ? <Link className="text-primary hover:underline" to="/leads/$id" params={{ id: t.entity_id }}>{ENTITY.lead} · {name}</Link>
-                        : t.entity_type === "customer" && t.entity_id ? <Link className="text-primary hover:underline" to="/customers/$id" params={{ id: t.entity_id }}>{ENTITY.customer} · {name}</Link>
+                  <tr key={t.id} className="cursor-pointer" onClick={() => navigate({ search: (s: Search) => ({ ...s, task: t.id }), replace: true })}>
+                    <td className="max-w-64">
+                      <span className="font-medium">{t.title}</span>
+                      {(data!.tickets.get(t.id) ?? []).map((k) => <Link key={k.id} onClick={(e) => e.stopPropagation()} to="/tickets/$id" params={{ id: k.id }} className="num ms-2 text-xs text-primary hover:underline">קריאה #{k.no}</Link>)}
+                      {t.description && <span className="block truncate text-xs text-muted-foreground">{t.description}</span>}
+                    </td>
+                    <td className="text-muted-foreground">{typeLabel(t.task_type)}</td>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      {t.entity_type === "lead" && t.entity_id ? <Link className="text-primary hover:underline" to="/leads/$id" params={{ id: t.entity_id }}>{data!.stage.get(t.entity_id) === "PROSPECT" ? "מתעניין" : "ליד"} · {name}</Link>
+                        : t.entity_type === "customer" && t.entity_id ? <Link className="text-primary hover:underline" to="/customers/$id" params={{ id: t.entity_id }}>לקוח · {name}</Link>
                         : <span className="text-muted-foreground">כללי</span>}
                     </td>
                     <td>{memberName(t.assigned_member_id)}</td>
-                    <td className={overdue ? "font-medium text-critical" : "text-muted-foreground"}>{fmtRelative(t.due_at, true)}</td>
+                    <td className={overdue ? "num font-medium text-critical" : "num text-muted-foreground"}>{fmtRelative(t.due_at, true)}</td>
                     <td><StatusBadge tone={t.priority === "URGENT" || t.priority === "HIGH" ? "warning" : "neutral"}>{TASK_PRIORITY[t.priority]}</StatusBadge></td>
                     <td>{overdue ? <StatusBadge tone="critical">באיחור</StatusBadge> : <StatusBadge tone={t.status === "COMPLETED" ? "ok" : "neutral"}>{TASK_STATUS[t.status]}</StatusBadge>}</td>
+                    <td className="num text-muted-foreground">{fmtRelative(t.created_at)}</td>
                     <td><SourceBadge source={t.source} /></td>
-                    <td className="text-muted-foreground">{branchName(t.branch_id)}</td>
-                    <td className="text-end">{open && <Button size="sm" variant="ghost" onClick={() => complete(t.id)}><CheckCircle2 className="size-4" /> בוצע</Button>}</td>
+                    <td className="text-end" onClick={(e) => e.stopPropagation()}>{OPEN_STATUSES.includes(t.status) && <Button size="sm" variant="ghost" onClick={() => complete(t.id)}><CheckCircle2 className="size-4" /> בוצע</Button>}</td>
                   </tr>
                 );
               })}
@@ -147,6 +234,7 @@ function TasksPage() {
           </table>
         )}
       </div>
+      <TaskDetail taskId={search.task ?? null} onClose={() => navigate({ search: (s: Search) => ({ ...s, task: undefined }), replace: true })} />
     </div>
   );
 }
