@@ -53,32 +53,65 @@ function NewCustomer() {
   const invalidate = useInvalidateAll();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ full_name: "", phone: "", email: "", national_id: "", branch: branchId ?? branches[0]?.id ?? "" });
+  const [busy, setBusy] = useState(false);
+  const empty = { full_name: "", phone: "", email: "", national_id: "", birth_date: "", address: "", payment_method: "", payment_details: "", branch: branchId ?? branches[0]?.id ?? "" };
+  const [f, setF] = useState(empty);
+  const [files, setFiles] = useState<{ HEALTH_DECLARATION: File | null; SIGNED_TERMS: File | null }>({ HEALTH_DECLARATION: null, SIGNED_TERMS: null });
+  const missing = [!f.phone && "טלפון", !f.national_id && "ת״ז", !f.birth_date && "תאריך לידה", !f.payment_method && "אמצעי תשלום", !files.HEALTH_DECLARATION && "הצהרת בריאות", !files.SIGNED_TERMS && "תקנון חתום"].filter(Boolean) as string[];
   async function save() {
+    if (busy) return;
     if (!f.full_name.trim()) return toast.error("יש להזין שם");
     if (f.phone && !isValidIsraeliPhone(f.phone)) return toast.error("מספר הטלפון אינו תקין");
-    const { data, error } = await supabase.from("customers").insert({
-      organization_id: org.id, home_branch_id: f.branch, full_name: f.full_name.trim(), phone: f.phone || null,
-      email: f.email || null, national_id: f.national_id || null, status: "PENDING",
-    }).select("id").single();
-    if (error) return toast.error(friendlyError(error));
-    setOpen(false);
-    invalidate();
-    navigate({ to: "/customers/$id", params: { id: data.id } });
+    if (f.national_id && !/^\d{5,9}$/.test(f.national_id.trim())) return toast.error("מספר תעודת הזהות אינו תקין");
+    if (f.birth_date && new Date(f.birth_date) > new Date()) return toast.error("תאריך הלידה אינו תקין");
+    if (f.email && !/^\S+@\S+\.\S+$/.test(f.email.trim())) return toast.error("כתובת האימייל אינה תקינה");
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.from("customers").insert({
+        organization_id: org.id, home_branch_id: f.branch, full_name: f.full_name.trim(), phone: f.phone || null,
+        email: f.email.trim() || null, national_id: f.national_id.trim() || null, birth_date: f.birth_date || null,
+        address: f.address.trim() || null, payment_method: f.payment_method || null,
+        payment_method_details: f.payment_details.trim() || null, status: "PENDING",
+      }).select("id").single();
+      if (error) return toast.error(friendlyError(error));
+      if (f.payment_method) {
+        const { data: req } = await supabase.from("compliance_requirements").select("id").eq("key", "PAYMENT_METHOD");
+        if (req?.length) await supabase.from("customer_compliance_items").update({ status: "VALID", completed_at: new Date().toISOString() }).eq("customer_id", data.id).in("requirement_id", req.map((r) => r.id));
+      }
+      for (const [type, file] of Object.entries(files)) {
+        if (!file) continue;
+        const path = `${org.id}/${data.id}/${Date.now()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
+        const up = await supabase.storage.from("customer-documents").upload(path, file);
+        if (up.error) { toast.error("העלאת מסמך נכשלה — ניתן להעלות מכרטיס הלקוח"); continue; }
+        await supabase.from("customer_documents").insert({ organization_id: org.id, customer_id: data.id, document_type: type, storage_path: path, file_name: file.name });
+      }
+      toast.success(missing.length ? `הכרטיס נפתח. חסר: ${missing.join(", ")}` : "הכרטיס נפתח ומלא");
+      setOpen(false); setF(empty); setFiles({ HEALTH_DECLARATION: null, SIGNED_TERMS: null });
+      invalidate();
+      navigate({ to: "/customers/$id", params: { id: data.id } });
+    } finally { setBusy(false); }
   }
+  const fld = (k: keyof typeof f, label: string, props: Record<string, unknown> = {}) => (
+    <div className="space-y-1.5"><Label>{label}</Label><Input value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} {...props} /></div>
+  );
+  const fileField = (k: keyof typeof files, label: string) => (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Input type="file" accept="application/pdf,image/*" onChange={(e) => setFiles({ ...files, [k]: e.target.files?.[0] ?? null })} />
+    </div>
+  );
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button><Plus className="size-4" /> לקוח חדש</Button></DialogTrigger>
-      <DialogContent dir="rtl" className="sm:max-w-md">
+      <DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader><DialogTitle>פתיחת כרטיס לקוח</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1.5"><Label>שם מלא</Label><Input value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} autoFocus /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>טלפון</Label><Input dir="ltr" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>ת״ז</Label><Input dir="ltr" value={f.national_id} onChange={(e) => setF({ ...f, national_id: e.target.value })} /></div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>אימייל</Label><Input dir="ltr" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
+        <div className="space-y-4">
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold text-muted-foreground">פרטים אישיים</h3>
+            {fld("full_name", "שם מלא *", { autoFocus: true })}
+            <div className="grid grid-cols-2 gap-3">{fld("phone", "טלפון", { dir: "ltr" })}{fld("national_id", "ת״ז", { dir: "ltr", inputMode: "numeric" })}</div>
+            <div className="grid grid-cols-2 gap-3">{fld("birth_date", "תאריך לידה", { type: "date" })}{fld("email", "אימייל", { dir: "ltr" })}</div>
+            {fld("address", "כתובת")}
             <div className="space-y-1.5">
               <Label>סניף</Label>
               <Select value={f.branch} onValueChange={(v) => setF({ ...f, branch: v })}>
@@ -86,9 +119,30 @@ function NewCustomer() {
                 <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+          </section>
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold text-muted-foreground">אמצעי תשלום</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>אמצעי</Label>
+                <Select value={f.payment_method} onValueChange={(v) => setF({ ...f, payment_method: v })}>
+                  <SelectTrigger><SelectValue placeholder="בחירה" /></SelectTrigger>
+                  <SelectContent>{Object.entries(PAYMENT_METHOD).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              {fld("payment_details", "פרטים (4 ספרות אחרונות / הערה)")}
+            </div>
+          </section>
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold text-muted-foreground">מסמכים חתומים</h3>
+            <div className="grid grid-cols-2 gap-3">{fileField("HEALTH_DECLARATION", "הצהרת בריאות")}{fileField("SIGNED_TERMS", "תקנון חתום")}</div>
+            <p className="text-xs text-muted-foreground">הצהרת בריאות שהועלתה ממתינה לאישור מנהל.</p>
+          </section>
+          <div className={`rounded-md border p-2.5 text-sm ${missing.length ? "border-warning/40 bg-warning/10" : "border-success/40 bg-success/10"}`}>
+            {missing.length ? <>הכרטיס ייפתח עם חוסרים: {missing.join(", ")}</> : <>כל הפרטים הדרושים הוזנו — הכרטיס ייפתח תקין</>}
           </div>
         </div>
-        <DialogFooter className="gap-2"><Button onClick={save}>פתח כרטיס</Button><Button variant="ghost" onClick={() => setOpen(false)}>ביטול</Button></DialogFooter>
+        <DialogFooter className="gap-2"><Button onClick={save} disabled={busy}>{busy ? "שומר…" : "פתח כרטיס"}</Button><Button variant="ghost" onClick={() => setOpen(false)}>ביטול</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
