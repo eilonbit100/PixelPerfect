@@ -195,7 +195,9 @@ function TasksPage() {
         {!leadView && <>{sel(search.priority, (v) => set({ priority: v }), "עדיפות", Object.entries(TASK_PRIORITY))}{sel(search.source, (v) => set({ source: v }), "מקור", [["auto", "אוטומטיות"], ["manual", "ידניות"]])}</>}
 
 
+        <div className="ms-auto flex flex-wrap items-center gap-1">
         <Select value={search.range ?? (search.from || search.to ? "custom" : "any")} onValueChange={(v) => set(v === "any" ? { range: undefined, from: undefined, to: undefined } : v === "custom" ? { range: "custom" } : { range: v, ...rangeDates(v) })}>
+
           <SelectTrigger className="h-7 w-auto max-w-44 min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
             <span className="flex min-w-0 items-center gap-1 truncate text-muted-foreground" style={{ display: "flex" }}>
               <CalendarDays className="size-3.5 shrink-0" />
@@ -224,6 +226,8 @@ function TasksPage() {
           <Button size="sm" variant="ghost" className="h-7 shrink-0 px-2 text-[11px]" onClick={() => navigate({ search: { view }, replace: true })}><X className="size-3.5" /> נקה</Button>
         )}
         </div>
+        </div>
+
       </div>
 
 
