@@ -259,4 +259,31 @@
     white-space: normal;
     min-width: 9rem;
   }
+  .tickets-table {
+    table-layout: fixed;
+    width: 100%;
+  }
+  .tickets-table td {
+    padding-block: 0.35rem;
+    padding-inline: 0.55rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tickets-table th,
+  .tickets-table td:not(.col-title) {
+    width: 1%;
+  }
+  .tickets-table .col-title {
+    min-width: 9rem;
+  }
+  .tickets-table .col-md {
+    display: none;
+  }
+  @media (min-width: 1500px) {
+    .tickets-table .col-md {
+      display: table-cell;
+    }
+  }
 }
+
