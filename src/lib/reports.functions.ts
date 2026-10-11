@@ -33,7 +33,7 @@ export const exportReport = createServerFn({ method: "POST" })
       const p = (perm.data as Record<string, { export: boolean }> | null)?.[data.key];
       if (!p?.export) throw new Error("אין הרשאת ייצוא לדוח זה");
       cols = def.cols; name = data.title || def.name; key = def.key;
-      res = await sb.rpc("run_report", { _org: data.orgId, _key: data.key, _from: data.from, _to: data.to, _branches: data.branches ?? [] });
+      res = await sb.rpc(reportRpc(data.key), { _org: data.orgId, _key: data.key, _from: data.from, _to: data.to, _branches: data.branches ?? [] });
     } else {
       const src = SOURCES.find((s) => s.key === data.source);
       if (!src || !data.columns?.length) throw new Error("הגדרות דוח חסרות");
