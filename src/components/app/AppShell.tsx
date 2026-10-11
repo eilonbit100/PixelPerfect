@@ -67,8 +67,8 @@ function Funnel({ path, stageParam, onNavigate }: { path: string; stageParam?: s
           <li key={f.key} className="relative">
             <Link to={f.to} search={f.to === "/leads" ? { stage: f.stage } : undefined} onClick={onNavigate}
               className={cn("flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-[inset_-2px_0_0_var(--sidebar-primary)]" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
-              <span className={cn("relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold text-sidebar", f.dot, active && "ring-2 ring-offset-2 ring-offset-sidebar", active && f.ring)}>{i + 1}</span>
+                active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
+              <span className={cn("relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold text-sidebar", f.dot, !active && "opacity-55")}>{i + 1}</span>
               <span className="min-w-0 flex-1 leading-tight">
                 <span className="block">{f.label}</span>
                 {f.hint && <span className="block text-[0.7rem] text-sidebar-foreground/55">{f.hint}</span>}
