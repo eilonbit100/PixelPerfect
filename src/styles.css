@@ -239,10 +239,16 @@
       display: table-cell;
     }
   }
+  .tasks-table {
+    table-layout: fixed;
+    width: 100%;
+  }
   .tasks-table td {
     padding-block: 0.35rem;
     padding-inline: 0.6rem;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .tasks-table th,
   .tasks-table td:not(.col-title) {
