@@ -5,7 +5,7 @@ import { ENTRY_REASON } from "./entry";
 
 export type ColType = "text" | "date" | "datetime" | "money" | "number" | "percent";
 export type Col = { key: string; label: string; type?: ColType; map?: Record<string, string> };
-export type Category = "members" | "finance" | "sales" | "staff" | "cards" | "entry" | "classes";
+export type Category = "members" | "finance" | "sales" | "staff" | "cards" | "entry" | "classes" | "inventory";
 
 export const CATEGORIES: { value: Category; label: string }[] = [
   { value: "members", label: "מנויים ולקוחות" },
@@ -15,12 +15,14 @@ export const CATEGORIES: { value: Category; label: string }[] = [
   { value: "cards", label: "תקינות כרטיסים" },
   { value: "entry", label: "כניסות" },
   { value: "classes", label: "שיעורים וטיפולים" },
+  { value: "inventory", label: "מלאי (היסטוריה)" },
 ];
 
 const MS: Record<string, string> = { ACTIVE: "פעיל", FROZEN: "מוקפא", CANCELLED: "בוטל", EXPIRED: "פג", PENDING: "ממתין" };
 const LS: Record<string, string> = { NEW: "חדש", CONTACT_ATTEMPT: "ניסיון קשר", FOLLOW_UP: "במעקב", TRIAL: "אימון ניסיון", WON: "נמכר", LOST: "לא רלוונטי" };
 const ACT: Record<string, string> = { CALL: "שיחה", WHATSAPP: "וואטסאפ", MEETING: "פגישה", NOTE: "הערה", STATUS_CHANGE: "שינוי סטטוס", CREATED: "נוצר" };
 const SRC: Record<string, string> = { WEBSITE: "אתר", FACEBOOK: "פייסבוק", INSTAGRAM: "אינסטגרם", WALK_IN: "הגיע למועדון", REFERRAL: "המלצה", PHONE: "טלפון", OTHER: "אחר" };
+const TX: Record<string, string> = { RECEIPT: "קבלת סחורה", SALE: "מכירה", RETURN_TO_SUPPLIER: "החזרה לספק", MANUAL_ADJUSTMENT: "תיקון ידני", PHYSICAL_COUNT: "ספירת מלאי", TRANSFER_IN: "העברה נכנסת", TRANSFER_OUT: "העברה יוצאת", CUSTOMER_RETURN: "החזרה מלקוח", WRITE_OFF: "גריעה" };
 const PM: Record<string, string> = { CREDIT_CARD: "כרטיס אשראי", STANDING_ORDER: "הוראת קבע", CASH: "מזומן", BIT: "ביט", BANK_TRANSFER: "העברה בנקאית", CHECK: "צ׳ק" };
 
 export type ReportDef = {
@@ -29,6 +31,12 @@ export type ReportDef = {
 };
 
 export const REPORTS: ReportDef[] = [
+  { key: "inv_movements", name: "תנועות מלאי", category: "inventory", desc: "כל תנועות המלאי: מי, מתי, כמה, סיבה ואסמכתה", dateMeaning: "לפי מועד התנועה",
+    cols: [{ key: "at_time", label: "מועד", type: "datetime" }, { key: "product", label: "מוצר" }, { key: "tx_type", label: "סוג", map: TX }, { key: "delta", label: "שינוי", type: "number" }, { key: "stock_before", label: "לפני", type: "number" }, { key: "stock_after", label: "אחרי", type: "number" }, { key: "reason", label: "סיבה" }, { key: "reference", label: "אסמכתה" }, { key: "employee", label: "עובד" }, { key: "branch", label: "סניף" }] },
+  { key: "inv_counts", name: "ספירות ופערים", category: "inventory", desc: "ספירות מלאי שאושרו: כמות במערכת מול נספר, פער וסיבה", dateMeaning: "לפי מועד אישור הספירה",
+    cols: [{ key: "approved_on", label: "אושרה", type: "date" }, { key: "branch", label: "סניף" }, { key: "product", label: "מוצר" }, { key: "system_qty", label: "במערכת", type: "number" }, { key: "counted_qty", label: "נספר", type: "number" }, { key: "difference", label: "פער", type: "number" }, { key: "reason", label: "סיבה" }, { key: "approver", label: "אישר" }] },
+  { key: "inv_writeoffs", name: "גריעות והחזרות לספק", category: "inventory", financial: true, desc: "נזק, פחת, תפוגה והחזרות לספק — כמות ושווי לפי עלות", dateMeaning: "לפי מועד התנועה",
+    cols: [{ key: "at_time", label: "מועד", type: "datetime" }, { key: "product", label: "מוצר" }, { key: "tx_type", label: "סוג", map: TX }, { key: "quantity", label: "כמות", type: "number" }, { key: "cost_value", label: "שווי לפי עלות", type: "money" }, { key: "reason", label: "סיבה" }, { key: "reference", label: "אסמכתה" }, { key: "branch", label: "סניף" }] },
   { key: "branch_mgmt", name: "דוח ניהול סניף", category: "members", custom: true, financial: true, desc: "מכירות, ביטולים, בקשות ביטול, תנועת מנויים, צמיחה וכספים — מול התקופה הקודמת", dateMeaning: "לפי סוג המדד", cols: [] },
   { key: "cancellations", number: "113", name: "ביטולים", category: "members", desc: "מנויים שבוטלו, סיבה ותאריך כניסה לתוקף", dateMeaning: "לפי מועד הביטול", link: "customer",
     cols: [{ key: "full_name", label: "לקוח" }, { key: "phone", label: "טלפון" }, { key: "plan", label: "סוג מנוי" }, { key: "requested", label: "בקשת ביטול", type: "date" }, { key: "effective", label: "בתוקף מ", type: "date" }, { key: "reason", label: "סיבה" }, { key: "branch", label: "סניף" }] },

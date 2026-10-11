@@ -3,3 +3,13 @@
 - [x] Open scoped undated cancellation details from the warning; include details in exports.
 - [x] Label inferred transfers as estimates and preserve exclusion from net change.
 - [x] Verify report, Excel, PDF and focused rule tests.
+# Inventory upgrade (correction reports)
+- [x] Stock screen: alert strip (low/out/expiry/count gap/return window) + tabs shelf/equipment/counts/movements/suppliers
+- [x] Movements: receipt from supplier, return to supplier by lot, write-off, customer return, branch transfer; reason, reference + document, double-click protection
+- [x] Counts: open, enter, gaps with reason, manager approval, history
+- [x] Suppliers: return days, lead time, expiry policy; catalog + prices under Settings (HQ)
+- [x] Lots: return deadline + return-window alert
+- [x] Reports: stock movements, counts & gaps, write-offs & supplier returns
+- [ ] Catalog import wizard — blocked: needs original CSV/Excel + answers on branch, cost meaning, negatives
+- [ ] Smart recommendations (forecast shortage/excess/return) — blocked: not enough sales history yet
+- [ ] POS stock hook — waits for the POS module
