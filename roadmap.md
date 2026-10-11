@@ -26,6 +26,8 @@
 - [x] Search on its own full-width row, filters on the row below, cells stretch to fill
 - [x] Custom range shows compact "מ־"/"עד" boxes with the result count centered
 - [x] Verified at 1181px: no horizontal scroll, nothing clipped, count matches the table
+- [x] Metric chips hug their content and share the top row with the search box (no dead space)
+
 
 
 
