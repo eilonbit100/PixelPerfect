@@ -161,7 +161,7 @@ export function EmployeeToday() {
         <section className="panel p-4">
           <p className="text-xs text-muted-foreground">היעד של היום</p>
           {!s ? <Skeleton className="mt-1 h-6 w-64" /> : (
-            <p className="mt-1 text-lg font-semibold">{goal ? `ליצור קשר עם ${goal} לידים ומתעניינים` : "אין כרגע לידים חדשים — זמן לחזק את המתעניינים"}</p>
+            <p className="mt-1 text-lg font-semibold">{goal ? goal === 1 ? "ליצור קשר עם ליד אחד" : `ליצור קשר עם ${goal} לידים ומתעניינים` : "אין כרגע לידים חדשים — זמן לחזק את המתעניינים"}</p>
           )}
           {s && <p className="text-[11px] text-muted-foreground">{basisText} · {s.pool} במאגר{s.due ? ` · ${s.due} מעקבים להיום` : ""}</p>}
           <div className="mt-3 flex items-center gap-3">
