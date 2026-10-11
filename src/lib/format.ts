@@ -65,6 +65,7 @@ export const MEMBER_STATUS: Record<string, string> = { INVITED: "הוזמן", AC
 export const TX_TYPE: Record<string, string> = {
   RECEIPT: "קבלת סחורה", SALE: "מכירה", RETURN_TO_SUPPLIER: "החזרה לספק", MANUAL_ADJUSTMENT: "תיקון ידני",
   PHYSICAL_COUNT: "ספירת מלאי", TRANSFER_IN: "העברה נכנסת", TRANSFER_OUT: "העברה יוצאת",
+  CUSTOMER_RETURN: "החזרה מלקוח", WRITE_OFF: "גריעה (נזק / פחת / תפוגה)",
 };
 export const ACTIVITY_LABEL: Record<string, string> = {
   LEAD_CREATED: "ליד נוצר", CALL: "שיחה", WHATSAPP: "הודעת וואטסאפ", MEETING: "פגישה", TRIAL: "אימון ניסיון", NOTE: "הערה",

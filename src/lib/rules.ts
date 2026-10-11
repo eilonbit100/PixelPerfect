@@ -28,6 +28,7 @@ export const RULES: Record<string, { group: (n: number) => string; cta: string; 
   OUT_OF_STOCK: { group: (n) => `${n} מוצרים אזלו מהמלאי`, cta: "בדוק", module: "inventory", description: "מלאי אפס בסניף" },
   LOW_STOCK: { group: (n) => `${n} מוצרים במלאי נמוך`, cta: "פתח מלאי", module: "inventory", description: "מלאי מתחת למינימום שהוגדר" },
   NEAR_EXPIRY: { group: (n) => `${n} אצוות עם תוקף קרוב`, cta: "טפל", module: "inventory", description: "אצוות שתוקפן קרוב או עבר" },
+  RETURN_WINDOW: { group: (n) => `${n} אצוות שחלון ההחזרה שלהן נסגר`, cta: "החזר לספק", module: "inventory", description: "אצוות שעדיין ניתן להחזיר לספק, אבל המועד מתקרב" },
   COUNT_DISCREPANCY: { group: (n) => `${n} פערי ספירת מלאי`, cta: "בדוק פער", module: "inventory", description: "ספירה פיזית שונה מהכמות במערכת" },
 };
 
@@ -59,6 +60,7 @@ export function healthLabel(i: Insight): string {
     case "LOW_STOCK": return "מלאי נמוך";
     case "NEAR_EXPIRY": return i.title;
     case "COUNT_DISCREPANCY": return "פער מלאי";
+    case "RETURN_WINDOW": return "חלון החזרה נסגר";
     default: return i.title;
   }
 }
