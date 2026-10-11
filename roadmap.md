@@ -13,3 +13,9 @@
 - [ ] Catalog import wizard — blocked: needs original CSV/Excel + answers on branch, cost meaning, negatives
 - [ ] Smart recommendations (forecast shortage/excess/return) — blocked: not enough sales history yet
 - [ ] POS stock hook — waits for the POS module
+# Tickets screen tidy-up (קריאות)
+- [x] Metric cards → single-line chips in one full-width row
+- [x] Filters → one compact row: search in the middle, one date picker with quick choices instead of two date boxes
+- [x] Table → single-line rows, columns hug content, branch column only for org-wide users, "נפתחה" only on wide screens
+- [x] Verified manager and HQ views at 1181px: no horizontal scroll, nothing clipped
+
