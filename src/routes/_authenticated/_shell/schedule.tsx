@@ -179,15 +179,15 @@ function Timetable({ tpl, days, count, roomName, instructorName, editBlock, onOp
                     return (
                       <div key={t.id} className="group absolute" style={{ top: ((s - dayStart) * HOUR_H) / 60 + 2, height: (t.duration_min * HOUR_H) / 60 - 4, width: `calc(${colW}% - 6px)`, insetInlineStart: `calc(${i * colW}% + 3px)` }}>
                         <button onClick={() => onOpen({ id: t.id, date: ds })} className="flex h-full w-full flex-col overflow-hidden rounded-[3px] border border-border bg-background p-1.5 text-start hover:border-primary">
-                          <div className="flex items-baseline gap-1">
+                          <div className="flex shrink-0 items-baseline gap-1">
                             <span className="num text-[11px] font-semibold">{t.start_time.slice(0, 5)}</span>
                             <span className="num text-[9px] text-muted-foreground">{t.duration_min} ד׳</span>
                           </div>
-                          <div className="truncate text-xs font-medium leading-tight">{t.name}</div>
-                          <div className="truncate text-[10px] text-muted-foreground">{roomName(t.room_id)} · {instructorName(t.instructor_member_id)}</div>
-                          <div className="mt-auto">
+                          <div className="shrink-0 truncate text-xs font-medium leading-tight">{t.name}</div>
+                          {t.duration_min >= 60 && <div className="shrink-0 truncate text-[10px] text-muted-foreground">{roomName(t.room_id)} · {instructorName(t.instructor_member_id)}</div>}
+                          <div className="mt-auto shrink-0">
                             <div className="h-[3px] overflow-hidden rounded-full bg-muted"><div className={`h-full ${tone}`} style={{ width: `${pct}%` }} /></div>
-                            <div className="mt-0.5 flex items-center gap-1.5 text-[10px]">
+                            <div className="mt-0.5 flex shrink-0 items-center gap-1.5 text-[10px]">
                               <span className="num">{n}/{t.capacity}</span>
                               {n >= t.capacity && <span className="font-medium text-critical">מלא</span>}
                               {w > 0 && <span className="num text-muted-foreground">המתנה {w}</span>}
