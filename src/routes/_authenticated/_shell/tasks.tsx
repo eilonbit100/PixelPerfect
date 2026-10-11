@@ -157,9 +157,9 @@ function TasksPage() {
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7">
         {cards.map((c) => (
           <button key={c.v} type="button" onClick={() => set({ view: c.v, status: undefined })} aria-pressed={view === c.v && !search.task}
-            className={`panel flex flex-col items-start gap-1 p-3 text-start transition-colors hover:bg-muted/50 ${view === c.v && !search.task ? "ring-2 ring-primary" : ""}`}>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><c.icon className={`size-4 ${c.tone === "critical" ? "text-critical" : c.tone === "warning" ? "text-warning" : ""}`} />{c.label}</span>
-            <span className="num text-2xl font-semibold">{q.isLoading ? "…" : c.n}</span>
+            className={`panel flex items-center justify-between gap-2 px-3 py-2 text-start transition-colors hover:bg-muted/50 ${view === c.v && !search.task ? "ring-2 ring-primary" : ""}`}>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><c.icon className={`size-3.5 ${c.tone === "critical" ? "text-critical" : c.tone === "warning" ? "text-warning" : ""}`} />{c.label}</span>
+            <span className="num text-lg font-semibold leading-none">{q.isLoading ? "…" : c.n}</span>
           </button>
         ))}
       </div>
