@@ -134,13 +134,17 @@ function InventoryPage() {
               <span className={"num text-sm font-semibold " + (n ? (k.rule === "OUT_OF_STOCK" ? "text-critical" : "text-warning") : "")}>{insights.isLoading ? "…" : n}</span>
             </button>);
         })}
-        <span className="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden />
-        <FilterChips dense value={filter} onChange={(v) => set({ filter: v === "all" ? undefined : v })} options={[
-          { value: "all", label: "כל המוצרים", count: all.length },
-          { value: "attention", label: "דורשים טיפול", count: all.filter((p) => byProd.has(p.id)).length },
-          { value: "active", label: "פעילים" }, { value: "inactive", label: "לא פעילים" },
-        ]} />
+        <div className="relative min-w-36 flex-1 basis-36">
+          <Search className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input value={search.query ?? ""} onChange={(event) => set({ query: event.target.value || undefined })} className="h-7 border-border/70 pe-7 ps-7 text-xs" placeholder="שם, מק״ט או ברקוד" aria-label="חיפוש מוצרים" />
+          {search.query && (
+            <button type="button" onClick={() => set({ query: undefined })} aria-label="ניקוי חיפוש" className="absolute end-1 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground">
+              <X className="size-3.5" />
+            </button>
+          )}
+        </div>
       </div>
+
 
 
       <div className="mb-3 flex flex-wrap gap-1 border-b">
@@ -156,8 +160,15 @@ function InventoryPage() {
           <button onClick={() => set({ rule: undefined })} className="ms-auto inline-flex items-center gap-1 text-xs hover:underline"><X className="size-3.5" /> נקה</button>
         </div>
       )}
-      <div className="mb-3 flex flex-wrap items-center gap-1" aria-label="קטגוריות מוצרים">
+      <div className="mb-3 flex flex-wrap items-center gap-1" aria-label="מסנני מלאי">
+        <FilterChips dense value={filter} onChange={(v) => set({ filter: v === "all" ? undefined : v })} options={[
+          { value: "all", label: "כל המוצרים", count: all.length },
+          { value: "attention", label: "דורשים טיפול", count: all.filter((p) => byProd.has(p.id)).length },
+          { value: "active", label: "פעילים" }, { value: "inactive", label: "לא פעילים" },
+        ]} />
+        <span className="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden />
         <button type="button" onClick={() => set({ category: undefined })} aria-pressed={!search.category}
+
           className={"inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] transition-colors " + (search.category ? "bg-surface hover:bg-muted" : "border-foreground/80 bg-foreground text-background")}>
           <PackageSearch className="size-3.5" />
           <span>הכול</span>
@@ -175,16 +186,8 @@ function InventoryPage() {
             </button>
           );
         })}
-        <div className="relative min-w-36 flex-1 basis-36">
-          <Search className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search.query ?? ""} onChange={(event) => set({ query: event.target.value || undefined })} className="h-7 border-border/70 pe-7 ps-7 text-xs" placeholder="שם, מק״ט או ברקוד" aria-label="חיפוש מוצרים" />
-          {search.query && (
-            <button type="button" onClick={() => set({ query: undefined })} aria-label="ניקוי חיפוש" className="absolute end-1 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground">
-              <X className="size-3.5" />
-            </button>
-          )}
-        </div>
       </div>
+
 
 
       {q.isLoading || insights.isLoading ? (
