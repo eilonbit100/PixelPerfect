@@ -249,15 +249,15 @@ function TasksPage() {
                 const name = t.entity_id ? data!.names.get(t.entity_id) : undefined;
                 return (
                   <tr key={t.id} className="cursor-pointer" onClick={() => navigate({ search: (s: Search) => ({ ...s, task: t.id }), replace: true })}>
-                    <td className="col-title max-w-56">
+                    <td className="col-title max-w-44">
                       <span className="block truncate font-medium">{t.title}</span>
                       {(data!.tickets.get(t.id) ?? []).map((k) => <Link key={k.id} onClick={(e) => e.stopPropagation()} to="/tickets/$id" params={{ id: k.id }} className="num ms-2 text-xs text-primary hover:underline">קריאה #{k.no}</Link>)}
                       {t.description && <span className="block truncate text-xs text-muted-foreground">{t.description}</span>}
                     </td>
                     <td className="hidden text-muted-foreground xl:table-cell">{typeLabel(t.task_type)}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
-                      {t.entity_type === "lead" && t.entity_id ? <Link className="text-primary hover:underline" to="/leads/$id" params={{ id: t.entity_id }}>{data!.stage.get(t.entity_id) === "PROSPECT" ? "מתעניין" : "ליד"} · {name}</Link>
-                        : t.entity_type === "customer" && t.entity_id ? <Link className="text-primary hover:underline" to="/customers/$id" params={{ id: t.entity_id }}>לקוח · {name}</Link>
+                    <td className="max-w-40" onClick={(e) => e.stopPropagation()}>
+                      {t.entity_type === "lead" && t.entity_id ? <Link className="block truncate text-primary hover:underline" to="/leads/$id" params={{ id: t.entity_id }}>{data!.stage.get(t.entity_id) === "PROSPECT" ? "מתעניין" : "ליד"} · {name}</Link>
+                         : t.entity_type === "customer" && t.entity_id ? <Link className="block truncate text-primary hover:underline" to="/customers/$id" params={{ id: t.entity_id }}>לקוח · {name}</Link>
                         : t.entity_type === "ticket" && t.entity_id ? <Link className="text-primary hover:underline" to="/tickets/$id" params={{ id: t.entity_id }}>קריאה #{data!.ticketNo.get(t.entity_id) ?? "—"}</Link>
                         : t.entity_type === "cancellation_request" ? <span>בקשת ביטול</span>
                         : <span className="text-muted-foreground">כללי</span>}

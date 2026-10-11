@@ -161,7 +161,7 @@ function LeadsPage() {
                 const nt = nextTask.get(l.id);
                 return (
                   <tr key={l.id} className="cursor-pointer" onClick={() => navigate({ to: "/leads/$id", params: { id: l.id } })}>
-                    <td className="font-medium"><Link to="/leads/$id" params={{ id: l.id }} onClick={(e) => e.stopPropagation()} className="block max-w-44 truncate">{l.full_name}</Link></td>
+                    <td className="font-medium"><Link to="/leads/$id" params={{ id: l.id }} onClick={(e) => e.stopPropagation()} className="block max-w-36 truncate">{l.full_name}</Link></td>
                     <td className="num text-muted-foreground col-phone" dir="ltr">{l.phone ?? "—"}</td>
                     <td className="text-muted-foreground col-md">{LEAD_SOURCE[l.source] ?? l.source}</td>
                     <td><StatusBadge tone={leadStatusTone(l.status)}>{LEAD_STATUS[l.status]}</StatusBadge></td>
