@@ -147,6 +147,11 @@
     color: var(--color-foreground);
     font-feature-settings: "tnum" 1;
   }
+  .app-content {
+    background-color: var(--color-background);
+    background-image: url("./assets/gym-pattern.svg");
+    background-size: 280px 280px;
+  }
 }
 
 @layer components {
