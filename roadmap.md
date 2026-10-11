@@ -37,3 +37,5 @@
 - [x] Manager: follow-up, team board, blocked customers, smart inventory; no revenue (server-side)
 - [x] Reports: top products, reorder, slow movers
 - [ ] Employee view verified in browser (demo sign-in unavailable in test browser)
+- [x] Employee home: daily goal, my closures today/week/month, today list, lead pool, prospects, card fixes
+- [x] Lead becomes the employee's when it moves to prospect (server trigger)

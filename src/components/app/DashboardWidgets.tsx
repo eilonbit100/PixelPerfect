@@ -144,7 +144,7 @@ export function EmployeeToday() {
     },
   });
   const all = people.data?.leads ?? [];
-  const pool = all.filter((l) => l.stage === "LEAD" && !l.assigned_member_id).sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at));
+  const pool = all.filter((l) => l.stage === "LEAD").sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at));
   const prospects = all.filter((l) => l.stage === "PROSPECT")
     .sort((a, b) => Number(b.assigned_member_id === me.id) - Number(a.assigned_member_id === me.id) || +new Date(a.next_due ?? a.created_at) - +new Date(b.next_due ?? b.created_at));
   const focus = prospects.filter((l) => l.assigned_member_id === me.id && isActionToday(l.state));
