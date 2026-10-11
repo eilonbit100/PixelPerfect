@@ -39,3 +39,7 @@
 - [ ] Employee view verified in browser (demo sign-in unavailable in test browser)
 - [x] Employee home: daily goal, my closures today/week/month, today list, lead pool, prospects, card fixes
 - [x] Lead becomes the employee's when it moves to prospect (server trigger)
+# Sidebar active-page marker
+- [x] Drop the lime edge bar and lime icon on the current screen; show it only as a lighter row + brighter text
+- [x] Funnel dots keep their stage colors at full strength for every item
+- [x] Verified at 1181px: no green edge marker, selected row reads clearly lighter

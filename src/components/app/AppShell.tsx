@@ -34,9 +34,9 @@ const GROUPS: { title?: string; funnel?: boolean; items: NavItem[] }[] = [
 ];
 
 const FUNNEL = [
-  { key: "lead", to: "/leads", stage: undefined, label: "לידים", hint: "הזדמנות חדשה", dot: "bg-funnel-lead", ring: "ring-funnel-lead" },
-  { key: "prospect", to: "/leads", stage: "PROSPECT", label: "מתעניינים", hint: "בתהליך מעקב", dot: "bg-funnel-prospect", ring: "ring-funnel-prospect" },
-  { key: "customer", to: "/customers", stage: undefined, label: "לקוחות", hint: "", dot: "bg-funnel-customer", ring: "ring-funnel-customer" },
+  { key: "lead", to: "/leads", stage: undefined, label: "לידים", hint: "הזדמנות חדשה", dot: "bg-funnel-lead" },
+  { key: "prospect", to: "/leads", stage: "PROSPECT", label: "מתעניינים", hint: "בתהליך מעקב", dot: "bg-funnel-prospect" },
+  { key: "customer", to: "/customers", stage: undefined, label: "לקוחות", hint: "", dot: "bg-funnel-customer" },
 ] as const;
 
 function Funnel({ path, stageParam, onNavigate }: { path: string; stageParam?: string; onNavigate?: () => void }) {
@@ -67,8 +67,8 @@ function Funnel({ path, stageParam, onNavigate }: { path: string; stageParam?: s
           <li key={f.key} className="relative">
             <Link to={f.to} search={f.to === "/leads" ? { stage: f.stage } : undefined} onClick={onNavigate}
               className={cn("flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-[inset_-2px_0_0_var(--sidebar-primary)]" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
-              <span className={cn("relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold text-sidebar", f.dot, active && "ring-2 ring-offset-2 ring-offset-sidebar", active && f.ring)}>{i + 1}</span>
+                active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
+              <span className={cn("relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold text-sidebar", f.dot)}>{i + 1}</span>
               <span className="min-w-0 flex-1 leading-tight">
                 <span className="block">{f.label}</span>
                 {f.hint && <span className="block text-[0.7rem] text-sidebar-foreground/55">{f.hint}</span>}
@@ -124,8 +124,8 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
                   return (
                     <Link key={n.to} to={n.to} onClick={onNavigate}
                       className={cn("flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                        active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-[inset_-2px_0_0_var(--sidebar-primary)]" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
-                      <n.icon className={cn("size-4", active ? "text-sidebar-primary" : "text-sidebar-foreground/60")} />
+                        active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
+                      <n.icon className={cn("size-4", active ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/60")} />
                       {n.label}
                     </Link>
                   );
