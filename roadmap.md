@@ -18,4 +18,9 @@
 - [x] Filters → one compact row: search in the middle, one date picker with quick choices instead of two date boxes
 - [x] Table → single-line rows, columns hug content, branch column only for org-wide users, "נפתחה" only on wide screens
 - [x] Verified manager and HQ views at 1181px: no horizontal scroll, nothing clipped
+# Tasks filter bar rows
+- [x] Search on its own full-width row, filters on the row below
+- [x] Filter cells stretch to fill the row; date range inputs stretch too, with centered text
+- [x] Verified at 1181px: two rows, no horizontal scroll, range filter still applies
+
 
