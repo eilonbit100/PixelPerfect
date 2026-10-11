@@ -67,9 +67,18 @@ export function ProductEditDialog({ p, trigger }: { p?: ProductRow; trigger: Rea
             <Select value={f.supplier || "none"} onValueChange={(v) => set("supplier", v === "none" ? "" : v)}><SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="none">ללא</SelectItem>{(sup.data ?? []).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5">
-            {T("return_window_days", "חלון החזרה (ימים)", { type: "number", min: 0, step: 1, dir: "ltr", placeholder: "לפי ברירת המחדל של הספק", disabled: !f.returnable })}
-            <p className="text-xs text-muted-foreground">ערך ריק משתמש בחלון ההחזרה של הספק. חל על קליטות חדשות.</p>
+            <Label>החזרה לספק</Label>
+            <Select value={f.returnable ? "yes" : "no"} onValueChange={(v) => { const rel = v === "yes"; setF((x) => ({ ...x, returnable: rel, return_window_days: rel ? x.return_window_days : "" })); }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="no">לא רלוונטי</SelectItem><SelectItem value="yes">רלוונטי — יש חלון זמן</SelectItem></SelectContent>
+            </Select>
           </div>
+          {f.returnable && (
+            <div className="space-y-1.5">
+              {T("return_window_days", "חלון החזרה (ימים)", { type: "number", min: 0, step: 1, dir: "ltr", placeholder: "לפי ברירת המחדל של הספק" })}
+              <p className="text-xs text-muted-foreground">ערך ריק משתמש בחלון ההחזרה של הספק. חל על קליטות חדשות.</p>
+            </div>
+          )}
           <div className="space-y-1.5"><Label>סטטוס</Label>
             <Select value={f.status} onValueChange={(v) => set("status", v)}><SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="ACTIVE">פעיל</SelectItem><SelectItem value="INACTIVE">לא פעיל</SelectItem></SelectContent></Select></div>
