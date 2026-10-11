@@ -61,6 +61,9 @@
   --color-warning-soft: var(--warning-soft);
   --color-critical: var(--critical);
   --color-critical-soft: var(--critical-soft);
+  --color-funnel-lead: var(--funnel-lead);
+  --color-funnel-prospect: var(--funnel-prospect);
+  --color-funnel-customer: var(--funnel-customer);
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
   --color-surface: var(--surface);
@@ -109,6 +112,9 @@
   --sidebar: oklch(0.22 0.045 255);
   --sidebar-foreground: oklch(0.85 0.02 250);
   --sidebar-primary: oklch(0.9 0.2 125);
+  --funnel-lead: oklch(0.68 0.19 35);
+  --funnel-prospect: oklch(0.84 0.16 85);
+  --funnel-customer: oklch(0.72 0.17 150);
   --sidebar-primary-foreground: oklch(0.2 0.04 255);
   --sidebar-accent: oklch(0.3 0.055 255);
   --sidebar-accent-foreground: oklch(0.98 0.01 250);
