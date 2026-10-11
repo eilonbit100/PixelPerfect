@@ -235,7 +235,7 @@
   .leads-table .col-md {
     display: none;
   }
-  @media (min-width: 1200px) {
+  @media (min-width: 1500px) {
     .leads-table .col-md {
       display: table-cell;
     }
