@@ -208,7 +208,7 @@ function TasksPage() {
           <EmptyState title="אין משימות להצגה" text="משימות חדשות — ידניות או כאלה שהמערכת יוצרת — יופיעו כאן." />
         ) : (
           <table className="data-table tasks-table">
-            <thead><tr><th>משימה</th><th>סוג</th><th>קשור ל</th><th>אחראי</th><th>יעד</th><th>עדיפות</th><th>סטטוס</th><th className="hidden xl:table-cell">נוצרה</th><th className="hidden xl:table-cell">מקור</th><th /></tr></thead>
+            <thead><tr><th>משימה</th><th className="hidden xl:table-cell">סוג</th><th>קשור ל</th><th>אחראי</th><th>יעד</th><th>עדיפות</th><th>סטטוס</th><th className="hidden xl:table-cell">נוצרה</th><th className="hidden xl:table-cell">מקור</th><th /></tr></thead>
             <tbody>
               {rows.map((t) => {
                 const overdue = isOverdue(t);
@@ -220,7 +220,7 @@ function TasksPage() {
                       {(data!.tickets.get(t.id) ?? []).map((k) => <Link key={k.id} onClick={(e) => e.stopPropagation()} to="/tickets/$id" params={{ id: k.id }} className="num ms-2 text-xs text-primary hover:underline">קריאה #{k.no}</Link>)}
                       {t.description && <span className="block truncate text-xs text-muted-foreground">{t.description}</span>}
                     </td>
-                    <td className="text-muted-foreground">{typeLabel(t.task_type)}</td>
+                    <td className="hidden text-muted-foreground xl:table-cell">{typeLabel(t.task_type)}</td>
                     <td onClick={(e) => e.stopPropagation()}>
                       {t.entity_type === "lead" && t.entity_id ? <Link className="text-primary hover:underline" to="/leads/$id" params={{ id: t.entity_id }}>{data!.stage.get(t.entity_id) === "PROSPECT" ? "מתעניין" : "ליד"} · {name}</Link>
                         : t.entity_type === "customer" && t.entity_id ? <Link className="text-primary hover:underline" to="/customers/$id" params={{ id: t.entity_id }}>לקוח · {name}</Link>
