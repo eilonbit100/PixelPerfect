@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowLeft, CheckCircle2, TerminalSquare, TrendingDown, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { useInsights, useRefreshInsights } from "@/lib/queries";
@@ -105,7 +105,7 @@ function Copilot({ groups }: { groups: { rule: string; list: Insight[] }[] }) {
 
   return (
     <div className="panel p-4">
-      <div className="flex items-center gap-2 text-sm font-medium"><Sparkles className="size-4 text-primary" /> שאל את המערכת</div>
+      <div className="flex items-center gap-2 text-sm font-medium"><TerminalSquare className="size-4 text-primary" /> שאל את המערכת</div>
       <form onSubmit={(e) => { e.preventDefault(); ask(q); }} className="mt-3">
         <input
           value={q}
@@ -215,11 +215,10 @@ function Dashboard() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">{greeting()}{firstName ? `, ${firstName}` : ""}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {role === "EMPLOYEE" ? "הנה מה שדורש ממך טיפול היום." : `הנה מה שדורש את תשומת הלב שלך היום · ${scope}`}
-        </p>
+      <div className="mb-4">
+        <p className="text-xs text-muted-foreground">{greeting()}{firstName ? `, ${firstName}` : ""}</p>
+        <h1>לוח בקרה</h1>
+        <p className="text-xs text-muted-foreground">{new Date().toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "numeric", timeZone: "Asia/Jerusalem" })} · {scope}</p>
       </div>
 
       {role === "HQ" && (

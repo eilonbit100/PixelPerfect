@@ -70,7 +70,7 @@
 }
 
 :root {
-  --radius: 0.7rem;
+  --radius: 0.4rem;
   --background: oklch(0.975 0.006 250);
   --surface: oklch(1 0 0);
   --foreground: oklch(0.24 0.045 255);
@@ -120,7 +120,7 @@
   --sidebar-accent-foreground: oklch(0.98 0.01 250);
   --sidebar-border: oklch(0.3 0.05 255);
   --sidebar-ring: oklch(0.9 0.2 125 / 55%);
-  --shadow-panel: 0 1px 2px oklch(0.24 0.045 255 / 5%), 0 8px 24px -16px oklch(0.24 0.045 255 / 18%);
+  --shadow-panel: 0 1px 0 oklch(0.24 0.045 255 / 3%);
   --timetable-hour-line: oklch(0.91 0.012 250);
   --timetable-half-line: oklch(0.93 0.01 250 / 70%);
   --timetable-today-bg: oklch(0.955 0.035 125 / 40%);
@@ -131,6 +131,12 @@
 @layer base {
   * {
     border-color: var(--color-border);
+  }
+  main h1 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
   html {
     font-family: var(--font-sans);
@@ -193,14 +199,14 @@
   }
   .data-table th {
     text-align: start;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 0.7rem;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.02em;
     color: var(--color-muted-foreground);
     padding: 0.6rem 0.9rem;
     border-bottom: 1px solid var(--color-border);
     white-space: nowrap;
-    background: transparent;
+    background: var(--color-muted);
   }
   .data-table td {
     padding: 0.7rem 0.9rem;

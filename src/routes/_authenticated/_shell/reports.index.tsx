@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, Copy, Download, Plus, RotateCcw, Search, Sparkles, Trash2, Users } from "lucide-react";
+import { ChevronLeft, Copy, Download, Plus, RotateCcw, Search, TerminalSquare, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/lib/org";
 import { ROLE, fmtDateTime } from "@/lib/format";
@@ -63,7 +63,7 @@ function AiSearch() {
   }
   return (
     <form onSubmit={go} className="panel flex items-center gap-2 p-2">
-      <Sparkles className="ms-2 size-4 shrink-0 text-muted-foreground" />
+      <TerminalSquare className="ms-2 size-4 shrink-0 text-muted-foreground" />
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="שאל בשפה חופשית: ״מי ביטל מנוי החודש?״, ״אילו לידים לא קיבלו משימה השבוע?״"
         className="h-9 border-0 shadow-none focus-visible:ring-0" />
       <Button type="submit" size="sm" disabled={busy}>{busy ? "מחפש…" : "חפש"}</Button>
