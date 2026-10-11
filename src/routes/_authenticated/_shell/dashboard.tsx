@@ -293,6 +293,7 @@ function Dashboard() {
               )}
             <div className="border-t px-4 py-2 text-xs text-muted-foreground">מחובר/ת כ־{memberName(me.id)}</div>
           </div>
+          <Copilot groups={groups} />
         </aside>
       </div>
       )}
