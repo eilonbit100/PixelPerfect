@@ -221,11 +221,14 @@ function TasksPage() {
         </div>
         {(search.range ?? (search.from || search.to ? "custom" : "")) === "custom" && (
 
-          <div className="flex min-w-0 flex-1 basis-56 items-center gap-1 text-[11px] text-muted-foreground">
-            <Input type="date" dir="ltr" className="num h-7 w-full min-w-0 flex-1 border-border/70 text-center text-[11px]" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
+          <div className="flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
+            <span className="shrink-0">מ־</span>
+            <Input type="date" dir="ltr" className="num h-7 w-32 border-border/70 text-[11px]" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
             <span className="shrink-0">עד</span>
-            <Input type="date" dir="ltr" className="num h-7 w-full min-w-0 flex-1 border-border/70 text-center text-[11px]" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
+            <Input type="date" dir="ltr" className="num h-7 w-32 border-border/70 text-[11px]" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
           </div>
+          <span className="min-w-0 flex-1 text-center text-[11px] text-muted-foreground">מציג <span className="num font-medium text-foreground">{rows.length}</span> תוצאות</span>
+
 
 
         )}
