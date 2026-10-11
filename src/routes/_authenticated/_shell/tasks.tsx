@@ -155,7 +155,7 @@ function TasksPage() {
     { v: "lost", label: "לא רלוונטיים", n: counts.lost, icon: CircleSlash },
     ...(role === "EMPLOYEE" ? [] : [{ v: "unassigned", label: "לא משויכות", n: counts.unassigned, icon: UserX, tone: "warning" }]),
   ];
-  const sel = (val: string | undefined, onChange: (v: string | undefined) => void, label: string, items: [string, string][], w = "w-36") => (
+  const sel = (val: string | undefined, onChange: (v: string | undefined) => void, label: string, items: [string, string][], w = "w-32") => (
     <Select value={val ?? "any"} onValueChange={(v) => onChange(v === "any" ? undefined : v)}>
       <SelectTrigger className={w} aria-label={label}><SelectValue /></SelectTrigger>
       <SelectContent><SelectItem value="any">{label}</SelectItem>{items.map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
@@ -175,21 +175,21 @@ function TasksPage() {
         ))}
       </div>
       {search.task && <div className="mb-3 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">מוצגת משימה אחת <Button size="sm" variant="ghost" onClick={() => set({})}>הצג את כל המשימות</Button></div>}
-      <div className="panel mb-3 flex flex-wrap items-center gap-2 p-2">
-        <div className="relative w-64">
+      <div className="panel mb-3 flex flex-wrap items-center gap-1.5 p-2">
+        <div className="relative w-52">
           <SearchIcon className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="ps-8" placeholder={leadView ? "חיפוש לפי שם או טלפון" : "חיפוש לפי משימה, לקוח או ליד"} defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש" />
         </div>
         {role !== "EMPLOYEE" && sel(search.owner, (v) => set({ owner: v }), "אחראי: כולם", members.map((m) => [m.id, m.display_name ?? "—"]))}
         {!branchId && branches.length > 1 && sel(search.branch, (v) => set({ branch: v }), "סניף: כולם", branches.map((b) => [b.id, b.name]))}
         {!leadView && <>
-          {sel(search.type, (v) => set({ type: v }), "סוג: הכל", (types.data ?? []).map((t) => [t.key, t.label]), "w-44")}
+          {sel(search.type, (v) => set({ type: v }), "סוג: הכל", (types.data ?? []).map((t) => [t.key, t.label]), "w-36")}
           {sel(search.status, (v) => set({ status: v }), "סטטוס: הכל", [...Object.entries(TASK_STATUS), ["OVERDUE", "באיחור"]])}
           {sel(search.priority, (v) => set({ priority: v }), "עדיפות: הכל", Object.entries(TASK_PRIORITY))}
           {sel(search.source, (v) => set({ source: v }), "מקור: הכל", [["auto", "אוטומטיות"], ["manual", "ידניות"]])}
         </>}
         <Select value={search.range ?? (search.from || search.to ? "custom" : "any")} onValueChange={(v) => set(v === "any" ? { range: undefined, from: undefined, to: undefined } : v === "custom" ? { range: "custom" } : { range: v, ...rangeDates(v) })}>
-          <SelectTrigger className="w-44" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
+          <SelectTrigger className="w-40" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
             <span className="flex items-center gap-1.5"><CalendarDays className="size-4 text-muted-foreground" /><SelectValue /></span>
           </SelectTrigger>
           <SelectContent>
@@ -204,8 +204,8 @@ function TasksPage() {
         </Select>
         {(search.range ?? (search.from || search.to ? "custom" : "")) === "custom" && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span>מ־</span><Input type="date" dir="ltr" className="num w-36 text-end" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
-            <span>עד</span><Input type="date" dir="ltr" className="num w-36 text-end" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
+            <span>מ־</span><Input type="date" dir="ltr" className="num w-32 text-end" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
+            <span>עד</span><Input type="date" dir="ltr" className="num w-32 text-end" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
           </div>
         )}
         {(search.q || search.owner || search.branch || search.type || search.status || search.priority || search.source || search.from || search.to || search.range) && (
@@ -215,18 +215,18 @@ function TasksPage() {
       <div className="panel overflow-x-auto">
         {q.isLoading ? <TableSkeleton cols={8} /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : leadView ? (
           !leadRows.length ? <EmptyState title={view === "nolead" ? "לכל הלידים יש משימת מעקב" : "אין לידים לא רלוונטיים"} text="שנו את הסינון כדי לראות רשומות נוספות." /> : (
-            <table className="data-table">
-              <thead><tr><th>שם</th><th>שלב</th><th>סטטוס</th><th>טלפון</th><th>אחראי</th><th>נכנס</th><th>סניף</th>{view === "lost" ? <th>סיבת סגירה</th> : <th />}</tr></thead>
+            <table className="data-table leads-table">
+              <thead><tr><th>שם</th><th>שלב</th><th>סטטוס</th><th className="col-phone">טלפון</th><th>אחראי</th><th className="col-md">נכנס</th><th className="col-md">סניף</th>{view === "lost" ? <th>סיבת סגירה</th> : <th />}</tr></thead>
               <tbody>
                 {leadRows.map((l) => (
                   <tr key={l.id}>
                     <td className="font-medium"><Link className="text-primary hover:underline" to="/leads/$id" params={{ id: l.id }}>{l.full_name}</Link></td>
                     <td>{l.stage === "PROSPECT" ? "מתעניין" : "ליד"}</td>
                     <td>{LEAD_STATUS[l.status] ?? l.status}</td>
-                    <td className="num">{l.phone ?? "—"}</td>
+                    <td className="num col-phone" dir="ltr">{l.phone ?? "—"}</td>
                     <td>{memberName(l.assigned_member_id)}</td>
-                    <td className="num text-muted-foreground">{fmtRelative(l.created_at)}</td>
-                    <td className="text-muted-foreground">{branchName(l.branch_id)}</td>
+                    <td className="num text-muted-foreground col-md">{fmtRelative(l.created_at)}</td>
+                    <td className="text-muted-foreground col-md">{branchName(l.branch_id)}</td>
                     {view === "lost" ? <td>{LOSS_REASON[l.loss_reason ?? ""] ?? l.loss_reason ?? "—"}{l.loss_note && <span className="block text-xs text-muted-foreground">{l.loss_note}</span>}</td> : (
                       <td className="text-end">
                         <TaskDialog entityType="lead" entityId={l.id} branchId={l.branch_id} defaultTitle={`מעקב — ${l.full_name}`} defaultAssignee={l.assigned_member_id ?? me.id}
@@ -249,15 +249,15 @@ function TasksPage() {
                 const name = t.entity_id ? data!.names.get(t.entity_id) : undefined;
                 return (
                   <tr key={t.id} className="cursor-pointer" onClick={() => navigate({ search: (s: Search) => ({ ...s, task: t.id }), replace: true })}>
-                    <td className="col-title max-w-56">
+                    <td className="col-title max-w-44">
                       <span className="block truncate font-medium">{t.title}</span>
                       {(data!.tickets.get(t.id) ?? []).map((k) => <Link key={k.id} onClick={(e) => e.stopPropagation()} to="/tickets/$id" params={{ id: k.id }} className="num ms-2 text-xs text-primary hover:underline">קריאה #{k.no}</Link>)}
                       {t.description && <span className="block truncate text-xs text-muted-foreground">{t.description}</span>}
                     </td>
                     <td className="hidden text-muted-foreground xl:table-cell">{typeLabel(t.task_type)}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
-                      {t.entity_type === "lead" && t.entity_id ? <Link className="text-primary hover:underline" to="/leads/$id" params={{ id: t.entity_id }}>{data!.stage.get(t.entity_id) === "PROSPECT" ? "מתעניין" : "ליד"} · {name}</Link>
-                        : t.entity_type === "customer" && t.entity_id ? <Link className="text-primary hover:underline" to="/customers/$id" params={{ id: t.entity_id }}>לקוח · {name}</Link>
+                    <td className="max-w-40" onClick={(e) => e.stopPropagation()}>
+                      {t.entity_type === "lead" && t.entity_id ? <Link className="block truncate text-primary hover:underline" to="/leads/$id" params={{ id: t.entity_id }}>{data!.stage.get(t.entity_id) === "PROSPECT" ? "מתעניין" : "ליד"} · {name}</Link>
+                         : t.entity_type === "customer" && t.entity_id ? <Link className="block truncate text-primary hover:underline" to="/customers/$id" params={{ id: t.entity_id }}>לקוח · {name}</Link>
                         : t.entity_type === "ticket" && t.entity_id ? <Link className="text-primary hover:underline" to="/tickets/$id" params={{ id: t.entity_id }}>קריאה #{data!.ticketNo.get(t.entity_id) ?? "—"}</Link>
                         : t.entity_type === "cancellation_request" ? <span>בקשת ביטול</span>
                         : <span className="text-muted-foreground">כללי</span>}
