@@ -1236,6 +1236,7 @@ export type Database = {
           product_id: string
           quantity: number
           received_at: string | null
+          return_deadline: string | null
           supplier_id: string | null
           updated_at: string
         }
@@ -1249,6 +1250,7 @@ export type Database = {
           product_id: string
           quantity?: number
           received_at?: string | null
+          return_deadline?: string | null
           supplier_id?: string | null
           updated_at?: string
         }
@@ -1262,6 +1264,7 @@ export type Database = {
           product_id?: string
           quantity?: number
           received_at?: string | null
+          return_deadline?: string | null
           supplier_id?: string | null
           updated_at?: string
         }
@@ -1299,11 +1302,16 @@ export type Database = {
       inventory_products: {
         Row: {
           barcode: string | null
+          brand: string | null
           category: string | null
+          cost: number | null
           created_at: string
           default_supplier_id: string | null
           deleted_at: string | null
           id: string
+          import_code: string | null
+          is_demo: boolean
+          kind: string
           name: string
           organization_id: string
           price: number | null
@@ -1311,15 +1319,23 @@ export type Database = {
           returnable: boolean
           sku: string | null
           status: string
+          subcategory: string | null
+          track_expiry: boolean
           updated_at: string
+          variant: string | null
         }
         Insert: {
           barcode?: string | null
+          brand?: string | null
           category?: string | null
+          cost?: number | null
           created_at?: string
           default_supplier_id?: string | null
           deleted_at?: string | null
           id?: string
+          import_code?: string | null
+          is_demo?: boolean
+          kind?: string
           name: string
           organization_id: string
           price?: number | null
@@ -1327,15 +1343,23 @@ export type Database = {
           returnable?: boolean
           sku?: string | null
           status?: string
+          subcategory?: string | null
+          track_expiry?: boolean
           updated_at?: string
+          variant?: string | null
         }
         Update: {
           barcode?: string | null
+          brand?: string | null
           category?: string | null
+          cost?: number | null
           created_at?: string
           default_supplier_id?: string | null
           deleted_at?: string | null
           id?: string
+          import_code?: string | null
+          is_demo?: boolean
+          kind?: string
           name?: string
           organization_id?: string
           price?: number | null
@@ -1343,7 +1367,10 @@ export type Database = {
           returnable?: boolean
           sku?: string | null
           status?: string
+          subcategory?: string | null
+          track_expiry?: boolean
           updated_at?: string
+          variant?: string | null
         }
         Relationships: [
           {
@@ -1377,6 +1404,7 @@ export type Database = {
           minimum_stock: number
           organization_id: string
           product_id: string
+          target_stock: number | null
           updated_at: string
         }
         Insert: {
@@ -1386,6 +1414,7 @@ export type Database = {
           minimum_stock?: number
           organization_id: string
           product_id: string
+          target_stock?: number | null
           updated_at?: string
         }
         Update: {
@@ -1395,6 +1424,7 @@ export type Database = {
           minimum_stock?: number
           organization_id?: string
           product_id?: string
+          target_stock?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -1425,7 +1455,9 @@ export type Database = {
         Row: {
           branch_id: string
           created_at: string
+          document_path: string | null
           id: string
+          idempotency_key: string | null
           metadata: Json
           notes: string | null
           organization_id: string
@@ -1434,6 +1466,7 @@ export type Database = {
           performed_by: string | null
           product_id: string
           quantity_delta: number
+          reason: string | null
           reference: string | null
           stock_after: number
           stock_before: number
@@ -1442,7 +1475,9 @@ export type Database = {
         Insert: {
           branch_id: string
           created_at?: string
+          document_path?: string | null
           id?: string
+          idempotency_key?: string | null
           metadata?: Json
           notes?: string | null
           organization_id: string
@@ -1451,6 +1486,7 @@ export type Database = {
           performed_by?: string | null
           product_id: string
           quantity_delta: number
+          reason?: string | null
           reference?: string | null
           stock_after: number
           stock_before: number
@@ -1459,7 +1495,9 @@ export type Database = {
         Update: {
           branch_id?: string
           created_at?: string
+          document_path?: string | null
           id?: string
+          idempotency_key?: string | null
           metadata?: Json
           notes?: string | null
           organization_id?: string
@@ -1468,6 +1506,7 @@ export type Database = {
           performed_by?: string | null
           product_id?: string
           quantity_delta?: number
+          reason?: string | null
           reference?: string | null
           stock_after?: number
           stock_before?: number
@@ -2272,14 +2311,153 @@ export type Database = {
           },
         ]
       }
+      stock_count_lines: {
+        Row: {
+          applied_delta: number | null
+          count_id: string
+          counted_at: string | null
+          counted_by: string | null
+          counted_qty: number | null
+          id: string
+          organization_id: string
+          product_id: string
+          reason: string | null
+          system_qty: number
+        }
+        Insert: {
+          applied_delta?: number | null
+          count_id: string
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_qty?: number | null
+          id?: string
+          organization_id: string
+          product_id: string
+          reason?: string | null
+          system_qty: number
+        }
+        Update: {
+          applied_delta?: number | null
+          count_id?: string
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_qty?: number | null
+          id?: string
+          organization_id?: string
+          product_id?: string
+          reason?: string | null
+          system_qty?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_count_lines_count_id_fkey"
+            columns: ["count_id"]
+            isOneToOne: false
+            referencedRelation: "stock_counts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_counted_by_fkey"
+            columns: ["counted_by"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_counts: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          branch_id: string
+          created_at: string
+          id: string
+          note: string | null
+          opened_at: string
+          opened_by: string | null
+          organization_id: string
+          status: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          branch_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          organization_id: string
+          status?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          branch_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          organization_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_counts_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_counts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_counts_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_counts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           active: boolean
           created_at: string
           default_return_window_days: number | null
           email: string | null
+          expired_return_policy: string | null
           id: string
+          lead_time_days: number | null
           name: string
+          notes: string | null
           organization_id: string
           phone: string | null
           updated_at: string
@@ -2289,8 +2467,11 @@ export type Database = {
           created_at?: string
           default_return_window_days?: number | null
           email?: string | null
+          expired_return_policy?: string | null
           id?: string
+          lead_time_days?: number | null
           name: string
+          notes?: string | null
           organization_id: string
           phone?: string | null
           updated_at?: string
@@ -2300,8 +2481,11 @@ export type Database = {
           created_at?: string
           default_return_window_days?: number | null
           email?: string | null
+          expired_return_policy?: string | null
           id?: string
+          lead_time_days?: number | null
           name?: string
+          notes?: string | null
           organization_id?: string
           phone?: string | null
           updated_at?: string
@@ -2563,14 +2747,20 @@ export type Database = {
       apply_inventory_transaction: {
         Args: {
           _branch: string
+          _document_path?: string
           _expiry_date?: string
+          _idempotency_key?: string
+          _lot_id?: string
           _lot_number?: string
+          _meta?: Json
           _notes?: string
           _override?: boolean
           _override_reason?: string
           _product: string
           _quantity: number
+          _reason?: string
           _reference?: string
+          _supplier?: string
           _type: string
         }
         Returns: Json
@@ -2580,6 +2770,7 @@ export type Database = {
         Args: { _branch: string; _date: string }
         Returns: undefined
       }
+      approve_stock_count: { Args: { _count: string }; Returns: Json }
       book_class: {
         Args: { _customer: string; _date: string; _template: string }
         Returns: string
@@ -2603,6 +2794,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cancel_stock_count: { Args: { _count: string }; Returns: undefined }
       cancellation_policy_for: { Args: { _membership: string }; Returns: Json }
       change_membership_plan: {
         Args: { _membership: string; _plan: string }
@@ -2664,6 +2856,10 @@ export type Database = {
         }
         Returns: string
       }
+      open_stock_count: {
+        Args: { _branch: string; _note?: string; _products?: string[] }
+        Returns: string
+      }
       preview_cancellation_date: {
         Args: { _membership: string; _requested: string }
         Returns: Json
@@ -2710,6 +2906,10 @@ export type Database = {
           title: string
         }[]
       }
+      set_count_line: {
+        Args: { _counted: number; _line: string; _reason?: string }
+        Returns: undefined
+      }
       shares_org_with: { Args: { _user: string }; Returns: boolean }
       suggest_daily_plan: {
         Args: { _branch: string; _date: string }
@@ -2740,6 +2940,17 @@ export type Database = {
       ticket_update: {
         Args: { _field: string; _t: string; _value: string }
         Returns: undefined
+      }
+      transfer_stock: {
+        Args: {
+          _from: string
+          _idempotency_key?: string
+          _note?: string
+          _product: string
+          _quantity: number
+          _to: string
+        }
+        Returns: Json
       }
       update_cancellation_request: {
         Args: {

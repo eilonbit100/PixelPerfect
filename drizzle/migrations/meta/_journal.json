@@ -64,6 +64,13 @@
       "when": 1791630237941,
       "tag": "0008_ticket_links",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791711848005,
+      "tag": "0009_inventory_upgrade",
+      "breakpoints": true
     }
   ]
 }
