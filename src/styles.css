@@ -225,4 +225,16 @@
     width: 1%;
     white-space: nowrap;
   }
+  .tasks-table td {
+    padding-block: 0.35rem;
+    white-space: nowrap;
+  }
+  .tasks-table th,
+  .tasks-table td:not(.col-title) {
+    width: 1%;
+  }
+  .tasks-table .col-title {
+    white-space: normal;
+    min-width: 12rem;
+  }
 }
