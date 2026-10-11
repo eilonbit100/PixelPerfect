@@ -6,7 +6,11 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const Select = SelectPrimitive.Root;
+// Radix defaults its select direction to ltr; this app is Hebrew RTL, so the
+// trigger (value text + chevron) must follow the page direction instead.
+const Select = ({ dir, ...props }: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) => (
+  <SelectPrimitive.Root dir={dir ?? "rtl"} {...props} />
+);
 
 const SelectGroup = SelectPrimitive.Group;
 
