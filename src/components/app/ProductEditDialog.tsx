@@ -36,7 +36,7 @@ export function ProductEditDialog({ p, trigger }: { p?: ProductRow; trigger: Rea
     if (!f.name.trim()) return toast.error("יש להזין שם מוצר");
     if (f.cost && Number(f.cost) < 0) return toast.error("עלות לא יכולה להיות שלילית");
     if (f.price && Number(f.price) < 0) return toast.error("מחיר לא יכול להיות שלילי");
-    if (f.return_window_days && (!Number.isInteger(Number(f.return_window_days)) || Number(f.return_window_days) < 0)) return toast.error("חלון החזרה חייב להיות מספר ימים שלם וחיובי");
+    if (f.return_window_days && (!Number.isInteger(Number(f.return_window_days)) || Number(f.return_window_days) < 0)) return toast.error("חלון החזרה חייב להיות מספר ימים שלם, 0 ומעלה");
     const row = {
       name: f.name.trim(), sku: f.sku || null, barcode: f.barcode || null, category: f.category || null, subcategory: f.subcategory || null, brand: f.brand || null,
       variant: f.variant || null, kind: f.kind, status: f.status, cost: f.cost === "" ? null : Number(f.cost), price: f.price === "" ? null : Number(f.price),
