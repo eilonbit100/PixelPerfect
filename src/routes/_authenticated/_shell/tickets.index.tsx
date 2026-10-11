@@ -89,15 +89,18 @@ function TicketsPage() {
   );
 
   const sel = (val: string | undefined, onChange: (v: string | undefined) => void, label: string, items: [string, string][]) => (
-    <Select value={val ?? ALL} onValueChange={(v) => onChange(v === ALL ? undefined : v)}>
-      <SelectTrigger className="h-7 w-auto max-w-40 min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label={label}>
-        <span className="flex min-w-0 items-center gap-1 truncate text-muted-foreground" style={{ display: "flex" }}>
-          <span className="shrink-0">{label}:</span>
-          <SelectValue className="text-foreground" />
-        </span>
-      </SelectTrigger>
-      <SelectContent><SelectItem value={ALL}>הכל</SelectItem>{items.map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
-    </Select>
+    <div className="min-w-0 flex-1 basis-28">
+      <Select value={val ?? ALL} onValueChange={(v) => onChange(v === ALL ? undefined : v)}>
+        <SelectTrigger className="h-7 w-full min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label={label}>
+          <span className="flex min-w-0 items-center gap-1 truncate text-muted-foreground" style={{ display: "flex" }}>
+            <span className="shrink-0">{label}:</span>
+            <SelectValue className="text-foreground" />
+          </span>
+        </SelectTrigger>
+        <SelectContent><SelectItem value={ALL}>הכל</SelectItem>{items.map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+      </Select>
+    </div>
+
   );
 
   return (
