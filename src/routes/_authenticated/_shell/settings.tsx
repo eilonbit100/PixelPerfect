@@ -41,7 +41,7 @@ function SettingsLayout() {
           ))}
         </nav>
       )}
-      {allowed ? <Outlet /> : <EmptyState title="אין לך הרשאה למסך זה" description="המסך זמין למשתמשי מטה בלבד." />}
+      {allowed ? <Outlet /> : <EmptyState title="אין לך הרשאה למסך זה" text="המסך זמין למשתמשי מטה בלבד." />}
     </div>
   );
 }
