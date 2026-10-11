@@ -155,6 +155,32 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-panel);
   }
+  .timetable-col {
+    background-image:
+      linear-gradient(to bottom, var(--timetable-hour-line) 1px, transparent 1px),
+      linear-gradient(to bottom, transparent calc(var(--timetable-hour-h) / 2 - 0.5px), var(--timetable-half-line) calc(var(--timetable-hour-h) / 2), transparent calc(var(--timetable-hour-h) / 2 + 0.5px));
+    background-size: 100% var(--timetable-hour-h), 100% var(--timetable-hour-h);
+  }
+  .timetable-today {
+    background-color: var(--timetable-today-bg);
+  }
+  .timetable-now {
+    position: absolute;
+    inset-inline: 0;
+    border-top: 2px solid var(--timetable-now);
+    z-index: 5;
+    pointer-events: none;
+  }
+  .timetable-now::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: -2px;
+    top: -4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: var(--timetable-now);
+  }
   .eyebrow {
     font-size: 0.72rem;
     font-weight: 600;
