@@ -107,20 +107,19 @@ function TicketsPage() {
     <div>
       <PageHeader title="קריאות" subtitle="תקלות, בקשות רכש, הצעות מחיר ובקשות אישור"
         actions={<TicketDialog trigger={<Button><Plus className="size-4" /> קריאה חדשה</Button>} />} />
-      <div className="mb-3 grid grid-cols-2 gap-1 sm:grid-cols-4">
-        <Kpi label="קריאות פתוחות" value={openCount} onClick={() => set({ status: undefined })} />
-        <Kpi label="ממתינות לאישור" value={pending} onClick={() => set({ status: "PENDING_APPROVAL" })} tone="text-warning" />
-        <Kpi label="באיחור" value={overdue} onClick={() => set({ status: "OVERDUE" })} tone={overdue ? "text-critical" : ""} />
-        <Kpi label="נסגרו בתקופה" value={closed} onClick={() => set({ status: "CLOSED" })} />
-      </div>
       <div className="panel mb-3 p-1.5">
-        <div className="flex items-center">
-          <div className="relative min-w-32 flex-1 basis-32">
+        <div className="flex flex-wrap items-center gap-1">
+          <Kpi label="קריאות פתוחות" value={openCount} onClick={() => set({ status: undefined })} />
+          <Kpi label="ממתינות לאישור" value={pending} onClick={() => set({ status: "PENDING_APPROVAL" })} tone="text-warning" />
+          <Kpi label="באיחור" value={overdue} onClick={() => set({ status: "OVERDUE" })} tone={overdue ? "text-critical" : ""} />
+          <Kpi label="נסגרו בתקופה" value={closed} onClick={() => set({ status: "CLOSED" })} />
+          <div className="relative min-w-32 flex-1 basis-40">
             <SearchIcon className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input className="h-7 border-border/70 ps-7 text-xs" placeholder="מספר, נושא או תיאור" value={s.q ?? ""} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש קריאות" />
             {s.q && <button type="button" onClick={() => set({ q: undefined })} aria-label="ניקוי חיפוש" className="absolute end-1 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>}
           </div>
         </div>
+
         <div className="mt-1.5 flex flex-wrap items-center gap-1 border-t border-border/60 pt-1.5">
           {sel(s.type, (v) => set({ type: v }), "סוג", Object.entries(TICKET_TYPE))}
           {sel(s.status, (v) => set({ status: v }), "סטטוס", [...Object.entries(TICKET_STATUS).map(([k, v]) => [k, v.label] as [string, string]), ["OVERDUE", "באיחור"]])}
