@@ -150,7 +150,7 @@ export function EmployeeToday() {
 
 /* ---------------- Manager ---------------- */
 
-export function ManagerStrip({ cardsCount }: { cardsCount?: number }) {
+export function ManagerStrip() {
   const people = usePeople();
   const team = useTeamTasks(true);
   const leads = people.data?.leads ?? [];
@@ -159,7 +159,6 @@ export function ManagerStrip({ cardsCount }: { cardsCount?: number }) {
     <div className="mb-4 flex flex-wrap gap-1.5">
       <Chip label="לידים שלא חזרו אליהם" value={people.data ? leads.filter((l) => l.state === "new_overdue").length : undefined} bad to="/leads" />
       <Chip label="מתעניינים בלי מעקב / שיוך" value={people.data ? leads.filter((l) => l.stage === "PROSPECT" && (l.state === "no_followup" || !l.assigned_member_id)).length : undefined} bad to="/leads" />
-      <Chip label="כרטיסים לא תקינים" value={cardsCount} bad to="/reports/cards" />
       <Chip label="חסומים בכניסה" value={people.data?.blocked.length} bad to="/reports/cards" />
       <Chip label="משימות צוות באיחור" value={team.data ? team.data.tasks.filter((t) => ["OPEN", "IN_PROGRESS"].includes(t.status) && new Date(t.due_at) < now).length : undefined} bad to="/tasks" search={{ view: "attention" }} />
     </div>
