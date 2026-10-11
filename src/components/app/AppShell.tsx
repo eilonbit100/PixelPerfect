@@ -23,8 +23,8 @@ const GROUPS: { title?: string; funnel?: boolean; items: NavItem[] }[] = [
     { to: "/schedule", label: "מערכת שעות", icon: CalendarDays },
   ] },
   { title: "תפעול", items: [
-    { to: "/inventory", label: "מלאי", icon: Package },
-    { to: "/tickets", label: "קריאות", icon: CheckSquare },
+    { to: "/inventory", label: "מלאי", icon: Package, minRole: "manager" },
+    { to: "/tickets", label: "קריאות", icon: CheckSquare, minRole: "manager" },
   ] },
   { title: "ניתוח וניהול", items: [
     { to: "/reports", label: "דוחות", icon: BarChart3 },
@@ -114,7 +114,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
         <span className="text-[15px] font-semibold tracking-tight">Pulse</span>
       </div>
       <nav className="flex-1 overflow-y-auto px-2 pb-3">
-        {GROUPS.map((g, gi) => (
+        {GROUPS.filter((g) => g.funnel || g.items.some((n) => !n.minRole || isManager)).map((g, gi) => (
           <div key={gi} className={gi ? "mt-4" : ""}>
             {g.title && <div className="mb-1 px-2.5 text-[0.72rem] font-semibold text-sidebar-foreground/60">{g.title}</div>}
             {g.funnel ? <Funnel path={path} stageParam={stageParam} onNavigate={onNavigate} /> : (
@@ -310,6 +310,22 @@ function UserMenu() {
   );
 }
 
+const MANAGER_ONLY = ["/inventory", "/tickets"];
+
+function ManagerGate({ children }: { children: ReactNode }) {
+  const { isManager } = useOrg();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const blocked = !isManager && MANAGER_ONLY.some((p) => path === p || path.startsWith(p + "/"));
+  if (!blocked) return <>{children}</>;
+  return (
+    <div className="mx-auto mt-16 max-w-md rounded-lg border bg-card p-8 text-center">
+      <h1 className="text-lg font-semibold">אין לך הרשאה למסך זה</h1>
+      <p className="mt-2 text-sm text-muted-foreground">המסך זמין למנהלי סניף ולמטה בלבד.</p>
+      <Link to="/dashboard" className="mt-4 inline-block text-sm font-medium text-primary underline">חזרה ללוח הבקרה</Link>
+    </div>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const [drawer, setDrawer] = useState(false);
   return (
@@ -333,7 +349,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <UserMenu />
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 lg:px-8">{children}</main>
+        <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 lg:px-8"><ManagerGate>{children}</ManagerGate></main>
       </div>
     </div>
   );
