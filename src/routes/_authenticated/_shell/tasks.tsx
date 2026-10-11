@@ -155,7 +155,7 @@ function TasksPage() {
     { v: "lost", label: "לא רלוונטיים", n: counts.lost, icon: CircleSlash },
     ...(role === "EMPLOYEE" ? [] : [{ v: "unassigned", label: "לא משויכות", n: counts.unassigned, icon: UserX, tone: "warning" }]),
   ];
-  const sel = (val: string | undefined, onChange: (v: string | undefined) => void, label: string, items: [string, string][], w = "w-36") => (
+  const sel = (val: string | undefined, onChange: (v: string | undefined) => void, label: string, items: [string, string][], w = "w-32") => (
     <Select value={val ?? "any"} onValueChange={(v) => onChange(v === "any" ? undefined : v)}>
       <SelectTrigger className={w} aria-label={label}><SelectValue /></SelectTrigger>
       <SelectContent><SelectItem value="any">{label}</SelectItem>{items.map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
@@ -183,13 +183,13 @@ function TasksPage() {
         {role !== "EMPLOYEE" && sel(search.owner, (v) => set({ owner: v }), "אחראי: כולם", members.map((m) => [m.id, m.display_name ?? "—"]))}
         {!branchId && branches.length > 1 && sel(search.branch, (v) => set({ branch: v }), "סניף: כולם", branches.map((b) => [b.id, b.name]))}
         {!leadView && <>
-          {sel(search.type, (v) => set({ type: v }), "סוג: הכל", (types.data ?? []).map((t) => [t.key, t.label]), "w-44")}
+          {sel(search.type, (v) => set({ type: v }), "סוג: הכל", (types.data ?? []).map((t) => [t.key, t.label]), "w-36")}
           {sel(search.status, (v) => set({ status: v }), "סטטוס: הכל", [...Object.entries(TASK_STATUS), ["OVERDUE", "באיחור"]])}
           {sel(search.priority, (v) => set({ priority: v }), "עדיפות: הכל", Object.entries(TASK_PRIORITY))}
           {sel(search.source, (v) => set({ source: v }), "מקור: הכל", [["auto", "אוטומטיות"], ["manual", "ידניות"]])}
         </>}
         <Select value={search.range ?? (search.from || search.to ? "custom" : "any")} onValueChange={(v) => set(v === "any" ? { range: undefined, from: undefined, to: undefined } : v === "custom" ? { range: "custom" } : { range: v, ...rangeDates(v) })}>
-          <SelectTrigger className="w-44" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
+          <SelectTrigger className="w-40" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
             <span className="flex items-center gap-1.5"><CalendarDays className="size-4 text-muted-foreground" /><SelectValue /></span>
           </SelectTrigger>
           <SelectContent>
@@ -204,8 +204,8 @@ function TasksPage() {
         </Select>
         {(search.range ?? (search.from || search.to ? "custom" : "")) === "custom" && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span>מ־</span><Input type="date" dir="ltr" className="num w-36 text-end" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
-            <span>עד</span><Input type="date" dir="ltr" className="num w-36 text-end" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
+            <span>מ־</span><Input type="date" dir="ltr" className="num w-32 text-end" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
+            <span>עד</span><Input type="date" dir="ltr" className="num w-32 text-end" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
           </div>
         )}
         {(search.q || search.owner || search.branch || search.type || search.status || search.priority || search.source || search.from || search.to || search.range) && (
