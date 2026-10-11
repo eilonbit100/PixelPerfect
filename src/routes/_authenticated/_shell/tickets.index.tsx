@@ -82,7 +82,7 @@ function TicketsPage() {
   const closed = all.filter((t) => t.status === "CLOSED" && t.closed_at && t.closed_at.slice(0, 10) >= from && t.closed_at.slice(0, 10) <= to).length;
 
   const Kpi = ({ label, value, onClick, tone }: { label: string; value: number; onClick: () => void; tone?: string }) => (
-    <button onClick={onClick} className="flex items-center justify-between gap-2 rounded-md border bg-surface px-2.5 py-1 text-start transition-colors hover:bg-muted">
+    <button onClick={onClick} className="inline-flex w-auto shrink-0 items-center gap-1.5 rounded-md border bg-surface px-2 py-1 text-start transition-colors hover:bg-muted">
       <span className="text-[11px] text-muted-foreground">{label}</span>
       <span className={"num text-sm font-semibold " + (tone ?? "")}>{q.isLoading ? "…" : value}</span>
     </button>
