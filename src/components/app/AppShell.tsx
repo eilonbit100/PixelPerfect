@@ -13,19 +13,73 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const NAV = [
-  { to: "/dashboard", label: "לוח בקרה", icon: LayoutDashboard },
-  { to: "/checkin", label: "כניסה", icon: ScanLine },
-  { to: "/schedule", label: "מערכת שעות", icon: CalendarDays },
-  { to: "/leads", label: "לידים", icon: UserPlus },
-  { to: "/leads", label: "מתעניינים", icon: UserCheck, stage: "PROSPECT" },
-  { to: "/customers", label: "לקוחות", icon: Users },
-  { to: "/tasks", label: "משימות", icon: ListTodo },
-  { to: "/inventory", label: "מלאי", icon: Package },
-  { to: "/reports", label: "דוחות", icon: BarChart3 },
-  { to: "/tickets", label: "קריאות", icon: CheckSquare, group: "ניהול" },
-  { to: "/settings", label: "הגדרות", icon: Settings },
+type NavItem = { to: string; label: string; icon: typeof Users };
+const GROUPS: { title?: string; funnel?: boolean; items: NavItem[] }[] = [
+  { items: [{ to: "/dashboard", label: "לוח בקרה", icon: LayoutDashboard }] },
+  { title: "מסלול לקוח", funnel: true, items: [] },
+  { title: "עבודה יומית", items: [
+    { to: "/tasks", label: "משימות", icon: ListTodo },
+    { to: "/checkin", label: "כניסה", icon: ScanLine },
+    { to: "/schedule", label: "מערכת שעות", icon: CalendarDays },
+  ] },
+  { title: "תפעול", items: [
+    { to: "/inventory", label: "מלאי", icon: Package },
+    { to: "/tickets", label: "קריאות", icon: CheckSquare },
+  ] },
+  { title: "ניתוח וניהול", items: [
+    { to: "/reports", label: "דוחות", icon: BarChart3 },
+    { to: "/settings", label: "הגדרות", icon: Settings },
+  ] },
+];
+
+const FUNNEL = [
+  { key: "lead", to: "/leads", stage: undefined, label: "לידים", hint: "הזדמנות חדשה", dot: "bg-funnel-lead", ring: "ring-funnel-lead" },
+  { key: "prospect", to: "/leads", stage: "PROSPECT", label: "מתעניינים", hint: "בתהליך מעקב", dot: "bg-funnel-prospect", ring: "ring-funnel-prospect" },
+  { key: "customer", to: "/customers", stage: undefined, label: "לקוחות", hint: "רכשו מנוי", dot: "bg-funnel-customer", ring: "ring-funnel-customer" },
 ] as const;
+
+function Funnel({ path, stageParam, onNavigate }: { path: string; stageParam?: string; onNavigate?: () => void }) {
+  const { org, branchId } = useOrg();
+  const counts = useQuery({
+    queryKey: ["funnel-counts", org.id, branchId],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const leads = (stage: string) => {
+        let q = supabase.from("leads").select("id", { count: "exact", head: true }).eq("organization_id", org.id).is("deleted_at", null).eq("stage", stage).not("status", "in", "(LOST,WON)");
+        if (branchId) q = q.eq("branch_id", branchId);
+        return q;
+      };
+      let c = supabase.from("customers").select("id", { count: "exact", head: true }).eq("organization_id", org.id).is("deleted_at", null).eq("status", "ACTIVE");
+      if (branchId) c = c.eq("home_branch_id", branchId);
+      const [l, p, cu] = await Promise.all([leads("LEAD"), leads("PROSPECT"), c]);
+      return { lead: l.count, prospect: p.count, customer: cu.count } as Record<string, number | null>;
+    },
+  });
+  return (
+    <ol className="relative">
+      <span aria-hidden className="absolute top-5 bottom-5 start-[1.4rem] w-px bg-sidebar-border" />
+      {FUNNEL.map((f, i) => {
+        const active = f.to === "/customers" ? path === "/customers" || path.startsWith("/customers/")
+          : path.startsWith("/leads/") ? false : path === "/leads" && (f.stage ?? null) === (stageParam ?? null);
+        const n = counts.data?.[f.key];
+        return (
+          <li key={f.key} className="relative">
+            <Link to={f.to} search={f.to === "/leads" ? { stage: f.stage } : undefined} onClick={onNavigate}
+              className={cn("flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+                active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
+              <span className={cn("relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold text-sidebar", f.dot, active && "ring-2 ring-offset-2 ring-offset-sidebar", active && f.ring)}>{i + 1}</span>
+              <span className="min-w-0 flex-1 leading-tight">
+                <span className="block">{f.label}</span>
+                <span className="block text-[0.7rem] text-sidebar-foreground/55">{f.hint}</span>
+              </span>
+              {n != null && <span className="num rounded bg-sidebar-accent px-1.5 text-xs text-sidebar-foreground/80">{n}</span>}
+            </Link>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 function BranchSelector() {
   const { branches, branchId, setBranchId, branchName } = useOrg();
@@ -58,29 +112,27 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
         <span className="flex size-7 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground"><Activity className="size-4" /></span>
         <span className="text-[15px] font-semibold tracking-tight">Pulse</span>
       </div>
-      <nav className="flex-1 space-y-0.5 px-2">
-        {NAV.map((n) => {
-          const stg = (n as { stage?: string }).stage;
-          const active = (path === n.to || path.startsWith(n.to + "/")) && (n.to !== "/leads" || path !== "/leads" || (stg ?? null) === (stageParam ?? null));
-          const group = (n as { group?: string }).group;
-          return (
-            <div key={n.label}>
-            {group && <div className="mt-3 mb-1 px-2.5 text-[0.72rem] font-semibold text-sidebar-foreground/60">{group}</div>}
-            <Link
-              to={n.to}
-              search={n.to === "/leads" ? { stage: stg } : undefined}
-              onClick={onNavigate}
-              className={cn(
-                "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60",
-              )}
-            >
-              <n.icon className={cn("size-4", active ? "text-sidebar-primary" : "text-sidebar-foreground/60")} />
-              {n.label}
-            </Link>
-            </div>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto px-2 pb-3">
+        {GROUPS.map((g, gi) => (
+          <div key={gi} className={gi ? "mt-4" : ""}>
+            {g.title && <div className="mb-1 px-2.5 text-[0.72rem] font-semibold text-sidebar-foreground/60">{g.title}</div>}
+            {g.funnel ? <Funnel path={path} stageParam={stageParam} onNavigate={onNavigate} /> : (
+              <div className="space-y-0.5">
+                {g.items.map((n) => {
+                  const active = path === n.to || path.startsWith(n.to + "/");
+                  return (
+                    <Link key={n.to} to={n.to} onClick={onNavigate}
+                      className={cn("flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+                        active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent/60")}>
+                      <n.icon className={cn("size-4", active ? "text-sidebar-primary" : "text-sidebar-foreground/60")} />
+                      {n.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ))}
       </nav>
       <div className="space-y-3 border-t border-sidebar-border p-3">
         <div>
