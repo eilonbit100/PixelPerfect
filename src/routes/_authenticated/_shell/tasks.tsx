@@ -204,8 +204,8 @@ function TasksPage() {
         </Select>
         {(search.range ?? (search.from || search.to ? "custom" : "")) === "custom" && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span>מ־</span><Input type="date" className="num w-36" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
-            <span>עד</span><Input type="date" className="num w-36" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
+            <span>מ־</span><Input type="date" dir="ltr" className="num w-36 text-end" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
+            <span>עד</span><Input type="date" dir="ltr" className="num w-36 text-end" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
           </div>
         )}
         {(search.q || search.owner || search.branch || search.type || search.status || search.priority || search.source || search.from || search.to || search.range) && (
