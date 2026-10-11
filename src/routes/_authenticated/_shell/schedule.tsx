@@ -93,39 +93,11 @@ function Schedule() {
       {q.isLoading ? <TableSkeleton /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : !q.data?.tpl.length ? (
         <div className="panel"><EmptyState title="אין עדיין שיעורים בסניף" text={isManager ? "הוסף שיעור קבוע כדי להתחיל." : "מנהל הסניף יוסיף שיעורים."} /></div>
       ) : (
-        <div className="overflow-x-auto"><div className="grid min-w-[900px] grid-cols-7 gap-2">
-          {days.map((d, wd) => {
-            const ds = isoDay(d);
-            const isToday = ds === isoDay(new Date());
-            return (
-              <div key={ds} className={`panel min-w-0 ${isToday ? "ring-2 ring-primary" : ""}`}>
-                <div className="border-b px-3 py-2 text-sm font-medium">{WEEKDAYS[wd]} <span className="num text-xs text-muted-foreground">{d.getDate()}/{d.getMonth() + 1}</span></div>
-                <div className="space-y-2 p-2">
-                  {q.data.tpl.filter((t) => t.weekday === wd).map((t) => {
-                    const n = count(t.id, ds, "BOOKED"), w = count(t.id, ds, "WAITLIST");
-                    const pct = Math.min(100, Math.round((n / t.capacity) * 100));
-                    const tone = n >= t.capacity ? "bg-critical" : pct >= 75 ? "bg-warning" : "bg-primary";
-                    return (
-                      <div key={t.id} className="group relative rounded-md border bg-background text-xs hover:border-primary">
-                        <button onClick={() => setOpen({ id: t.id, date: ds })} className="w-full p-2 text-start">
-                          <div className="num font-semibold">{t.start_time.slice(0, 5)} <span className="font-normal text-muted-foreground">· {t.duration_min} ד׳</span></div>
-                          <div className="text-sm font-medium">{t.name}</div>
-                          <div className="truncate text-muted-foreground">{roomName(t.room_id)} · {memberName(t.instructor_member_id)}</div>
-                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted"><div className={`h-full ${tone}`} style={{ width: `${pct}%` }} /></div>
-                          <div className="mt-1 num">{n}/{t.capacity}{n >= t.capacity && <span className="text-critical font-medium"> · מלא</span>}{w > 0 && <span className="text-muted-foreground"> · המתנה {w}</span>}</div>
-                        </button>
-                        {isManager && (
-                          <NewClass orgId={org.id} branch={branch} rooms={q.data.rooms} instructors={instructors} template={t}
-                            trigger={<button className="absolute end-1 top-1 rounded p-1 text-muted-foreground opacity-0 hover:bg-muted group-hover:opacity-100 focus:opacity-100" aria-label="עריכת שיעור"><Pencil className="size-3.5" /></button>} />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div></div>
+        <Timetable tpl={q.data.tpl} days={days} count={count} roomName={roomName} instructorName={memberName} onOpen={setOpen}
+          editBlock={(t) => (
+            <NewClass orgId={org.id} branch={branch} rooms={q.data.rooms} instructors={instructors} template={t}
+              trigger={<button className="absolute end-1 top-1 z-10 rounded p-1 text-muted-foreground opacity-0 hover:bg-muted group-hover:opacity-100 focus:opacity-100" aria-label="עריכת שיעור"><Pencil className="size-3.5" /></button>} />
+          )} />
       )}
       {open && q.data && (() => {
         const t = q.data.tpl.find((x) => x.id === open.id);
