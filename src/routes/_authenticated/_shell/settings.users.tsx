@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/_shell/settings/users")({
 });
 
 function Users() {
-  const { org, members, allBranches, isAdmin, me } = useOrg();
+  const { org, members: allMembers, allBranches, branches: myBranches, isAdmin, me } = useOrg();
   const qc = useQueryClient();
   const [inv, setInv] = useState({ name: "", username: "", job: "", role: "EMPLOYEE" });
   const access = useQuery({
@@ -29,6 +29,8 @@ function Users() {
       return data ?? [];
     },
   });
+  // מנהל סניף רואה רק את צוות הסניפים שלו (צפייה בלבד); מטה רואה את כולם ועורך
+  const members = isAdmin ? allMembers : allMembers.filter((m) => m.id === me.id || m.role !== "HQ" && access.data?.some((a) => a.organization_member_id === m.id && myBranches.some((b) => b.id === a.branch_id)));
   const refresh = () => { qc.invalidateQueries({ queryKey: orgQueryKey }); qc.invalidateQueries({ queryKey: ["member-access"] }); };
 
   async function patch(id: string, p: TablesUpdate<"organization_members">) {

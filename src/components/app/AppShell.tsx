@@ -13,7 +13,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type NavItem = { to: string; label: string; icon: typeof Users };
+type NavItem = { to: string; label: string; icon: typeof Users; minRole?: "manager" };
 const GROUPS: { title?: string; funnel?: boolean; items: NavItem[] }[] = [
   { items: [{ to: "/dashboard", label: "לוח בקרה", icon: LayoutDashboard }] },
   { title: "מסלול לקוח", funnel: true, items: [] },
@@ -28,7 +28,8 @@ const GROUPS: { title?: string; funnel?: boolean; items: NavItem[] }[] = [
   ] },
   { title: "ניתוח וניהול", items: [
     { to: "/reports", label: "דוחות", icon: BarChart3 },
-    { to: "/settings", label: "הגדרות", icon: Settings },
+    { to: "/settings/users", label: "עובדים", icon: UserCheck, minRole: "manager" },
+    { to: "/settings", label: "הגדרות", icon: Settings, minRole: "manager" },
   ] },
 ];
 
@@ -103,7 +104,7 @@ function BranchSelector() {
 }
 
 function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
-  const { org, profileName, role } = useOrg();
+  const { org, profileName, role, isManager } = useOrg();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const stageParam = useRouterState({ select: (s) => (s.location.search as { stage?: string }).stage });
   return (
@@ -118,8 +119,8 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
             {g.title && <div className="mb-1 px-2.5 text-[0.72rem] font-semibold text-sidebar-foreground/60">{g.title}</div>}
             {g.funnel ? <Funnel path={path} stageParam={stageParam} onNavigate={onNavigate} /> : (
               <div className="space-y-0.5">
-                {g.items.map((n) => {
-                  const active = path === n.to || path.startsWith(n.to + "/");
+                {g.items.filter((n) => !n.minRole || isManager).map((n) => {
+                  const active = n.to === "/settings" ? path.startsWith("/settings") && !path.startsWith("/settings/users") : path === n.to || path.startsWith(n.to + "/");
                   return (
                     <Link key={n.to} to={n.to} onClick={onNavigate}
                       className={cn("flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
