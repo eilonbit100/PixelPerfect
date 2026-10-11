@@ -99,7 +99,6 @@ function LeadRows({ list, showOwner }: { list: ReturnType<typeof prioritizeLeads
 
 /* ---------------- Employee ---------------- */
 
-const DAILY_LEAD_GOAL = 4;
 const CARD_ITEM: Record<string, string> = { HEALTH_DECLARATION: "הצהרת בריאות", SIGNED_TERMS: "חתימה על תקנון", PAYMENT_METHOD: "אמצעי תשלום" };
 
 function useMyStats() {
@@ -109,7 +108,7 @@ function useMyStats() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("dashboard_my_stats", { _org: org.id });
       if (error) throw error;
-      return data as { closed_today: number; closed_week: number; closed_month: number; calls_today: number };
+      return data as { closed_today: number; closed_week: number; closed_month: number; calls_today: number; goal: number; avg: number; basis: "personal" | "team" | "default"; pool: number; due: number };
     },
   });
 }
@@ -151,7 +150,9 @@ export function EmployeeToday() {
   const fixes = people.data?.card_fixes ?? [];
   const s = stats.data;
   const calls = s?.calls_today ?? 0;
-  const pct = Math.min(100, Math.round((calls / DAILY_LEAD_GOAL) * 100));
+  const goal = s?.goal ?? 0;
+  const pct = goal ? Math.min(100, Math.round((calls / goal) * 100)) : 100;
+  const basisText = !s ? "" : s.basis === "personal" ? `לפי הממוצע שלך: ~${s.avg} לידים ביום` : s.basis === "team" ? `לפי ממוצע הצוות: ~${s.avg} לידים ביום` : "יעד התחלתי עד שיצטבר מספיק מידע";
   const now = new Date();
 
   return (
@@ -159,10 +160,13 @@ export function EmployeeToday() {
       <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
         <section className="panel p-4">
           <p className="text-xs text-muted-foreground">היעד של היום</p>
-          <p className="mt-1 text-lg font-semibold">להתקשר ל־{DAILY_LEAD_GOAL} לידים ולהמשיך שיחה עם המתעניינים</p>
+          {!s ? <Skeleton className="mt-1 h-6 w-64" /> : (
+            <p className="mt-1 text-lg font-semibold">{goal ? `ליצור קשר עם ${goal} לידים ומתעניינים` : "אין כרגע לידים חדשים — זמן לחזק את המתעניינים"}</p>
+          )}
+          {s && <p className="text-[11px] text-muted-foreground">{basisText} · {s.pool} במאגר{s.due ? ` · ${s.due} מעקבים להיום` : ""}</p>}
           <div className="mt-3 flex items-center gap-3">
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} /></div>
-            <span className="num shrink-0 text-sm font-medium">{calls}/{DAILY_LEAD_GOAL} שיחות</span>
+            <span className="num shrink-0 text-sm font-medium">{calls}/{goal} {calls >= goal && goal ? "· כל הכבוד!" : "שיחות"}</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
             <Chip label="משימות להיום" value={tasks.data?.length} to="/tasks" search={{ view: "mine" }} />
