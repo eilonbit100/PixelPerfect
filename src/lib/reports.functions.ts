@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { REPORTS, SOURCES, fmtCell, reportByKey, type Col } from "./reports";
+import { REPORTS, SOURCES, fmtCell, reportByKey, reportRpc, type Col } from "./reports";
 
 const runInput = z.object({
   orgId: z.string().uuid(),
