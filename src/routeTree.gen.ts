@@ -33,6 +33,7 @@ import { Route as AuthenticatedShellReportsHealthRouteImport } from './routes/_a
 import { Route as AuthenticatedShellSettingsIndexRouteImport } from './routes/_authenticated/_shell/settings.index'
 import { Route as AuthenticatedShellSettingsBranchesRouteImport } from './routes/_authenticated/_shell/settings.branches'
 import { Route as AuthenticatedShellSettingsCancellationRouteImport } from './routes/_authenticated/_shell/settings.cancellation'
+import { Route as AuthenticatedShellSettingsCatalogRouteImport } from './routes/_authenticated/_shell/settings.catalog'
 import { Route as AuthenticatedShellSettingsOrganizationRouteImport } from './routes/_authenticated/_shell/settings.organization'
 import { Route as AuthenticatedShellSettingsReportPermissionsRouteImport } from './routes/_authenticated/_shell/settings.report-permissions'
 import { Route as AuthenticatedShellSettingsRulesRouteImport } from './routes/_authenticated/_shell/settings.rules'
@@ -178,6 +179,12 @@ const AuthenticatedShellSettingsCancellationRoute =
     path: '/cancellation',
     getParentRoute: () => AuthenticatedShellSettingsRoute,
   } as any)
+const AuthenticatedShellSettingsCatalogRoute =
+  AuthenticatedShellSettingsCatalogRouteImport.update({
+    id: '/catalog',
+    path: '/catalog',
+    getParentRoute: () => AuthenticatedShellSettingsRoute,
+  } as any)
 const AuthenticatedShellSettingsOrganizationRoute =
   AuthenticatedShellSettingsOrganizationRouteImport.update({
     id: '/organization',
@@ -239,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/settings/cancellation': typeof AuthenticatedShellSettingsCancellationRoute
+  '/settings/catalog': typeof AuthenticatedShellSettingsCatalogRoute
   '/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
   '/settings/report-permissions': typeof AuthenticatedShellSettingsReportPermissionsRoute
   '/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
@@ -268,6 +276,7 @@ export interface FileRoutesByTo {
   '/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/settings/cancellation': typeof AuthenticatedShellSettingsCancellationRoute
+  '/settings/catalog': typeof AuthenticatedShellSettingsCatalogRoute
   '/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
   '/settings/report-permissions': typeof AuthenticatedShellSettingsReportPermissionsRoute
   '/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
@@ -302,6 +311,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/reports/health': typeof AuthenticatedShellReportsHealthRoute
   '/_authenticated/_shell/settings/branches': typeof AuthenticatedShellSettingsBranchesRoute
   '/_authenticated/_shell/settings/cancellation': typeof AuthenticatedShellSettingsCancellationRoute
+  '/_authenticated/_shell/settings/catalog': typeof AuthenticatedShellSettingsCatalogRoute
   '/_authenticated/_shell/settings/organization': typeof AuthenticatedShellSettingsOrganizationRoute
   '/_authenticated/_shell/settings/report-permissions': typeof AuthenticatedShellSettingsReportPermissionsRoute
   '/_authenticated/_shell/settings/rules': typeof AuthenticatedShellSettingsRulesRoute
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/reports/health'
     | '/settings/branches'
     | '/settings/cancellation'
+    | '/settings/catalog'
     | '/settings/organization'
     | '/settings/report-permissions'
     | '/settings/rules'
@@ -364,6 +375,7 @@ export interface FileRouteTypes {
     | '/reports/health'
     | '/settings/branches'
     | '/settings/cancellation'
+    | '/settings/catalog'
     | '/settings/organization'
     | '/settings/report-permissions'
     | '/settings/rules'
@@ -397,6 +409,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/reports/health'
     | '/_authenticated/_shell/settings/branches'
     | '/_authenticated/_shell/settings/cancellation'
+    | '/_authenticated/_shell/settings/catalog'
     | '/_authenticated/_shell/settings/organization'
     | '/_authenticated/_shell/settings/report-permissions'
     | '/_authenticated/_shell/settings/rules'
@@ -587,6 +600,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellSettingsCancellationRouteImport
       parentRoute: typeof AuthenticatedShellSettingsRoute
     }
+    '/_authenticated/_shell/settings/catalog': {
+      id: '/_authenticated/_shell/settings/catalog'
+      path: '/catalog'
+      fullPath: '/settings/catalog'
+      preLoaderRoute: typeof AuthenticatedShellSettingsCatalogRouteImport
+      parentRoute: typeof AuthenticatedShellSettingsRoute
+    }
     '/_authenticated/_shell/settings/organization': {
       id: '/_authenticated/_shell/settings/organization'
       path: '/organization'
@@ -663,6 +683,7 @@ const AuthenticatedShellReportsRouteWithChildren =
 interface AuthenticatedShellSettingsRouteChildren {
   AuthenticatedShellSettingsBranchesRoute: typeof AuthenticatedShellSettingsBranchesRoute
   AuthenticatedShellSettingsCancellationRoute: typeof AuthenticatedShellSettingsCancellationRoute
+  AuthenticatedShellSettingsCatalogRoute: typeof AuthenticatedShellSettingsCatalogRoute
   AuthenticatedShellSettingsOrganizationRoute: typeof AuthenticatedShellSettingsOrganizationRoute
   AuthenticatedShellSettingsReportPermissionsRoute: typeof AuthenticatedShellSettingsReportPermissionsRoute
   AuthenticatedShellSettingsRulesRoute: typeof AuthenticatedShellSettingsRulesRoute
@@ -676,6 +697,8 @@ const AuthenticatedShellSettingsRouteChildren: AuthenticatedShellSettingsRouteCh
       AuthenticatedShellSettingsBranchesRoute,
     AuthenticatedShellSettingsCancellationRoute:
       AuthenticatedShellSettingsCancellationRoute,
+    AuthenticatedShellSettingsCatalogRoute:
+      AuthenticatedShellSettingsCatalogRoute,
     AuthenticatedShellSettingsOrganizationRoute:
       AuthenticatedShellSettingsOrganizationRoute,
     AuthenticatedShellSettingsReportPermissionsRoute:
