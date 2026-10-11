@@ -218,6 +218,7 @@
   }
   .leads-table td {
     padding-block: 0.35rem;
+    white-space: nowrap;
   }
   .leads-table .col-phone,
   .leads-table .col-date {
