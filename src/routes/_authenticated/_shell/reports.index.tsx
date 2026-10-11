@@ -32,7 +32,7 @@ function ReportsHome() {
     <div className="space-y-4">
       <PageHeader title="דוחות" subtitle="מוצגים רק הדוחות והסניפים שמותר לך לראות"
         actions={canBuild && <Button asChild><Link to="/reports/builder"><Plus className="size-4" /> יצירת דוח חדש</Link></Button>} />
-      <AiSearch />
+      {canBuild && <AiSearch />}
       <nav className="flex gap-1 border-b">
         {([["library", "ספריית דוחות"], ["runs", "הפקות אחרונות"], ["saved", "דוחות שמורים"]] as const).map(([v, l]) => (
           <button key={v} type="button" onClick={() => navigate({ search: { tab: v === "library" ? undefined : v } })}
