@@ -2952,6 +2952,7 @@ export type Database = {
         Args: { _branch?: string; _org: string }
         Returns: Json
       }
+      dashboard_my_stats: { Args: { _org: string }; Returns: Json }
       dashboard_people: {
         Args: { _branch?: string; _org: string }
         Returns: Json

@@ -8,7 +8,7 @@ import { useInsights, useRefreshInsights } from "@/lib/queries";
 import { RULES, sevRank, worst, type Insight } from "@/lib/rules";
 import { fmtMoney, fmtNum, fmtRelative, greeting } from "@/lib/format";
 import { SEVERITY_UI } from "@/components/app/badges";
-import { DailyPlanEmployee, DailyPlanManager } from "@/components/app/DailyPlan";
+import { DailyPlanManager } from "@/components/app/DailyPlan";
 import { EmptyState, ErrorState } from "@/components/app/states";
 import { RuleLink } from "@/components/app/InsightLink";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -240,7 +240,7 @@ function Dashboard() {
       {role !== "EMPLOYEE" && <ManagerStrip />}
 
       {role === "EMPLOYEE" ? (
-        <div className="mb-6 space-y-4"><EmployeeToday /><DailyPlanEmployee /></div>
+        <div className="mb-6 space-y-4"><EmployeeToday /></div>
       ) : (
         <div className="mb-6 space-y-4">
           <LeadsFollowUp />
@@ -250,6 +250,7 @@ function Dashboard() {
         </div>
       )}
 
+      {role !== "EMPLOYEE" && (
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <section className="min-w-0 space-y-6 overflow-hidden">
           {insights.isLoading ? (
@@ -300,6 +301,7 @@ function Dashboard() {
           </div>
         </aside>
       </div>
+      )}
       {role === "HQ" && !branchId && <BranchComparison insights={insights.data ?? []} />}
     </div>
   );
