@@ -1,3 +1,4 @@
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -51,7 +52,7 @@ export function TaskDetail({ taskId, onClose }: { taskId: string | null; onClose
     },
   });
 
-  async function update(patch: Record<string, unknown>, msg: string) {
+  async function update(patch: TablesUpdate<"tasks">, msg: string) {
     setBusy(true);
     const { error } = await supabase.from("tasks").update(patch).eq("id", taskId!);
     setBusy(false);
