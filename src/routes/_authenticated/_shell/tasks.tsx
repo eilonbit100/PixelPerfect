@@ -156,16 +156,19 @@ function TasksPage() {
     ...(role === "EMPLOYEE" ? [] : [{ v: "unassigned", label: "לא משויכות", n: counts.unassigned, icon: UserX, tone: "warning" }]),
   ];
   const sel = (val: string | undefined, onChange: (v: string | undefined) => void, label: string, items: [string, string][]) => (
-    <Select value={val ?? "any"} onValueChange={(v) => onChange(v === "any" ? undefined : v)}>
-      <SelectTrigger className="h-7 w-auto max-w-40 min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label={label}>
-        <span className="flex min-w-0 items-center gap-1 truncate text-muted-foreground" style={{ display: "flex" }}>
-          <span className="shrink-0">{label}:</span>
-          <SelectValue className="text-foreground" />
-        </span>
-      </SelectTrigger>
-      <SelectContent><SelectItem value="any">הכל</SelectItem>{items.map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
-    </Select>
+    <div className="min-w-0 flex-1 basis-28">
+      <Select value={val ?? "any"} onValueChange={(v) => onChange(v === "any" ? undefined : v)}>
+        <SelectTrigger className="h-7 w-full min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label={label}>
+          <span className="flex min-w-0 items-center gap-1 truncate text-muted-foreground" style={{ display: "flex" }}>
+            <span className="shrink-0">{label}:</span>
+            <SelectValue className="text-foreground" />
+          </span>
+        </SelectTrigger>
+        <SelectContent><SelectItem value="any">הכל</SelectItem>{items.map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+      </Select>
+    </div>
   );
+
 
 
   return (
@@ -181,18 +184,24 @@ function TasksPage() {
         ))}
       </div>
       {search.task && <div className="mb-3 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">מוצגת משימה אחת <Button size="sm" variant="ghost" onClick={() => set({})}>הצג את כל המשימות</Button></div>}
-      <div className="panel mb-3 flex flex-wrap items-center gap-1 p-1.5">
+      <div className="panel mb-3 p-1.5">
+        <div className="flex items-center gap-1">
+          <div className="relative min-w-32 flex-1 basis-32">
+            <SearchIcon className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input className="h-7 border-border/70 ps-7 text-xs" placeholder={leadView ? "שם או טלפון" : "משימה, לקוח או ליד"} defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש" />
+          </div>
+        </div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-1 border-t border-border/60 pt-1.5">
         {role !== "EMPLOYEE" && sel(search.owner, (v) => set({ owner: v }), "אחראי", members.map((m) => [m.id, m.display_name ?? "—"]))}
         {!branchId && branches.length > 1 && sel(search.branch, (v) => set({ branch: v }), "סניף", branches.map((b) => [b.id, b.name]))}
         {!leadView && <>{sel(search.type, (v) => set({ type: v }), "סוג", (types.data ?? []).map((t) => [t.key, t.label]))}{sel(search.status, (v) => set({ status: v }), "סטטוס", [...Object.entries(TASK_STATUS), ["OVERDUE", "באיחור"]])}</>}
-        <div className="relative min-w-32 flex-1 basis-32">
-          <SearchIcon className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input className="h-7 border-border/70 ps-7 text-xs" placeholder={leadView ? "שם או טלפון" : "משימה, לקוח או ליד"} defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש" />
-        </div>
         {!leadView && <>{sel(search.priority, (v) => set({ priority: v }), "עדיפות", Object.entries(TASK_PRIORITY))}{sel(search.source, (v) => set({ source: v }), "מקור", [["auto", "אוטומטיות"], ["manual", "ידניות"]])}</>}
 
+
+        <div className="min-w-0 flex-1 basis-32">
         <Select value={search.range ?? (search.from || search.to ? "custom" : "any")} onValueChange={(v) => set(v === "any" ? { range: undefined, from: undefined, to: undefined } : v === "custom" ? { range: "custom" } : { range: v, ...rangeDates(v) })}>
-          <SelectTrigger className="h-7 w-auto max-w-44 min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
+
+          <SelectTrigger className="h-7 w-full min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
             <span className="flex min-w-0 items-center gap-1 truncate text-muted-foreground" style={{ display: "flex" }}>
               <CalendarDays className="size-3.5 shrink-0" />
               <span className="shrink-0">{leadView ? "כניסה" : "יעד"}:</span>
@@ -209,17 +218,31 @@ function TasksPage() {
             <SelectItem value="custom">טווח תאריכים…</SelectItem>
           </SelectContent>
         </Select>
+        </div>
         {(search.range ?? (search.from || search.to ? "custom" : "")) === "custom" && (
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Input type="date" dir="ltr" className="num h-7 w-28 border-border/70 text-[11px]" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
-            <span>עד</span>
-            <Input type="date" dir="ltr" className="num h-7 w-28 border-border/70 text-[11px]" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
-          </div>
+
+          <>
+            <div className="flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
+              <span className="shrink-0">מ־</span>
+              <Input type="date" dir="ltr" className="num h-7 w-32 border-border/70 text-[11px]" value={search.from ?? ""} onChange={(e) => set({ range: "custom", from: e.target.value || undefined })} aria-label="מתאריך" />
+              <span className="shrink-0">עד</span>
+              <Input type="date" dir="ltr" className="num h-7 w-32 border-border/70 text-[11px]" value={search.to ?? ""} onChange={(e) => set({ range: "custom", to: e.target.value || undefined })} aria-label="עד תאריך" />
+            </div>
+            <span className="min-w-0 flex-1 text-center text-[11px] text-muted-foreground">מציג <span className="num font-medium text-foreground">{rows.length}</span> תוצאות</span>
+          </>
+
+
+
+
         )}
         {(search.q || search.owner || search.branch || search.type || search.status || search.priority || search.source || search.from || search.to || search.range) && (
           <Button size="sm" variant="ghost" className="h-7 shrink-0 px-2 text-[11px]" onClick={() => navigate({ search: { view }, replace: true })}><X className="size-3.5" /> נקה</Button>
         )}
+        </div>
+
+
       </div>
+
 
       <div className="panel overflow-x-auto">
         {q.isLoading ? <TableSkeleton cols={8} /> : q.error ? <ErrorState onRetry={() => q.refetch()} /> : leadView ? (
