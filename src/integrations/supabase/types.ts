@@ -1150,6 +1150,21 @@ export type Database = {
           },
         ]
       }
+      github_sync_test: {
+        Row: {
+          created_at: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       insights: {
         Row: {
           acknowledged_at: string | null
