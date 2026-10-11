@@ -109,7 +109,7 @@ function Schedule() {
   );
 }
 
-const HOUR_H = 64;
+const HOUR_H = 88;
 const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return (h || 0) * 60 + (m || 0); };
 const pad2 = (n: number) => String(n).padStart(2, "0");
 

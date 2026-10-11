@@ -125,7 +125,7 @@
   --timetable-half-line: oklch(0.93 0.01 250 / 70%);
   --timetable-today-bg: oklch(0.955 0.035 125 / 40%);
   --timetable-now: oklch(0.62 0.15 150);
-  --timetable-hour-h: 64px;
+  --timetable-hour-h: 88px;
 }
 
 @layer base {
