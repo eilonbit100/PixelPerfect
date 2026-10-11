@@ -184,16 +184,13 @@ function TasksPage() {
       <div className="panel mb-3 flex flex-wrap items-center gap-1 p-1.5">
         {role !== "EMPLOYEE" && sel(search.owner, (v) => set({ owner: v }), "אחראי", members.map((m) => [m.id, m.display_name ?? "—"]))}
         {!branchId && branches.length > 1 && sel(search.branch, (v) => set({ branch: v }), "סניף", branches.map((b) => [b.id, b.name]))}
+        {!leadView && <>{sel(search.type, (v) => set({ type: v }), "סוג", (types.data ?? []).map((t) => [t.key, t.label]))}{sel(search.status, (v) => set({ status: v }), "סטטוס", [...Object.entries(TASK_STATUS), ["OVERDUE", "באיחור"]])}</>}
         <div className="relative min-w-32 flex-1 basis-32">
           <SearchIcon className="pointer-events-none absolute start-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input className="h-7 border-border/70 ps-7 text-xs" placeholder={leadView ? "שם או טלפון" : "משימה, לקוח או ליד"} defaultValue={search.q} onChange={(e) => set({ q: e.target.value || undefined })} aria-label="חיפוש" />
         </div>
-        {!leadView && <>
-          {sel(search.type, (v) => set({ type: v }), "סוג", (types.data ?? []).map((t) => [t.key, t.label]))}
-          {sel(search.status, (v) => set({ status: v }), "סטטוס", [...Object.entries(TASK_STATUS), ["OVERDUE", "באיחור"]])}
-          {sel(search.priority, (v) => set({ priority: v }), "עדיפות", Object.entries(TASK_PRIORITY))}
-          {sel(search.source, (v) => set({ source: v }), "מקור", [["auto", "אוטומטיות"], ["manual", "ידניות"]])}
-        </>}
+        {!leadView && <>{sel(search.priority, (v) => set({ priority: v }), "עדיפות", Object.entries(TASK_PRIORITY))}{sel(search.source, (v) => set({ source: v }), "מקור", [["auto", "אוטומטיות"], ["manual", "ידניות"]])}</>}
+
         <Select value={search.range ?? (search.from || search.to ? "custom" : "any")} onValueChange={(v) => set(v === "any" ? { range: undefined, from: undefined, to: undefined } : v === "custom" ? { range: "custom" } : { range: v, ...rangeDates(v) })}>
           <SelectTrigger className="h-7 w-auto max-w-44 min-w-0 gap-1 rounded-md px-1.5 text-[11px]" aria-label={leadView ? "תאריך כניסה" : "מועד יעד"}>
             <span className="flex min-w-0 items-center gap-1 truncate text-muted-foreground" style={{ display: "flex" }}>
