@@ -227,6 +227,7 @@
   }
   .tasks-table td {
     padding-block: 0.35rem;
+    padding-inline: 0.6rem;
     white-space: nowrap;
   }
   .tasks-table th,
